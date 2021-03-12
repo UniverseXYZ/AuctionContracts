@@ -22,15 +22,20 @@ module.exports = {
   networks: {
     ganache: {
       url: 'HTTP://127.0.0.1:7545',
-      accounts: ['$PRIVATE_KEY'],
+      accounts: [process.env.PRIVATE_KEY]
     },
     ropsten: {
       chainId: 3,
-      url: '$INFURA_API_KEY',
-      accounts: ['$PRIVATE_KEY'],
+      url: `https://ropsten.infura.io/v3/${process.env.INFURA_API_KEY}`,
+      accounts: [process.env.PRIVATE_KEY]
+    },
+    rinkeby: {
+      chainId: 4,
+      url: `https://rinkeby.infura.io/v3/${process.env.INFURA_API_KEY}`,
+      accounts: [process.env.PRIVATE_KEY]
     },
   },
   etherscan: {
-    apiKey: '$ETHERSCAN_API_KEY',
-  },
+    apiKey: process.env.ETHERSCAN_API_KEY
+  }
 };

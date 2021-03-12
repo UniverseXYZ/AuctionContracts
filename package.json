@@ -1,7 +1,11 @@
 {
+  "name": "universe.xyz-auctions",
+  "version": "1.0",
+  "description": "Auction contracts for Universe.xyz",
   "scripts": {
-    "deploy": "npx hardhat run scripts/deploy.js --network $NETWORK",
-    "etherscan-verify": "npx hardhat verify --network $NETWORK $CONTRACT_ADDRESS"
+    "compile": "npx hardhat compile",
+    "deploy": "npx hardhat run scripts/deploy.js --network",
+    "etherscan-verify": "npx hardhat verify --network"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.2",
