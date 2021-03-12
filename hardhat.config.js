@@ -4,11 +4,11 @@ require('@nomiclabs/hardhat-etherscan');
 // This is a sample Hardhat task. To learn how to create your own go to
 // https://hardhat.org/guides/create-task.html
 task('accounts', 'Prints the list of accounts', async () => {
-    const accounts = await ethers.getSigners();
+  const accounts = await ethers.getSigners();
 
-    for (const account of accounts) {
-        console.log(account.address);
-    }
+  for (const account of accounts) {
+    console.log(account.address);
+  }
 });
 
 // You need to export an object to set up your config
@@ -18,19 +18,19 @@ task('accounts', 'Prints the list of accounts', async () => {
  * @type import('hardhat/config').HardhatUserConfig
  */
 module.exports = {
-    solidity: '0.7.3',
-    networks: {
-        ropsten: {
-            chainId: 3,
-            url: '$INFURA_API_KEY',
-            accounts: ['$PRIVATE_KEY'],
-        },
-        ganache: {
-            url: 'HTTP://127.0.0.1:7545',
-            accounts: ['$PRIVATE_KEY'],
-        },
+  solidity: '0.7.3',
+  networks: {
+    ropsten: {
+      chainId: 3,
+      url: '$INFURA_API_KEY',
+      accounts: ['$PRIVATE_KEY'],
     },
-    etherscan: {
-        apiKey: '$ETHERSCAN_API_KEY',
+    ganache: {
+      url: 'HTTP://127.0.0.1:7545',
+      accounts: ['$PRIVATE_KEY'],
     },
+  },
+  etherscan: {
+    apiKey: '$ETHERSCAN_API_KEY',
+  },
 };
