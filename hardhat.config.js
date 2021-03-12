@@ -20,13 +20,13 @@ task('accounts', 'Prints the list of accounts', async () => {
 module.exports = {
   solidity: '0.7.3',
   networks: {
+    ganache: {
+      url: 'HTTP://127.0.0.1:7545',
+      accounts: ['$PRIVATE_KEY'],
+    },
     ropsten: {
       chainId: 3,
       url: '$INFURA_API_KEY',
-      accounts: ['$PRIVATE_KEY'],
-    },
-    ganache: {
-      url: 'HTTP://127.0.0.1:7545',
       accounts: ['$PRIVATE_KEY'],
     },
   },
