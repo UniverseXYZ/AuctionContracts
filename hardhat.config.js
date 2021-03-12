@@ -25,8 +25,7 @@ module.exports = {
         },
         ropsten: {
             chainId: 3,
-            url:
-                'https://ropsten.infura.io/v3/e49086a14af041ee82be935ea2da4d12',
+            url: 'INFURA_API_KEY',
             accounts: ['private_key'],
         },
     },
