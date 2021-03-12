@@ -1,17 +1,39 @@
-### Setup dev envoirment
+### Build the project
 
-1. Open hardhat.config.js find out module.exports and inside look for networks object
+Run:
 
-2. Replace $PRIVATE_KEY in the array with your own private key
+```
+$ yarn
+$ yarn compile
+```
 
-3. If network is different than ganache we need to replace $INFURA_API_KEY with our own
+### Deploy to live networks
 
-4. In package.json look for the deploy script and replace $NETWORK
+Copy over .envrc.example to .envrc
 
-5. Run: yarn deploy
+```
+$ cp .envrc.example .envrc
+```
 
-### Verify smart contract
+Make sure to update the enviroment variables with suitable values.
 
-1. Open package.json and in etherscan-verify replace $NETWORK and $CONTRACT_ADDRESS
+Now enable the env vars using [direnv](https://direnv.net/docs/installation.html)
 
-2. In hardhat.config.js go to etherscan in module.exports and replace $ETHERSCAN_API_KEY with your own
+```
+$ eval "$(direnv hook bash)"
+$ direnv allow
+```
+
+Deploy to a network:
+
+```
+$ yarn deploy rinkeby
+```
+
+### Verify smart contract on etherscan
+
+To verify the deployed contract run:
+
+```
+$ yarn etherscan-verify rinkeby --address
+```
