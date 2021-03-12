@@ -1,6 +1,17 @@
-Setup dev envoirment
+### Setup dev envoirment
 
-1. Open hardhat.config.js and look for networks object
-2. Replace private_key in the array with your own private key (for ROPSTEN or other test networks we need to private and INFURA_API_KEY)
-3. In package.json we have a script which is used to deploy the smart contract execute: yarn deploy
-4. To change the network where contract will be deployed we need to edit the script: "deploy": "npx hardhat run scripts/deploy.js --network ganache" we need to replace "ganache" with "ropsten" or whatever we have in the networks object located in the hardhat.config.js
+1. Open hardhat.config.js find out module.exports and inside look for networks object
+
+2. Replace $PRIVATE_KEY in the array with your own private key
+
+3. If network is different than ganache we need to replace $INFURA_API_KEY with our own
+
+4. In package.json look for the deploy script and replace $NETWORK
+
+5. Run: yarn deploy
+
+### Verify smart contract
+
+1. Open package.json and in etherscan-verify replace $NETWORK and $CONTRACT_ADDRESS
+
+2. In hardhat.config.js go to etherscan in module.exports and replace $ETHERSCAN_API_KEY with your own
