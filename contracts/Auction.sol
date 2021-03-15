@@ -7,7 +7,7 @@ import "./IAuction.sol";
 contract Auction is IAuction {
     struct Slot {
         address tokenAddress;
-        address owner;
+        address depositor;
         uint256 tokenId;
     }
 
@@ -24,7 +24,7 @@ contract Auction is IAuction {
     mapping(address => _Auction[]) auctionsOf;
 
     event DEPOSIT_ERC721(
-        address sender,
+        address depositor,
         address tokenAddress,
         uint256 tokenId,
         uint256 auction,
@@ -65,11 +65,11 @@ contract Auction is IAuction {
         );
 
         _Auction storage auction = auctionsOf[auctionOwner][auctionId];
-        address sender = msg.sender;
+        address depositor = msg.sender;
 
         if (auction.supportWhitelist) {
             require(
-                auction.isWhiteListed[sender],
+                auction.isWhiteListed[depositor],
                 "You are not allowed to deposit in this auction"
             );
         }
@@ -89,12 +89,12 @@ contract Auction is IAuction {
 
         slot.tokenAddress = tokenAddress;
         slot.tokenId = tokenId;
-        slot.owner = sender;
+        slot.depositor = depositor;
 
         auction.slots.push(slot);
 
         emit DEPOSIT_ERC721(
-            sender,
+            depositor,
             tokenAddress,
             tokenId,
             auctionId,
