@@ -11,10 +11,11 @@ contract Auction is IAuction {
     }
 
     struct _Auction {
+        bool supportWhitelist;
         uint256 startBlockNumber;
         uint256 endBlockNumber;
         uint256 resetTimer;
-        address[] whitelistAddresses;
+        mapping(address => bool) isWhiteListed;
         Slot[] slots;
     }
 
@@ -53,6 +54,13 @@ contract Auction is IAuction {
         );
 
         _Auction storage auction = auctionsOf[auctionOwner][auctionId];
+
+        if (auction.supportWhitelist) {
+            require(
+                auction.isWhiteListed[msg.sender],
+                "You are not allowed to deposit in this auction"
+            );
+        }
 
         require(
             auction.slots[slotIndex].tokenId == 0 &&
