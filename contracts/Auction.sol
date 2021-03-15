@@ -16,6 +16,7 @@ contract Auction is IAuction {
         uint256 startBlockNumber;
         uint256 endBlockNumber;
         uint256 resetTimer;
+        uint256 numberOfSlots;
         mapping(address => bool) isWhiteListed;
         Slot[] slots;
     }
@@ -68,6 +69,11 @@ contract Auction is IAuction {
             auction.slots[slotIndex].tokenId == 0 &&
                 auction.slots[slotIndex].tokenAddress == address(0),
             "Slot index is already taken"
+        );
+
+        require(
+            auction.slots.length < auction.numberOfSlots,
+            "All slots are filled"
         );
 
         Slot memory slot;
