@@ -23,6 +23,15 @@ contract Auction is IAuction {
 
     mapping(address => _Auction[]) auctionsOf;
 
+    event DEPOSIT_ERC721(
+        address sender,
+        address tokenAddress,
+        uint256 tokenId,
+        uint256 auction,
+        uint256 slot,
+        uint256 time
+    );
+
     constructor() {}
 
     function createAuction(
@@ -72,7 +81,7 @@ contract Auction is IAuction {
         );
 
         require(
-            auction.slots.length < auction.numberOfSlots,
+            auction.slots.length <= auction.numberOfSlots,
             "All slots are filled"
         );
 
@@ -83,6 +92,15 @@ contract Auction is IAuction {
         slot.owner = sender;
 
         auction.slots.push(slot);
+
+        emit DEPOSIT_ERC721(
+            sender,
+            tokenAddress,
+            tokenId,
+            auctionId,
+            auction.slots.length,
+            block.timestamp
+        );
 
         return true;
     }
