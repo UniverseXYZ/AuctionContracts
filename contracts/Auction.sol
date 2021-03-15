@@ -6,8 +6,9 @@ import "./IAuction.sol";
 
 contract Auction is IAuction {
     struct Slot {
-        uint256 tokenId;
         address tokenAddress;
+        address owner;
+        uint256 tokenId;
     }
 
     struct _Auction {
@@ -54,10 +55,11 @@ contract Auction is IAuction {
         );
 
         _Auction storage auction = auctionsOf[auctionOwner][auctionId];
+        address sender = msg.sender;
 
         if (auction.supportWhitelist) {
             require(
-                auction.isWhiteListed[msg.sender],
+                auction.isWhiteListed[sender],
                 "You are not allowed to deposit in this auction"
             );
         }
@@ -72,6 +74,7 @@ contract Auction is IAuction {
 
         slot.tokenAddress = tokenAddress;
         slot.tokenId = tokenId;
+        slot.owner = sender;
 
         auction.slots.push(slot);
 
