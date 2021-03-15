@@ -7,14 +7,19 @@ import "hardhat/console.sol";
 /// @notice This interface should be implemented by the Auction contract
 /// @dev This interface should be implemented by the Auction contract
 interface IAuction {
-
     /// @notice Create an auction with initial parameters
     /// @param startBlockNumber The start of the auction
-    /// @param endBlockNumber End of the auction 
+    /// @param endBlockNumber End of the auction
     /// @param resetTimer Reset timer
     /// @param numberOfSlots The number of slots which the auction will have
     /// @param whitelistAddresses Array of addresses allowed to deposit
-    function createAuction(uint256 startBlockNumber, uint256 endBlockNumber, uint256 resetTimer, uint256 numberOfSlots, address[] memory whitelistAddresses) external;
+    function createAuction(
+        uint256 startBlockNumber,
+        uint256 endBlockNumber,
+        uint256 resetTimer,
+        uint256 numberOfSlots,
+        address[] memory whitelistAddresses
+    ) external;
 
     /// @notice Cancels an auction which has not started yet
     /// @param auctionId The auction id
@@ -22,10 +27,16 @@ interface IAuction {
 
     /// @notice Deposit ERC721 assets to the specified Auction
     /// @param auctionId The auction id
-    /// @param slotIndex Index of the slot 
+    /// @param slotIndex Index of the slot
     /// @param tokenId Id of the ERC721 token
     /// @param tokenAddress Address of the ERC721 contract
-    function depositERC721(uint256 auctionId, uint256 slotIndex, uint256 tokenId, address tokenAddress) external returns (bool);
+    function depositERC721(
+        address auctionOwner,
+        uint256 auctionId,
+        uint256 slotIndex,
+        uint256 tokenId,
+        address tokenAddress
+    ) external returns (bool);
 
     /// @notice Sends a bid to the specified auciton
     /// @param auctionId The auction id
@@ -43,5 +54,7 @@ interface IAuction {
     /// @notice Matches the bid to the highest slot
     /// @param auctionId The auction id
     /// @param amount Amount of the bid
-    function matchBidToSlot(uint256 auctionId, uint256 amount) external returns (uint256);
+    function matchBidToSlot(uint256 auctionId, uint256 amount)
+        external
+        returns (uint256);
 }
