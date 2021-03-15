@@ -2,9 +2,11 @@
 pragma solidity ^0.7.0;
 
 import "hardhat/console.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+
 import "./IAuction.sol";
 
-contract Auction is IAuction {
+contract Auction is IAuction, IERC721 {
     struct Slot {
         address tokenAddress;
         address depositor;
@@ -23,7 +25,7 @@ contract Auction is IAuction {
 
     mapping(address => _Auction[]) auctionsOf;
 
-    event DEPOSIT_ERC721(
+    event LogERC721Deposit(
         address depositor,
         address tokenAddress,
         uint256 tokenId,
@@ -93,7 +95,13 @@ contract Auction is IAuction {
 
         auction.slots.push(slot);
 
-        emit DEPOSIT_ERC721(
+        IERC721(tokenAddress).safeTransferFrom(
+            depositor,
+            address(this),
+            tokenId
+        );
+
+        emit LogERC721Deposit(
             depositor,
             tokenAddress,
             tokenId,
