@@ -6,24 +6,20 @@ import "hardhat/console.sol";
 /// @title Users bid to this contract in order to win a slot with deposited ERC721 tokens.
 /// @notice This interface should be implemented by the Auction contract
 /// @dev This interface should be implemented by the Auction contract
-interface IAuction {
+interface IAuctionFactory {
     /// @notice Create an auction with initial parameters
-    /// @param startBlockNumber The start of the auction
-    /// @param endBlockNumber End of the auction
-    /// @param resetTimer Reset timer
-    /// @param numberOfSlots The number of slots which the auction will have
-    /// @param whitelistAddresses Array of addresses allowed to deposit
+    /// @param _startBlockNumber The start of the auction
+    /// @param _endBlockNumber End of the auction
+    /// @param _resetTimer Reset timer
+    /// @param _numberOfSlots The number of slots which the auction will have
+    /// @param _supportsWhitelist Array of addresses allowed to deposit
     function createAuction(
-        uint256 startBlockNumber,
-        uint256 endBlockNumber,
-        uint256 resetTimer,
-        uint256 numberOfSlots,
-        address[] memory whitelistAddresses
-    ) external;
-
-    /// @notice Cancels an auction which has not started yet
-    /// @param auctionId The auction id
-    function cancelAuction(uint256 auctionId) external returns (bool);
+        uint256 _startBlockNumber,
+        uint256 _endBlockNumber,
+        uint256 _resetTimer,
+        uint256 _numberOfSlots,
+        bool _supportsWhitelist
+    ) external returns (uint256);
 
     /// @notice Deposit ERC721 assets to the specified Auction
     /// @param auctionId The auction id
@@ -31,7 +27,6 @@ interface IAuction {
     /// @param tokenId Id of the ERC721 token
     /// @param tokenAddress Address of the ERC721 contract
     function depositERC721(
-        address auctionOwner,
         uint256 auctionId,
         uint256 slotIndex,
         uint256 tokenId,
@@ -57,4 +52,8 @@ interface IAuction {
     function matchBidToSlot(uint256 auctionId, uint256 amount)
         external
         returns (uint256);
+
+    /// @notice Cancels an auction which has not started yet
+    /// @param auctionId The auction id
+    function cancelAuction(uint256 auctionId) external returns (bool);
 }
