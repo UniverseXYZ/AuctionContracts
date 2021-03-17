@@ -4,44 +4,15 @@ pragma experimental ABIEncoderV2;
 
 import "hardhat/console.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
+import "@openzeppelin/contracts/token/ERC721/ERC721Holder.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "./IAuctionFactory.sol";
 
-contract AuctionFactory is IAuctionFactory, IERC721Receiver {
+contract AuctionFactory is IAuctionFactory, ERC721Holder {
     using SafeMath for uint256;
 
-    struct Auction {
-        address auctionOwner;
-        uint256 startBlockNumber;
-        uint256 endBlockNumber;
-        uint256 resetTimer;
-        uint256 numberOfSlots;
-        bool supportsWhitelist;
-    }
-
-    struct Slot {
-        uint256 auctionId;
-        uint256 slotIndex;
-        DepositedERC721[] nfts;
-    }
-
-    struct DepositedERC721 {
-        address tokenAddress;
-        uint256 tokenId;
-        uint256 auctionId;
-        uint256 slotIndex;
-    }
-
-    // totalAuctions
     uint256 public totalAuctions;
-    // auctionId -> Auction
     mapping(uint256 => Auction) public auctions;
-    // auctionId -> slotIndex -> Slot
-    mapping(uint256 => mapping(uint256 => Slot)) public auctionsSlots;
-    // auctionId -> depositorAddress -> true/false
-    mapping(uint256 => mapping(address => bool)) public auctionWhitelistAddresses;
 
     event LogERC721Deposit(
         address depositor,
@@ -55,12 +26,14 @@ contract AuctionFactory is IAuctionFactory, IERC721Receiver {
     event LogAuctionCreated(
         uint256 auctionId,
         address auctionOwner,
-        uint256 numberOfSlots
+        uint256 numberOfSlots,
+        uint256 startBlockNumber,
+        uint256 endBlockNumber,
+        uint256 resetTimer,
+        bool supportsWhitelist
     );
 
-    constructor() {
-        totalAuctions = 0;
-    }
+    constructor() {}
 
     function createAuction(
         uint256 _startBlockNumber,
@@ -69,101 +42,131 @@ contract AuctionFactory is IAuctionFactory, IERC721Receiver {
         uint256 _numberOfSlots,
         bool _supportsWhitelist
     ) external override returns (uint256) {
-        uint blockNumber = block.number;
+        uint256 blockNumber = block.number;
         require(
-          blockNumber <= _startBlockNumber,
-          "Auction can not to begin before the current block"
+            blockNumber <= _startBlockNumber,
+            "Auction can not to begin before the current block"
         );
         require(
-          blockNumber < _endBlockNumber
-          "Auction can not end in the same block it is launched"
+            blockNumber < _endBlockNumber,
+            "Auction can not end in the same block it is launched"
+        );
+        uint256 _auctionId = totalAuctions.add(1);
+
+        auctions[_auctionId].auctionOwner = msg.sender;
+        auctions[_auctionId].startBlockNumber = _startBlockNumber;
+        auctions[_auctionId].endBlockNumber = _endBlockNumber;
+        auctions[_auctionId].resetTimer = _resetTimer;
+        auctions[_auctionId].numberOfSlots = _numberOfSlots;
+        auctions[_auctionId].supportsWhitelist = _supportsWhitelist;
+
+        totalAuctions = totalAuctions.add(1);
+
+        emit LogAuctionCreated(
+            _auctionId,
+            msg.sender,
+            _numberOfSlots,
+            _startBlockNumber,
+            _endBlockNumber,
+            _resetTimer,
+            _supportsWhitelist
         );
 
-        uint256 auctionId = totalAuctions.add(1);
-
-        Auction memory auction =
-            Auction({
-                auctionOwner: msg.sender,
-                startBlockNumber: _startBlockNumber,
-                endBlockNumber: _endBlockNumber,
-                resetTimer: _resetTimer,
-                numberOfSlots: _numberOfSlots,
-                supportsWhitelist: _supportsWhitelist
-            });
-
-        auctions[auctionId] = auction;
-        totalAuctions.add(1);
-
-        emit LogAuctionCreated(auctionId, msg.sender, _numberOfSlots);
-
-        return auctionId;
+        return _auctionId;
     }
 
     function depositERC721(
-        uint256 auctionId,
-        uint256 slotIndex,
-        uint256 tokenId,
-        address tokenAddress
+        uint256 _auctionId,
+        uint256 _slotIndex,
+        uint256 _tokenId,
+        address _tokenAddress
     ) external override returns (bool) {
+        address _depositor = msg.sender;
+
         require(
-            tokenAddress != address(0),
+            _tokenAddress != address(0),
             "Zero address was provided for token address"
         );
 
-        address depositor = msg.sender;
-
-        if (auctions[auctionId].supportsWhitelist) {
+        if (auctions[_auctionId].supportsWhitelist) {
             require(
-                auctionWhitelistAddresses[auctionId][depositor],
+                auctions[_auctionId].whitelistAddresses[_depositor] == true,
                 "You are not allowed to deposit in this auction"
             );
         }
 
         require(
-            auctions[auctionId].numberOfSlots > slotIndex,
+            auctions[_auctionId].numberOfSlots >= _slotIndex,
             "You are trying to deposit to a non-existing slot"
         );
 
-        DepositedERC721 memory item;
+        DepositedERC721 memory item =
+            DepositedERC721({
+                auctionId: _auctionId,
+                slotIndex: _slotIndex,
+                tokenId: _tokenId,
+                tokenAddress: _tokenAddress
+            });
 
-        item.tokenAddress = tokenAddress;
-        item.tokenId = tokenId;
-        item.auctionId = auctionId;
-        item.slotIndex = slotIndex;
+        auctions[_auctionId].slots[_slotIndex].auctionId = _auctionId;
+        auctions[_auctionId].slots[_slotIndex].slotIndex = _slotIndex;
+        auctions[_auctionId].slots[_slotIndex].nfts.push(item);
 
-        auctionsSlots[auctionId][slotIndex].auctionId = auctionId;
-        auctionsSlots[auctionId][slotIndex].slotIndex = slotIndex;
-        auctionsSlots[auctionId][slotIndex].nfts.push(item);
-
-        IERC721(tokenAddress).safeTransferFrom(
-            depositor,
+        IERC721(_tokenAddress).safeTransferFrom(
+            _depositor,
             address(this),
-            tokenId
+            _tokenId
         );
 
         emit LogERC721Deposit(
-            depositor,
-            tokenAddress,
-            tokenId,
-            auctionId,
-            slotIndex,
+            _depositor,
+            _tokenAddress,
+            _tokenId,
+            _auctionId,
+            _slotIndex,
             block.timestamp
         );
 
         return true;
     }
 
-    function bid(uint256 auctionId, uint256 amount) external override returns (bool) {}
+    function bid(uint256 auctionId, uint256 amount)
+        external
+        override
+        returns (bool)
+    {}
 
     function finalize(uint256 auctionId) external override returns (bool) {}
 
     function withdrawBid(uint256 auctionId) external override returns (bool) {}
 
-    function matchBidToSlot(uint256 auctionId, uint256 amount) external override returns (uint256) {}
+    function matchBidToSlot(uint256 auctionId, uint256 amount)
+        external
+        override
+        returns (uint256)
+    {}
 
-    function cancelAuction(uint256 auctionId) external override returns (bool) {}
+    function cancelAuction(uint256 auctionId)
+        external
+        override
+        returns (bool)
+    {}
 
-    function onERC721Received(address operator, address from, uint256 tokenId, bytes calldata data) external override returns (bytes4){
-        return IERC721Receiver(0).onERC721Received.selector;
+    function getSlot(uint256 auctionId, uint256 slotIndex)
+        external
+        view
+        override
+        returns (Slot memory)
+    {
+        return auctions[auctionId].slots[slotIndex];
+    }
+
+    function getDeposited(uint256 auctionId, uint256 slotIndex)
+        external
+        view
+        override
+        returns (DepositedERC721[] memory)
+    {
+        return auctions[auctionId].slots[slotIndex].nfts;
     }
 }

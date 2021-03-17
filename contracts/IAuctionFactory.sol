@@ -1,5 +1,6 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.7.0;
+pragma experimental ABIEncoderV2;
 
 import "hardhat/console.sol";
 
@@ -7,6 +8,31 @@ import "hardhat/console.sol";
 /// @notice This interface should be implemented by the Auction contract
 /// @dev This interface should be implemented by the Auction contract
 interface IAuctionFactory {
+
+    struct Auction {
+        address auctionOwner;
+        uint256 startBlockNumber;
+        uint256 endBlockNumber;
+        uint256 resetTimer;
+        uint256 numberOfSlots;
+        bool supportsWhitelist;
+        mapping(uint256 => Slot) slots;
+        mapping(address => bool) whitelistAddresses;
+    }
+
+    struct Slot {
+        uint256 auctionId;
+        uint256 slotIndex;
+        DepositedERC721[] nfts;
+    }
+
+    struct DepositedERC721 {
+        address tokenAddress;
+        uint256 tokenId;
+        uint256 auctionId;
+        uint256 slotIndex;
+    }
+
     /// @notice Create an auction with initial parameters
     /// @param _startBlockNumber The start of the auction
     /// @param _endBlockNumber End of the auction
@@ -56,4 +82,14 @@ interface IAuctionFactory {
     /// @notice Cancels an auction which has not started yet
     /// @param auctionId The auction id
     function cancelAuction(uint256 auctionId) external returns (bool);
+
+    /// @notice Gets slot of an auction
+    /// @param auctionId The auction id
+    /// @param slotIndex The slot index
+    function getSlot(uint256 auctionId, uint256 slotIndex) external view returns(Slot memory);
+
+    /// @notice Gets deposited erc721s for slot
+    /// @param auctionId The auction id
+    /// @param slotIndex The slot index
+    function getDeposited(uint256 auctionId, uint256 slotIndex) external view returns(DepositedERC721[] memory);
 }
