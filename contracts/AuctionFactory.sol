@@ -70,7 +70,7 @@ contract AuctionFactory is IAuctionFactory, IERC721Receiver {
         bool _supportsWhitelist
     ) external override returns (uint256) {
         uint blockNumber = block.number;
-        require(blockNumber >= _startBlockNumber);
+        require(blockNumber <= _startBlockNumber);
         require(blockNumber < _endBlockNumber);
 
         uint256 auctionId = totalAuctions.add(1);
