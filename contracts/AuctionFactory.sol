@@ -69,6 +69,10 @@ contract AuctionFactory is IAuctionFactory, IERC721Receiver {
         uint256 _numberOfSlots,
         bool _supportsWhitelist
     ) external override returns (uint256) {
+        uint blockNumber = block.number;
+        require(blockNumber >= _startBlockNumber);
+        require(blockNumber < _endBlockNumber);
+
         uint256 auctionId = totalAuctions.add(1);
 
         Auction memory auction =
@@ -113,14 +117,14 @@ contract AuctionFactory is IAuctionFactory, IERC721Receiver {
             auctions[auctionId].numberOfSlots > slotIndex,
             "You are trying to deposit to a non-existing slot"
         );
-        
+
         DepositedERC721 memory item;
 
         item.tokenAddress = tokenAddress;
         item.tokenId = tokenId;
         item.auctionId = auctionId;
         item.slotIndex = slotIndex;
-        
+
         auctionsSlots[auctionId][slotIndex].auctionId = auctionId;
         auctionsSlots[auctionId][slotIndex].slotIndex = slotIndex;
         auctionsSlots[auctionId][slotIndex].nfts.push(item);
