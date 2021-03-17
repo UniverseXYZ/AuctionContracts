@@ -76,7 +76,7 @@ contract AuctionFactory is IAuctionFactory, IERC721Receiver {
         );
         require(
           blockNumber < _endBlockNumber
-          "Auction can not end until in the same block it is launched"
+          "Auction can not end in the same block it is launched"
         );
 
         uint256 auctionId = totalAuctions.add(1);
