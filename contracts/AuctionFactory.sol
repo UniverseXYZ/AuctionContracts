@@ -144,7 +144,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
         override
         returns (bool)
     {
-        require(_auctionId < totalAuctions, "Auction do not exists");
+        require(_auctionId <= totalAuctions, "Auction do not exists");
 
         uint256 _bid = msg.value;
 
