@@ -33,6 +33,14 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
         bool supportsWhitelist
     );
 
+    event LogBidSubmitted(
+        address sender,
+        uint256 auctionId,
+        uint256 currentBid,
+        uint256 totalBid,
+        uint256 time
+    );
+
     constructor() {}
 
     function createAuction(
@@ -130,11 +138,26 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
         return true;
     }
 
-    function bid(uint256 auctionId, uint256 amount)
-        external
-        override
-        returns (bool)
-    {}
+    function bid(uint256 _auctionId) external payable override returns (bool) {
+        uint256 _bid = msg.value;
+        address _bidder = msg.sender;
+
+        require(_auctionId <= totalAuctions, "Auction does not exist");
+        require(_bid > 0, "Bid amount must be higher than 0");
+
+        Auction storage auction = auctions[_auctionId];
+        auction.balanceOf[_bidder] = auction.balanceOf[_bidder].add(_bid);
+
+        emit LogBidSubmitted(
+            _bidder,
+            _auctionId,
+            _bid,
+            auction.balanceOf[_bidder],
+            block.timestamp
+        );
+
+        return true;
+    }
 
     function finalize(uint256 auctionId) external override returns (bool) {}
 
@@ -168,5 +191,14 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
         returns (DepositedERC721[] memory)
     {
         return auctions[auctionId].slots[slotIndex].nfts;
+    }
+
+    function getBidderBalance(uint256 auctionId)
+        external
+        view
+        override
+        returns (uint256)
+    {
+        return auctions[auctionId].balanceOf[msg.sender];
     }
 }
