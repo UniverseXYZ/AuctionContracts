@@ -14,6 +14,8 @@ interface IAuctionFactory {
         uint256 endBlockNumber;
         uint256 resetTimer;
         uint256 numberOfSlots;
+        uint256 numberOfBids;
+        uint256 lowestEligibleBid;
         bool supportsWhitelist;
         address bidToken;
         mapping(uint256 => Slot) slots;
