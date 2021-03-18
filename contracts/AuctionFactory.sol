@@ -186,7 +186,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
             "No token contract address provided"
         );
         require(
-          (auctions[_auctionId].numberOfSlots > auctions[_auctionId].numberOfBids ||
+          (auctions[_auctionId].numberOfSlots >= auctions[_auctionId].numberOfBids ||
           _bid > auctions[_auctionId].lowestEligibleBid),
            "Bid amount must be greater than the lowest eligble bid when all auction slots are filled"
         );
