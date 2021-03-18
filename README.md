@@ -17,6 +17,7 @@ $ npx hardhat test
 
 ### Deploy to Ganache
 ```
+$ ./start_ganache.sh
 $ yarn deploy ganache
 ```
 
