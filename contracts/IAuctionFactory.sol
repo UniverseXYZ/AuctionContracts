@@ -8,7 +8,6 @@ import "hardhat/console.sol";
 /// @notice This interface should be implemented by the Auction contract
 /// @dev This interface should be implemented by the Auction contract
 interface IAuctionFactory {
-
     struct Auction {
         address auctionOwner;
         uint256 startBlockNumber;
@@ -18,9 +17,12 @@ interface IAuctionFactory {
         bool supportsWhitelist;
         mapping(uint256 => Slot) slots;
         mapping(address => bool) whitelistAddresses;
+        mapping(address => uint256) balanceOf;
     }
 
     struct Slot {
+        address winner;
+        uint256 highestBid;
         uint256 auctionId;
         uint256 slotIndex;
         DepositedERC721[] nfts;
@@ -62,7 +64,10 @@ interface IAuctionFactory {
     /// @notice Sends a bid to the specified auciton
     /// @param auctionId The auction id
     /// @param amount Amount of the bid
-    function bid(uint256 auctionId, uint256 amount) external returns (bool);
+    function bid(uint256 auctionId, uint256 amount)
+        external
+        payable
+        returns (bool);
 
     /// @notice Distributes all slot assets to the bidders and winning bids to the collector
     /// @param auctionId The auction id
@@ -86,10 +91,16 @@ interface IAuctionFactory {
     /// @notice Gets slot of an auction
     /// @param auctionId The auction id
     /// @param slotIndex The slot index
-    function getSlot(uint256 auctionId, uint256 slotIndex) external view returns(Slot memory);
+    function getSlot(uint256 auctionId, uint256 slotIndex)
+        external
+        view
+        returns (Slot memory);
 
     /// @notice Gets deposited erc721s for slot
     /// @param auctionId The auction id
     /// @param slotIndex The slot index
-    function getDeposited(uint256 auctionId, uint256 slotIndex) external view returns(DepositedERC721[] memory);
+    function getDeposited(uint256 auctionId, uint256 slotIndex)
+        external
+        view
+        returns (DepositedERC721[] memory);
 }

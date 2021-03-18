@@ -33,6 +33,14 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
         bool supportsWhitelist
     );
 
+    event LogBidSubmited(
+        address sender,
+        uint256 amount,
+        uint256 auctionId,
+        uint256 slotIdx,
+        uint256 time
+    );
+
     constructor() {}
 
     function createAuction(
@@ -130,11 +138,54 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
         return true;
     }
 
-    function bid(uint256 auctionId, uint256 amount)
+    function bid(uint256 _auctionId, uint256 _slotIdx)
         external
+        payable
         override
         returns (bool)
-    {}
+    {
+        require(_auctionId < totalAuctions, "Auction do not exists");
+
+        uint256 _bid = msg.value;
+
+        require(_bid > 0, "Bid amount must be higher than 0");
+
+        Auction storage auction = auctions[_auctionId];
+
+        address _sender = msg.sender;
+
+        auction.balanceOf[_sender] += _bid;
+
+        uint256 totalBid = auction.balanceOf[_sender];
+
+        Slot storage slot = auctions[_auctionId].slots[_slotIdx];
+
+        if (slot.highestBid < totalBid) {
+            slot.highestBid = totalBid;
+            slot.winner = _sender;
+        }
+
+        emit LogBidSubmited(
+            _sender,
+            _bid,
+            _auctionId,
+            _slotIdx,
+            block.timestamp
+        );
+
+        return true;
+    }
+
+    // FYI: Just for testing purposes, to check balance after deposit in single auction
+    function balanceOfAuction(uint256 auctionIdx)
+        external
+        view
+        returns (uint256)
+    {
+        address sender = msg.sender;
+
+        return auctions[auctionIdx].balanceOf[sender];
+    }
 
     function finalize(uint256 auctionId) external override returns (bool) {}
 
