@@ -59,8 +59,8 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
             "Auction cannot begin before the current block"
         );
         require(
-            blockNumber < _endBlockNumber,
-            "Auction cannot end in the same block it is launched"
+            _startBlockNumber < _endBlockNumber,
+            "Auction cannot end before it is launched"
         );
         uint256 _auctionId = totalAuctions.add(1);
 
