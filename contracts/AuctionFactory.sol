@@ -154,7 +154,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
 
         address _sender = msg.sender;
 
-        auction.balanceOf[_sender] += _bid;
+        auction.balanceOf[_sender] = auction.balanceOf[_sender].add(_bid);
 
         uint256 totalBid = auction.balanceOf[_sender];
 
