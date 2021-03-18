@@ -59,9 +59,8 @@ interface IAuctionFactory {
         address tokenAddress
     ) external returns (bool);
 
-    /// @notice Sends a bid to the specified auciton
+    /// @notice Sends a bid (eth) to the specified auciton
     /// @param auctionId The auction id
-
     function bid(uint256 auctionId) external payable returns (bool);
 
     /// @notice Distributes all slot assets to the bidders and winning bids to the collector
@@ -98,4 +97,11 @@ interface IAuctionFactory {
         external
         view
         returns (DepositedERC721[] memory);
+
+    /// @notice Gets the bidder total bids in auction
+    /// @param auctionId The auction id
+    function getBidderBalance(uint256 auctionId)
+        external
+        view
+        returns (uint256);
 }

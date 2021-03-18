@@ -33,7 +33,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
         bool supportsWhitelist
     );
 
-    event LogBidSubmited(
+    event LogBidSubmitted(
         address sender,
         uint256 auctionId,
         uint256 currentBid,
@@ -139,38 +139,24 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
     }
 
     function bid(uint256 _auctionId) external payable override returns (bool) {
-        require(_auctionId <= totalAuctions, "Auction do not exists");
-
         uint256 _bid = msg.value;
+        address _bidder = msg.sender;
 
+        require(_auctionId <= totalAuctions, "Auction does not exist");
         require(_bid > 0, "Bid amount must be higher than 0");
 
         Auction storage auction = auctions[_auctionId];
+        auction.balanceOf[_bidder] = auction.balanceOf[_bidder].add(_bid);
 
-        address _sender = msg.sender;
-
-        auction.balanceOf[_sender] = auction.balanceOf[_sender].add(_bid);
-
-        emit LogBidSubmited(
-            _sender,
+        emit LogBidSubmitted(
+            _bidder,
             _auctionId,
             _bid,
-            auction.balanceOf[_sender],
+            auction.balanceOf[_bidder],
             block.timestamp
         );
 
         return true;
-    }
-
-    // FYI: Just for testing purposes, to check balance after deposit in single auction
-    function balanceOfAuction(uint256 auctionIdx)
-        external
-        view
-        returns (uint256)
-    {
-        address sender = msg.sender;
-
-        return auctions[auctionIdx].balanceOf[sender];
     }
 
     function finalize(uint256 auctionId) external override returns (bool) {}
@@ -205,5 +191,14 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
         returns (DepositedERC721[] memory)
     {
         return auctions[auctionId].slots[slotIndex].nfts;
+    }
+
+    function getBidderBalance(uint256 auctionId)
+        external
+        view
+        override
+        returns (uint256)
+    {
+        return auctions[auctionId].balanceOf[msg.sender];
     }
 }
