@@ -9,6 +9,12 @@ $ source .envrc
 $ yarn compile
 ```
 
+### Run Tests
+```
+$ npx hardhat test
+```
+
+
 ### Deploy to Ganache
 ```
 $ yarn deploy ganache

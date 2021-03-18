@@ -39,6 +39,7 @@ describe("AuctionFactory", () => {
   it("Launch an Auction", async function() {
     const {auctionFactory, auction} = await loadFixture(launchAuction);
     auctionData = await auctionFactory.auctions(1)
+
     expect(auctionData['startBlockNumber'].toString()).to.equal("2")
     expect(auctionData['endBlockNumber'].toString()).to.equal("12")
   });
