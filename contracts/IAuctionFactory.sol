@@ -21,8 +21,6 @@ interface IAuctionFactory {
     }
 
     struct Slot {
-        address winner;
-        uint256 highestBid;
         uint256 auctionId;
         uint256 slotIndex;
         DepositedERC721[] nfts;
@@ -63,11 +61,8 @@ interface IAuctionFactory {
 
     /// @notice Sends a bid to the specified auciton
     /// @param auctionId The auction id
-    /// @param amount Amount of the bid
-    function bid(uint256 auctionId, uint256 amount)
-        external
-        payable
-        returns (bool);
+
+    function bid(uint256 auctionId) external payable returns (bool);
 
     /// @notice Distributes all slot assets to the bidders and winning bids to the collector
     /// @param auctionId The auction id

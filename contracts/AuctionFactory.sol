@@ -35,9 +35,9 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
 
     event LogBidSubmited(
         address sender,
-        uint256 amount,
         uint256 auctionId,
-        uint256 slotIdx,
+        uint256 currentBid,
+        uint256 totalBid,
         uint256 time
     );
 
@@ -138,12 +138,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
         return true;
     }
 
-    function bid(uint256 _auctionId, uint256 _slotIdx)
-        external
-        payable
-        override
-        returns (bool)
-    {
+    function bid(uint256 _auctionId) external payable override returns (bool) {
         require(_auctionId <= totalAuctions, "Auction do not exists");
 
         uint256 _bid = msg.value;
@@ -156,20 +151,11 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
 
         auction.balanceOf[_sender] = auction.balanceOf[_sender].add(_bid);
 
-        uint256 totalBid = auction.balanceOf[_sender];
-
-        Slot storage slot = auctions[_auctionId].slots[_slotIdx];
-
-        if (slot.highestBid < totalBid) {
-            slot.highestBid = totalBid;
-            slot.winner = _sender;
-        }
-
         emit LogBidSubmited(
             _sender,
-            _bid,
             _auctionId,
-            _slotIdx,
+            _bid,
+            auction.balanceOf[_sender],
             block.timestamp
         );
 
