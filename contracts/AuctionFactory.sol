@@ -198,9 +198,14 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
         Auction storage auction = auctions[_auctionId];
         if(_bid < auction.lowestEligibleBid){
             auction.lowestEligibleBid = _bid;
-          }
+        }
+        if(auctions[_auctionId].numberOfSlots <= auctions[_auctionId].numberOfBids){
+          auction.lowestEligibleBid = _bid;
+        }
         auction.balanceOf[_bidder] = auction.balanceOf[_bidder].add(_bid);
         auction.numberOfBids = auction.numberOfBids.add(1);
+
+        bidToken.transferFrom(_bidder, address(this), _bid);
 
         emit LogBidSubmitted(
             _bidder,
