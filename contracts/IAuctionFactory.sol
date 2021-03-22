@@ -24,7 +24,10 @@ interface IAuctionFactory {
     struct Slot {
         uint256 auctionId;
         uint256 slotIndex;
-        DepositedERC721[] nfts;
+        uint256 totalDepositedNfts;
+        uint256 totalWithdrawnNfts;
+        mapping (uint256 => DepositedERC721) depositedNfts;
+    
     }
 
     struct DepositedERC721 {
@@ -61,7 +64,7 @@ interface IAuctionFactory {
         uint256 slotIndex,
         uint256 tokenId,
         address tokenAddress
-    ) external returns (bool);
+    ) external returns (uint256);
 
     /// @notice Sends a bid (ETH) to the specified auciton
     /// @param auctionId The auction id
@@ -79,6 +82,12 @@ interface IAuctionFactory {
     /// @param auctionId The auction id
     function withdrawBid(uint256 auctionId) external returns (bool);
 
+    /// @notice Withdraws the deposited ERC721 if it hasn't been awarded
+    /// @param auctionId The auction id
+    /// @param slotIndex The slot index
+    /// @param nftSlotIndex The index of the NFT inside the particular slot - it is returned on depositERC721() call
+    function withdrawDepositedERC721(uint256 auctionId, uint256 slotIndex, uint256 nftSlotIndex) external returns (bool);
+
     /// @notice Matches the bid to the highest slot
     /// @param auctionId The auction id
     /// @param amount Amount of the bid
@@ -90,18 +99,10 @@ interface IAuctionFactory {
     /// @param auctionId The auction id
     function cancelAuction(uint256 auctionId) external returns (bool);
 
-    /// @notice Gets slot of an auction
-    /// @param auctionId The auction id
-    /// @param slotIndex The slot index
-    function getSlot(uint256 auctionId, uint256 slotIndex)
-        external
-        view
-        returns (Slot memory);
-
     /// @notice Gets deposited erc721s for slot
     /// @param auctionId The auction id
     /// @param slotIndex The slot index
-    function getDeposited(uint256 auctionId, uint256 slotIndex)
+    function getDepositedNftsInSlot(uint256 auctionId, uint256 slotIndex)
         external
         view
         returns (DepositedERC721[] memory);
