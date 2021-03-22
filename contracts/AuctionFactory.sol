@@ -69,7 +69,6 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
         auctions[_auctionId].endBlockNumber = _endBlockNumber;
         auctions[_auctionId].resetTimer = _resetTimer;
         auctions[_auctionId].numberOfSlots = _numberOfSlots;
-        auctions[_auctionId].numberOfBids = 0;
         auctions[_auctionId].lowestEligibleBid = uint256(-1);
         auctions[_auctionId].supportsWhitelist = _supportsWhitelist;
         auctions[_auctionId].bidToken = _bidToken;
@@ -222,16 +221,18 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
 
     function withdrawBid(uint256 auctionId) external override returns (bool) {
       Auction storage auction = auctions[auctionId];
-      uint256 amount = auction.balanceOf[msg.sender];
+      address _sender = msg.sender;
+      uint256 _amount = auction.balanceOf[_sender];
+
       require(
         auction.numberOfBids > auction.numberOfSlots,
         "All slots must have bids before a withdrawl can occur"
       );
-      require(amount < auction.lowestEligibleBid, "Bid is still eligbile");
+      require(_amount < auction.lowestEligibleBid, "Bid is still eligbile");
 
-      auction.balanceOf[msg.sender] = 0;
+      auction.balanceOf[_sender] = 0;
       IERC20 bidToken = IERC20(auction.bidToken);
-      bidToken.transfer(msg.sender, amount);
+      bidToken.transfer(_sender, _amount);
       return true;
     }
 
