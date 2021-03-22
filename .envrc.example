@@ -1,5 +1,5 @@
 # Used to deploy to testnets
-export PRIVATE_KEY=''
+export PRIVATE_KEY='0x5cb1395e3939abe159f7c96e4479c6c4cb18bad6d0b6d006ef71b1c670efdce5'
 
 # Used to deploy to testnets
 export INFURA_API_KEY=''

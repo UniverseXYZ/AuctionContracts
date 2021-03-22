@@ -4,15 +4,31 @@ Run:
 
 ```
 $ yarn
+$ cp .envrc.example .envrc
+$ source .envrc
 $ yarn compile
 ```
 
+### Run Tests
+```
+$ npx hardhat test
+```
+
+
+### Deploy to Ganache
+```
+$ ./start_ganache.sh
+$ yarn deploy ganache
+```
+
+
 ### Deploy to live networks
 
-Copy over .envrc.example to .envrc
+Edit .envrc.example then copy it to .envrc
 
 ```
 $ cp .envrc.example .envrc
+$ source .envrc
 ```
 
 Make sure to update the enviroment variables with suitable values.

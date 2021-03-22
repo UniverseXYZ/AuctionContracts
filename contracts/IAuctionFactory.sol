@@ -8,7 +8,6 @@ import "hardhat/console.sol";
 /// @notice This interface should be implemented by the Auction contract
 /// @dev This interface should be implemented by the Auction contract
 interface IAuctionFactory {
-
     struct Auction {
         address auctionOwner;
         uint256 startBlockNumber;
@@ -16,8 +15,10 @@ interface IAuctionFactory {
         uint256 resetTimer;
         uint256 numberOfSlots;
         bool supportsWhitelist;
+        address bidToken;
         mapping(uint256 => Slot) slots;
         mapping(address => bool) whitelistAddresses;
+        mapping(address => uint256) balanceOf;
     }
 
     struct Slot {
@@ -31,6 +32,7 @@ interface IAuctionFactory {
         uint256 tokenId;
         uint256 auctionId;
         uint256 slotIndex;
+        address depositor;
     }
 
     /// @notice Create an auction with initial parameters
@@ -39,12 +41,14 @@ interface IAuctionFactory {
     /// @param _resetTimer Reset timer
     /// @param _numberOfSlots The number of slots which the auction will have
     /// @param _supportsWhitelist Array of addresses allowed to deposit
+    /// @param _bidToken Address of the token used for bidding - can be address(0)
     function createAuction(
         uint256 _startBlockNumber,
         uint256 _endBlockNumber,
         uint256 _resetTimer,
         uint256 _numberOfSlots,
-        bool _supportsWhitelist
+        bool _supportsWhitelist,
+        address _bidToken
     ) external returns (uint256);
 
     /// @notice Deposit ERC721 assets to the specified Auction
@@ -59,9 +63,12 @@ interface IAuctionFactory {
         address tokenAddress
     ) external returns (bool);
 
-    /// @notice Sends a bid to the specified auciton
+    /// @notice Sends a bid (ETH) to the specified auciton
     /// @param auctionId The auction id
-    /// @param amount Amount of the bid
+    function bid(uint256 auctionId) external payable returns (bool);
+
+    /// @notice Sends a bid (ERC20) to the specified auciton
+    /// @param auctionId The auction id
     function bid(uint256 auctionId, uint256 amount) external returns (bool);
 
     /// @notice Distributes all slot assets to the bidders and winning bids to the collector
@@ -86,10 +93,24 @@ interface IAuctionFactory {
     /// @notice Gets slot of an auction
     /// @param auctionId The auction id
     /// @param slotIndex The slot index
-    function getSlot(uint256 auctionId, uint256 slotIndex) external view returns(Slot memory);
+    function getSlot(uint256 auctionId, uint256 slotIndex)
+        external
+        view
+        returns (Slot memory);
 
     /// @notice Gets deposited erc721s for slot
     /// @param auctionId The auction id
     /// @param slotIndex The slot index
-    function getDeposited(uint256 auctionId, uint256 slotIndex) external view returns(DepositedERC721[] memory);
+    function getDeposited(uint256 auctionId, uint256 slotIndex)
+        external
+        view
+        returns (DepositedERC721[] memory);
+
+    /// @notice Gets the bidder total bids in auction
+    /// @param auctionId The auction id
+    /// @param bidder The address of the bidder
+    function getBidderBalance(uint256 auctionId, address bidder)
+        external
+        view
+        returns (uint256);
 }

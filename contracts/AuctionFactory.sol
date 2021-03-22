@@ -4,6 +4,7 @@ pragma experimental ABIEncoderV2;
 
 import "hardhat/console.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721Holder.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "./IAuctionFactory.sol";
@@ -30,7 +31,16 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
         uint256 startBlockNumber,
         uint256 endBlockNumber,
         uint256 resetTimer,
-        bool supportsWhitelist
+        bool supportsWhitelist,
+        uint256 time
+    );
+
+    event LogBidSubmitted(
+        address sender,
+        uint256 auctionId,
+        uint256 currentBid,
+        uint256 totalBid,
+        uint256 time
     );
 
     constructor() {}
@@ -40,16 +50,17 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
         uint256 _endBlockNumber,
         uint256 _resetTimer,
         uint256 _numberOfSlots,
-        bool _supportsWhitelist
+        bool _supportsWhitelist,
+        address _bidToken
     ) external override returns (uint256) {
         uint256 blockNumber = block.number;
         require(
             blockNumber <= _startBlockNumber,
-            "Auction can not to begin before the current block"
+            "Auction cannot begin before the current block"
         );
         require(
-            blockNumber < _endBlockNumber,
-            "Auction can not end in the same block it is launched"
+            _startBlockNumber < _endBlockNumber,
+            "Auction cannot end before it is launched"
         );
         uint256 _auctionId = totalAuctions.add(1);
 
@@ -59,6 +70,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
         auctions[_auctionId].resetTimer = _resetTimer;
         auctions[_auctionId].numberOfSlots = _numberOfSlots;
         auctions[_auctionId].supportsWhitelist = _supportsWhitelist;
+        auctions[_auctionId].bidToken = _bidToken;
 
         totalAuctions = totalAuctions.add(1);
 
@@ -69,7 +81,8 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
             _startBlockNumber,
             _endBlockNumber,
             _resetTimer,
-            _supportsWhitelist
+            _supportsWhitelist,
+            block.timestamp
         );
 
         return _auctionId;
@@ -105,7 +118,8 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
                 auctionId: _auctionId,
                 slotIndex: _slotIndex,
                 tokenId: _tokenId,
-                tokenAddress: _tokenAddress
+                tokenAddress: _tokenAddress,
+                depositor: _depositor
             });
 
         auctions[_auctionId].slots[_slotIndex].auctionId = _auctionId;
@@ -130,11 +144,65 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
         return true;
     }
 
-    function bid(uint256 auctionId, uint256 amount)
+    function bid(uint256 _auctionId) external payable override returns (bool) {
+        uint256 _bid = msg.value;
+        address _bidder = msg.sender;
+
+        require(_auctionId <= totalAuctions, "Auction does not exist");
+        require(_bid > 0, "Bid amount must be higher than 0");
+        require(
+            auctions[_auctionId].bidToken == address(0),
+            "This auction does not accept ETH for bidding"
+        );
+
+        Auction storage auction = auctions[_auctionId];
+        auction.balanceOf[_bidder] = auction.balanceOf[_bidder].add(_bid);
+
+        emit LogBidSubmitted(
+            _bidder,
+            _auctionId,
+            _bid,
+            auction.balanceOf[_bidder],
+            block.timestamp
+        );
+
+        return true;
+    }
+
+    function bid(uint256 _auctionId, uint256 _amount)
         external
         override
         returns (bool)
-    {}
+    {
+        uint256 _bid = _amount;
+        address _bidder = msg.sender;
+
+        require(_auctionId <= totalAuctions, "Auction does not exist");
+        require(_bid > 0, "Bid amount must be higher than 0");
+        require(
+            auctions[_auctionId].bidToken != address(0),
+            "No token contract address provided"
+        );
+
+        IERC20 bidToken = IERC20(auctions[_auctionId].bidToken);
+        uint256 allowance = bidToken.allowance(msg.sender, address(this));
+        require(allowance >= _bid, "Token allowance too small");
+
+        Auction storage auction = auctions[_auctionId];
+        auction.balanceOf[_bidder] = auction.balanceOf[_bidder].add(_bid);
+
+        bidToken.transferFrom(_bidder, address(this), _bid);
+
+        emit LogBidSubmitted(
+            _bidder,
+            _auctionId,
+            _bid,
+            auction.balanceOf[_bidder],
+            block.timestamp
+        );
+
+        return true;
+    }
 
     function finalize(uint256 auctionId) external override returns (bool) {}
 
@@ -168,5 +236,14 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
         returns (DepositedERC721[] memory)
     {
         return auctions[auctionId].slots[slotIndex].nfts;
+    }
+
+    function getBidderBalance(uint256 auctionId, address bidder)
+        external
+        view
+        override
+        returns (uint256)
+    {
+        return auctions[auctionId].balanceOf[bidder];
     }
 }
