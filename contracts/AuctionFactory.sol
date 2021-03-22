@@ -43,6 +43,13 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
         uint256 time
     );
 
+    event LogWithdraw(
+        address recipient,
+        uint256 auction,
+        uint256 amount,
+        uint256 time
+    );
+
     constructor() {}
 
     function createAuction(
@@ -206,7 +213,29 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
 
     function finalize(uint256 auctionId) external override returns (bool) {}
 
-    function withdrawBid(uint256 auctionId) external override returns (bool) {}
+    function withdrawBid(uint256 _auctionId) external override returns (bool) {
+        require(_auctionId <= totalAuctions, "Auction do not exists");
+
+        address payable _recipient = msg.sender;
+        Auction storage auction = auctions[_auctionId];
+
+        require(auction.balanceOf[_recipient] > 0, "You have 0 deposited");
+
+        uint256 amountToWithdraw = auction.balanceOf[_recipient];
+
+        auction.balanceOf[_recipient] = 0;
+
+        _recipient.transfer(amountToWithdraw);
+
+        emit LogWithdraw(
+            _recipient,
+            _auctionId,
+            amountToWithdraw,
+            block.timestamp
+        );
+
+        return true;
+    }
 
     function matchBidToSlot(uint256 auctionId, uint256 amount)
         external
