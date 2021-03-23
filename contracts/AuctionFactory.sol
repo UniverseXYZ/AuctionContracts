@@ -414,16 +414,18 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
     }
 
     function extendAuction(uint256 auctionId) internal returns (bool) {
+        Auction storage auction = auctions[auctionId];
+
         require(
-            block.number < auctions[auctionId].endBlockNumber,
+            block.number < auction.endBlockNumber,
             "Cannot extend the auction if it has already ended!"
         );
-        uint256 resetTimer = auctions[auctionId].resetTimer;
-        auctions[auctionId].endBlockNumber = auctions[auctionId]
+        uint256 resetTimer = auction.resetTimer;
+        auctions[auctionId].endBlockNumber = auction
             .endBlockNumber
             .add(resetTimer);
         
-        emit LogAuctionExtended(auctionId, auctions[auctionId].endBlockNumber, block.timestamp);
+        emit LogAuctionExtended(auctionId, auction.endBlockNumber, block.timestamp);
 
         return true;
     }
