@@ -11,6 +11,8 @@ describe("AuctionFactory", () => {
     const auctionFactory = await AuctionFactory.deploy();
     const mockNFT = await MockNFT.deploy();
     const mockToken = await MockToken.deploy(1000);
+    const [owner, addr1] = await ethers.getSigners();
+    await mockToken.transfer(addr1.address, 600);
 
     return {auctionFactory, mockNFT, mockToken};
   }
@@ -45,7 +47,20 @@ describe("AuctionFactory", () => {
 
     return {auctionFactory, mockNFT, mockToken};
   }
+  async function bid(){
+    const {auctionFactory, mockNFT, mockToken} = await loadFixture(depositERC721);
+    const [owner, addr1] = await ethers.getSigners();
 
+    const balanceOwner = await mockToken.balanceOf(owner.address)
+    await mockToken.approve(auctionFactory.address, balanceOwner.toString())
+    await auctionFactory.functions['bid(uint256,uint256)'](1, balanceOwner.toString())
+
+    const balanceAddr1 = await mockToken.balanceOf(addr1.address)
+    await mockToken.connect(addr1).approve(auctionFactory.address, balanceAddr1.toString())
+    await auctionFactory.connect(addr1).functions['bid(uint256,uint256)'](1, balanceAddr1.toString())
+
+    return {auctionFactory, mockNFT, mockToken};
+  }
 
   it("Deploy the AuctionFactory and MockNFT", async function() {
     const {auctionFactory, mockNFT, mockToken} = await loadFixture(deployContract);
@@ -65,14 +80,25 @@ describe("AuctionFactory", () => {
     expect(deposited[0]['tokenId'].toString()).to.equal("1")
   });
   it("Bid on Auction", async function() {
-    const {auctionFactory, mockNFT, mockToken} = await loadFixture(depositERC721);
+    var {auctionFactory, mockNFT, mockToken} = await loadFixture(depositERC721);
     const [owner] = await ethers.getSigners();
     const balance = await mockToken.balanceOf(owner.address)
-    await mockToken.approve(auctionFactory.address, balance.toString())
-    await auctionFactory.functions['bid(uint256,uint256)'](1, balance.toString())
+
+    var {auctionFactory, mockNFT, mockToken} = await loadFixture(bid);
+    const newBalance = await mockToken.balanceOf(owner.address)
 
     const bidderBalance = await auctionFactory.getBidderBalance(1, owner.address)
     expect(bidderBalance).to.equal(balance.toString())
+    expect("0").to.equal(newBalance)
+  });
+  it("Withdraw Bid", async function() {
+    var {auctionFactory, mockNFT, mockToken} = await loadFixture(bid);
+    const auction = await auctionFactory.auctions(1);
+    const [owner] = await ethers.getSigners();
+    const bidderBalance = await auctionFactory.getBidderBalance(1, owner.address)
+    await auctionFactory.withdrawBid(1);
+    const balance = await mockToken.balanceOf(owner.address)
+    expect(bidderBalance.toString()).to.equal(bidderBalance);
   });
 
 

@@ -80,6 +80,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
         auctions[_auctionId].endBlockNumber = _endBlockNumber;
         auctions[_auctionId].resetTimer = _resetTimer;
         auctions[_auctionId].numberOfSlots = _numberOfSlots;
+        auctions[_auctionId].lowestEligibleBid = uint256(-1);
         auctions[_auctionId].supportsWhitelist = _supportsWhitelist;
         auctions[_auctionId].bidToken = _bidToken;
 
@@ -201,13 +202,25 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
             auctions[_auctionId].bidToken != address(0),
             "No token contract address provided"
         );
+        require(
+          (auctions[_auctionId].numberOfSlots >= auctions[_auctionId].numberOfBids ||
+          _bid > auctions[_auctionId].lowestEligibleBid),
+           "Bid amount must be greater than the lowest eligble bid when all auction slots are filled"
+        );
 
         IERC20 bidToken = IERC20(auctions[_auctionId].bidToken);
         uint256 allowance = bidToken.allowance(msg.sender, address(this));
         require(allowance >= _bid, "Token allowance too small");
 
         Auction storage auction = auctions[_auctionId];
+        if(_bid < auction.lowestEligibleBid){
+            auction.lowestEligibleBid = _bid;
+        }
+        if(auctions[_auctionId].numberOfSlots <= auctions[_auctionId].numberOfBids){
+          auction.lowestEligibleBid = _bid;
+        }
         auction.balanceOf[_bidder] = auction.balanceOf[_bidder].add(_bid);
+        auction.numberOfBids = auction.numberOfBids.add(1);
 
         bidToken.transferFrom(_bidder, address(this), _bid);
 
@@ -224,7 +237,22 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
 
     function finalize(uint256 auctionId) external override returns (bool) {}
 
-    function withdrawBid(uint256 auctionId) external override returns (bool) {}
+    function withdrawBid(uint256 auctionId) external override returns (bool) {
+      Auction storage auction = auctions[auctionId];
+      address _sender = msg.sender;
+      uint256 _amount = auction.balanceOf[_sender];
+
+      require(
+        auction.numberOfBids > auction.numberOfSlots,
+        "All slots must have bids before a withdrawl can occur"
+      );
+      require(_amount < auction.lowestEligibleBid, "Bid is still eligbile");
+
+      auction.balanceOf[_sender] = 0;
+      IERC20 bidToken = IERC20(auction.bidToken);
+      bidToken.transfer(_sender, _amount);
+      return true;
+    }
 
     function withdrawDepositedERC721(
         uint256 auctionId,
