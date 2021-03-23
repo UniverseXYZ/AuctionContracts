@@ -18,6 +18,8 @@ interface IAuctionFactory {
         uint256 lowestEligibleBid;
         bool supportsWhitelist;
         address bidToken;
+        uint256 filledSlots;
+        mapping(uint256 => bool) isFilledSlot;
         mapping(uint256 => Slot) slots;
         mapping(address => bool) whitelistAddresses;
         mapping(address => uint256) balanceOf;

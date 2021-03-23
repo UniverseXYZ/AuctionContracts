@@ -61,6 +61,8 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
         uint256 time
     );
 
+    event LogAuctionCanceled(uint256 auctionId, uint256 time);
+
     constructor() {}
 
     function createAuction(
@@ -153,6 +155,13 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
 
         auctions[_auctionId].slots[_slotIndex]
             .totalDepositedNfts = _nftSlotIndex;
+
+        if (auctions[_auctionId].isFilledSlot[_slotIndex] == false) {
+            auctions[_auctionId].filledSlots = auctions[_auctionId]
+                .filledSlots
+                .add(1);
+            auctions[_auctionId].isFilledSlot[_slotIndex] = true;
+        }
 
         IERC721(_tokenAddress).safeTransferFrom(
             _depositor,
@@ -366,11 +375,34 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
         return true;
     }
 
-    function cancelAuction(uint256 auctionId)
+    function cancelAuction(uint256 _auctionId)
         external
         override
         returns (bool)
-    {}
+    {
+        require(
+            _auctionId > 0 && _auctionId <= totalAuctions,
+            "Invalid auction"
+        );
+
+        Auction storage auction = auctions[_auctionId];
+
+        require(
+            msg.sender == auction.auctionOwner,
+            "Only auction owner can cancel the auction"
+        );
+
+        require(block.number < auction.startBlockNumber, "Auction is started");
+
+        require(
+            auction.filledSlots < auction.numberOfSlots,
+            "All slots have been filled"
+        );
+
+        LogAuctionCanceled(_auctionId, block.timestamp);
+
+        return true;
+    }
 
     function getDepositedNftsInSlot(uint256 auctionId, uint256 slotIndex)
         external
