@@ -181,11 +181,28 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
         require(_bid > 0, "Bid amount must be higher than 0");
         require(
             auctions[_auctionId].bidToken == address(0),
-            "This auction does not accept ETH for bidding"
+            "No token contract address provided"
+        );
+        require(
+            (auctions[_auctionId].numberOfSlots >=
+                auctions[_auctionId].numberOfBids ||
+                _bid > auctions[_auctionId].lowestEligibleBid),
+            "Bid amount must be greater than the lowest eligble bid when all auction slots are filled"
         );
 
         Auction storage auction = auctions[_auctionId];
+
+        if (_bid < auction.lowestEligibleBid) {
+            auction.lowestEligibleBid = _bid;
+        }
+        if (
+            auctions[_auctionId].numberOfSlots <=
+            auctions[_auctionId].numberOfBids
+        ) {
+            auction.lowestEligibleBid = _bid;
+        }
         auction.balanceOf[_bidder] = auction.balanceOf[_bidder].add(_bid);
+        auction.numberOfBids = auction.numberOfBids.add(1);
 
         emit LogBidSubmitted(
             _bidder,
@@ -265,6 +282,9 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
         auction.balanceOf[_sender] = 0;
         IERC20 bidToken = IERC20(auction.bidToken);
         bidToken.transfer(_sender, _amount);
+
+        emit LogWithdraw(_sender, auctionId, _amount, block.timestamp);
+
         return true;
     }
 
