@@ -399,6 +399,8 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
             "All slots have been filled"
         );
 
+        auction.isCanceled = true;
+
         LogAuctionCanceled(_auctionId, block.timestamp);
 
         return true;
