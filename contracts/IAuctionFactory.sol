@@ -81,11 +81,11 @@ interface IAuctionFactory {
 
     /// @notice Withdraws the bid amount from an auction (if slot is non-winning)
     /// @param auctionId The auction id
-    function withdrawBid(uint256 auctionId) external returns (bool);
+    function withdrawERC20Bid(uint256 auctionId) external returns (bool);
 
     /// @notice Withdraws the eth amount from an auction (if slot is non-winning)
     /// @param auctionId The auction id
-    function withdrawEth(uint256 auctionId) external returns (bool);
+    function withdrawEthBid(uint256 auctionId) external returns (bool);
 
     /// @notice Withdraws the deposited ERC721 if it hasn't been awarded
     /// @param auctionId The auction id
@@ -96,13 +96,6 @@ interface IAuctionFactory {
         uint256 slotIndex,
         uint256 nftSlotIndex
     ) external returns (bool);
-
-    /// @notice Matches the bid to the highest slot
-    /// @param auctionId The auction id
-    /// @param amount Amount of the bid
-    function matchBidToSlot(uint256 auctionId, uint256 amount)
-        external
-        returns (uint256);
 
     /// @notice Cancels an auction which has not started yet
     /// @param auctionId The auction id

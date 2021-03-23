@@ -54,7 +54,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
         uint256 time
     );
 
-    event LogWithdraw(
+    event LogBidWithdrawal(
         address recipient,
         uint256 auction,
         uint256 amount,
@@ -268,7 +268,13 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
 
     function finalize(uint256 auctionId) external override returns (bool) {}
 
-    function withdrawBid(uint256 auctionId) external override returns (bool) {
+    function withdrawERC20Bid(uint256 auctionId)
+        external
+        override
+        returns (bool)
+    {
+        require(auctionId <= totalAuctions, "Auction do not exists");
+
         Auction storage auction = auctions[auctionId];
         address _sender = msg.sender;
         uint256 _amount = auction.balanceOf[_sender];
@@ -283,12 +289,16 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
         IERC20 bidToken = IERC20(auction.bidToken);
         bidToken.transfer(_sender, _amount);
 
-        emit LogWithdraw(_sender, auctionId, _amount, block.timestamp);
+        emit LogBidWithdrawal(_sender, auctionId, _amount, block.timestamp);
 
         return true;
     }
 
-    function withdrawEth(uint256 _auctionId) external override returns (bool) {
+    function withdrawEthBid(uint256 _auctionId)
+        external
+        override
+        returns (bool)
+    {
         require(_auctionId <= totalAuctions, "Auction do not exists");
 
         Auction storage auction = auctions[_auctionId];
@@ -307,7 +317,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
 
         _recipient.transfer(_amount);
 
-        emit LogWithdraw(_recipient, _auctionId, _amount, block.timestamp);
+        emit LogBidWithdrawal(_recipient, _auctionId, _amount, block.timestamp);
 
         return true;
     }
@@ -355,12 +365,6 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
 
         return true;
     }
-
-    function matchBidToSlot(uint256 auctionId, uint256 amount)
-        external
-        override
-        returns (uint256)
-    {}
 
     function cancelAuction(uint256 auctionId)
         external
