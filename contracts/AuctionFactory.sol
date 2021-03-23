@@ -21,6 +21,17 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
         uint256 tokenId,
         uint256 auctionId,
         uint256 slotIndex,
+        uint256 nftSlotIndex,
+        uint256 time
+    );
+
+    event LogERC721Withdrawal(
+        address depositor,
+        address tokenAddress,
+        uint256 tokenId,
+        uint256 auctionId,
+        uint256 slotIndex,
+        uint256 nftSlotIndex,
         uint256 time
     );
 
@@ -93,7 +104,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
         uint256 _slotIndex,
         uint256 _tokenId,
         address _tokenAddress
-    ) external override returns (bool) {
+    ) external override returns (uint256) {
         address _depositor = msg.sender;
 
         require(
@@ -124,7 +135,13 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
 
         auctions[_auctionId].slots[_slotIndex].auctionId = _auctionId;
         auctions[_auctionId].slots[_slotIndex].slotIndex = _slotIndex;
-        auctions[_auctionId].slots[_slotIndex].nfts.push(item);
+
+        uint256 _nftSlotIndex =
+            auctions[_auctionId].slots[_slotIndex].totalDepositedNfts.add(1);
+
+        auctions[_auctionId].slots[_slotIndex].depositedNfts[_nftSlotIndex] = item;
+
+        auctions[_auctionId].slots[_slotIndex].totalDepositedNfts = _nftSlotIndex;
 
         IERC721(_tokenAddress).safeTransferFrom(
             _depositor,
@@ -138,10 +155,11 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
             _tokenId,
             _auctionId,
             _slotIndex,
+            _nftSlotIndex,
             block.timestamp
         );
 
-        return true;
+        return _nftSlotIndex;
     }
 
     function bid(uint256 _auctionId) external payable override returns (bool) {
@@ -208,6 +226,50 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
 
     function withdrawBid(uint256 auctionId) external override returns (bool) {}
 
+    function withdrawDepositedERC721(
+        uint256 auctionId,
+        uint256 slotIndex,
+        uint256 nftSlotIndex
+    ) external override returns (bool) {
+        uint256 totalWithdrawnNftsInSlot =
+            auctions[auctionId].slots[slotIndex].totalWithdrawnNfts;
+        require(
+            block.number < auctions[auctionId].startBlockNumber,
+            "You cannot withdraw if the auction has already started"
+        );
+
+        DepositedERC721 memory nftForWithdrawal =
+            auctions[auctionId].slots[slotIndex].depositedNfts[nftSlotIndex];
+
+        require(
+            msg.sender == nftForWithdrawal.depositor,
+            "Only a depositor can withdraw"
+        );
+
+        auctions[auctionId].slots[slotIndex]
+            .totalWithdrawnNfts = totalWithdrawnNftsInSlot.add(1);
+
+        delete auctions[auctionId].slots[slotIndex].depositedNfts[nftSlotIndex];
+
+        IERC721(nftForWithdrawal.tokenAddress).safeTransferFrom(
+            address(this),
+            nftForWithdrawal.depositor,
+            nftForWithdrawal.tokenId
+        );
+
+        emit LogERC721Withdrawal(
+            msg.sender,
+            nftForWithdrawal.tokenAddress,
+            nftForWithdrawal.tokenId,
+            auctionId,
+            slotIndex,
+            nftSlotIndex,
+            block.timestamp
+        );
+
+        return true;
+    }
+
     function matchBidToSlot(uint256 auctionId, uint256 amount)
         external
         override
@@ -220,22 +282,21 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
         returns (bool)
     {}
 
-    function getSlot(uint256 auctionId, uint256 slotIndex)
-        external
-        view
-        override
-        returns (Slot memory)
-    {
-        return auctions[auctionId].slots[slotIndex];
-    }
-
-    function getDeposited(uint256 auctionId, uint256 slotIndex)
+    function getDepositedNftsInSlot(uint256 auctionId, uint256 slotIndex)
         external
         view
         override
         returns (DepositedERC721[] memory)
     {
-        return auctions[auctionId].slots[slotIndex].nfts;
+        uint256 nftsInSlot =
+            auctions[auctionId].slots[slotIndex].totalDepositedNfts;
+
+        DepositedERC721[] memory nfts = new DepositedERC721[](nftsInSlot);
+
+        for (uint256 i = 0; i < nftsInSlot; i++) {
+            nfts[i] = auctions[auctionId].slots[slotIndex].depositedNfts[i + 1];
+        }
+        return nfts;
     }
 
     function getBidderBalance(uint256 auctionId, address bidder)
