@@ -61,6 +61,12 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
         uint256 time
     );
 
+    event LogAuctionExtended(
+        uint256 auctionId,
+        uint256 endBlockNumber,
+        uint256 time
+    );
+
     constructor() {}
 
     function createAuction(
@@ -201,6 +207,11 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
         ) {
             auction.lowestEligibleBid = _bid;
         }
+
+        if (_bid > auctions[_auctionId].lowestEligibleBid){
+            extendAuction(_auctionId);
+        }
+        
         auction.balanceOf[_bidder] = auction.balanceOf[_bidder].add(_bid);
         auction.numberOfBids = auction.numberOfBids.add(1);
 
@@ -252,6 +263,10 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
         }
         auction.balanceOf[_bidder] = auction.balanceOf[_bidder].add(_bid);
         auction.numberOfBids = auction.numberOfBids.add(1);
+
+        if (_bid > auctions[_auctionId].lowestEligibleBid){
+            extendAuction(_auctionId);
+        }
 
         bidToken.transferFrom(_bidder, address(this), _bid);
 
@@ -396,5 +411,22 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
         returns (uint256)
     {
         return auctions[auctionId].balanceOf[bidder];
+    }
+
+    function extendAuction(uint256 auctionId) internal returns (bool) {
+        Auction storage auction = auctions[auctionId];
+
+        require(
+            block.number < auction.endBlockNumber,
+            "Cannot extend the auction if it has already ended!"
+        );
+        uint256 resetTimer = auction.resetTimer;
+        auctions[auctionId].endBlockNumber = auction
+            .endBlockNumber
+            .add(resetTimer);
+        
+        emit LogAuctionExtended(auctionId, auction.endBlockNumber, block.timestamp);
+
+        return true;
     }
 }
