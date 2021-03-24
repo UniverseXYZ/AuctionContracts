@@ -45,7 +45,7 @@ interface IAuctionFactory {
     /// @notice Create an auction with initial parameters
     /// @param _startBlockNumber The start of the auction
     /// @param _endBlockNumber End of the auction
-    /// @param _resetTimer Reset timer
+    /// @param _resetTimer Reset timer in blocks
     /// @param _numberOfSlots The number of slots which the auction will have
     /// @param _supportsWhitelist Array of addresses allowed to deposit
     /// @param _bidToken Address of the token used for bidding - can be address(0)
