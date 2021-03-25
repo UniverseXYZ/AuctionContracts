@@ -101,6 +101,16 @@ interface IAuctionFactory {
     /// @param auctionId The auction id
     function cancelAuction(uint256 auctionId) external returns (bool);
 
+    /// @notice Whitelist single address to be able to participate in auction
+    /// @param auctionId The auction id
+    /// @param addressToWhitelist The address which will be whitelisted
+    function whitelistAddress(uint256 auctionId, address addressToWhitelist) external returns (bool);
+
+    /// @notice Whitelist multiple addresses which will be able to participate in the auction
+    /// @param auctionId The auction id
+    /// @param addressesToWhitelist The array of addresses which will be whitelisted
+    function whitelistMultipleAddresses(uint256 auctionId, address[] calldata addressesToWhitelist) external returns (bool);
+
     /// @notice Gets deposited erc721s for slot
     /// @param auctionId The auction id
     /// @param slotIndex The slot index
@@ -116,4 +126,12 @@ interface IAuctionFactory {
         external
         view
         returns (uint256);
+
+    /// @notice Checks id an address is whitelisted for specific auction
+    /// @param auctionId The auction id
+    /// @param addressToCheck The address to be checked
+    function isAddressWhitelisted(uint256 auctionId, address addressToCheck)
+        external
+        view
+        returns (bool);
 }
