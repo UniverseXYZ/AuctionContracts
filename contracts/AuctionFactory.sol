@@ -123,7 +123,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
         require(
             auctions[_auctionId].numberOfBids >
                 auctions[_auctionId].numberOfSlots,
-            "All slots must have bids before a withdrawl can occur"
+            "All slots must have bids before a withdrawal can occur"
         );
         _;
     }
@@ -175,7 +175,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
             "Auction cannot end before it is launched"
         );
 
-        require(_resetTimer > 0, "Reset timer must be higher than 0seconds");
+        require(_resetTimer > 0, "Reset timer must be higher than 0 seconds");
 
         require(
             _numberOfSlots > 0 && _numberOfSlots <= 2000,
