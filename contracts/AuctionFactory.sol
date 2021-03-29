@@ -68,6 +68,11 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         uint256 time
     );
 
+    event LogAuctionCanceled(
+        uint256 auctionId,
+        uint256 time
+    );
+
     modifier onlyExistingAuction(uint256 _auctionId) {
         require(
             _auctionId > 0 && _auctionId <= totalAuctions,
@@ -501,28 +506,17 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         returns (bool)
     {}
 
-    function cancelAuction(uint256 auctionId)
+    function cancelAuction(uint256 _auctionId)
         external
         override
-        onlyExistingAuction(auctionId)
-        onlyAuctionNotStarted(auctionId)
-        onlyAuctionNotCanceled(auctionId)
-        onlyAuctionOwner(auctionId)
+        onlyExistingAuction(_auctionId)
+        onlyAuctionNotStarted(_auctionId)
+        onlyAuctionNotCanceled(_auctionId)
+        onlyAuctionOwner(_auctionId)
         returns (bool)
     {
-        require(
-            _auctionId > 0 && _auctionId <= totalAuctions,
-            "Invalid auction"
-        );
 
         Auction storage auction = auctions[_auctionId];
-
-        require(
-            msg.sender == auction.auctionOwner,
-            "Only auction owner can cancel the auction"
-        );
-
-        require(block.number < auction.startBlockNumber, "Auction is started");
 
         require(
             auction.filledSlots < auction.numberOfSlots,
