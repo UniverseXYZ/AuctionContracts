@@ -77,7 +77,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
 
     modifier onlyAuctionStarted(uint256 _auctionId) {
         require(
-            auctions[_auctionId].startBlockNumber >= block.number,
+            auctions[_auctionId].startBlockNumber < block.number,
             "Auction is not started yet"
         );
         _;
@@ -85,7 +85,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
 
     modifier onlyAuctionNotStarted(uint256 _auctionId) {
         require(
-            auctions[_auctionId].startBlockNumber < block.number,
+            auctions[_auctionId].startBlockNumber > block.number,
             "Auction is started"
         );
         _;
