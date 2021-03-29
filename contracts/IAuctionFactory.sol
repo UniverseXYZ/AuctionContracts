@@ -68,6 +68,18 @@ interface IAuctionFactory {
         address tokenAddress
     ) external returns (uint256);
 
+    /// @notice Deposit ERC721 assets to the specified Auction
+    /// @param auctionId The auction id
+    /// @param slotIndex Index of the slot
+    /// @param tokenIds Array of ERC721 token ids
+    /// @param tokenAddress Address of the ERC721 contract
+    function depositMultipleERC721(
+        uint256 auctionId,
+        uint256 slotIndex,
+        uint256[] calldata tokenIds,
+        address tokenAddress
+    ) external returns (uint256[] memory);
+
     /// @notice Sends a bid (ETH) to the specified auciton
     /// @param auctionId The auction id
     function bid(uint256 auctionId) external payable returns (bool);

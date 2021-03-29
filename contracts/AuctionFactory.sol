@@ -219,7 +219,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         uint256 _tokenId,
         address _tokenAddress
     )
-        external
+        public
         override
         onlyExistingAuction(_auctionId)
         onlyAuctionNotStarted(_auctionId)
@@ -284,6 +284,46 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         );
 
         return _nftSlotIndex;
+    }
+
+    function depositMultipleERC721(
+        uint256 _auctionId,
+        uint256 _slotIndex,
+        uint256[] calldata _tokenIds,
+        address _tokenAddress
+    )
+        external
+        override
+        onlyExistingAuction(_auctionId)
+        onlyAuctionNotStarted(_auctionId)
+        onlyAuctionNotCanceled(_auctionId)
+        returns (uint256[] memory)
+    {
+        address _depositor = msg.sender;
+        uint256[] memory _nftSlotIndexes = new uint256[](_tokenIds.length);
+
+        require(
+            _tokenAddress != address(0),
+            "Zero address was provided for token address"
+        );
+
+        if (auctions[_auctionId].supportsWhitelist) {
+            require(
+                auctions[_auctionId].whitelistAddresses[_depositor] == true,
+                "You are not allowed to deposit in this auction"
+            );
+        }
+
+        require(
+            auctions[_auctionId].numberOfSlots >= _slotIndex,
+            "You are trying to deposit to a non-existing slot"
+        );
+
+        for (uint256 i = 0; i < _tokenIds.length; i++) {
+            _nftSlotIndexes[i] = depositERC721(_auctionId, _slotIndex, _tokenIds[i], _tokenAddress);
+        }
+
+        return _nftSlotIndexes;
     }
 
     function bid(uint256 _auctionId)
