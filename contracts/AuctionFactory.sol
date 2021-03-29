@@ -6,10 +6,11 @@ import "hardhat/console.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721Holder.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "./IAuctionFactory.sol";
 
-contract AuctionFactory is IAuctionFactory, ERC721Holder {
+contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
     using SafeMath for uint256;
 
     uint256 public totalAuctions;
@@ -67,6 +68,93 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
         uint256 time
     );
 
+    modifier onlyExistingAuction(uint256 _auctionId) {
+        require(
+            _auctionId > 0 && _auctionId <= totalAuctions,
+            "Auction do not exists"
+        );
+        _;
+    }
+
+    modifier onlyAuctionStarted(uint256 _auctionId) {
+        require(
+            auctions[_auctionId].startBlockNumber < block.number,
+            "Auction is not started yet"
+        );
+        _;
+    }
+
+    modifier onlyAuctionNotStarted(uint256 _auctionId) {
+        require(
+            auctions[_auctionId].startBlockNumber > block.number,
+            "Auction is started"
+        );
+        _;
+    }
+
+    modifier onlyAuctionNotCanceled(uint256 _auctionId) {
+        require(
+            auctions[_auctionId].isCanceled == false,
+            "Auction is canceled"
+        );
+        _;
+    }
+
+    modifier onlyValidBidAmount(uint256 _bid) {
+        require(_bid > 0, "Bid amount must be higher than 0");
+        _;
+    }
+
+    modifier onlyETH(uint256 _auctionId) {
+        require(
+            auctions[_auctionId].bidToken == address(0),
+            "Token contract address provided"
+        );
+        _;
+    }
+
+    modifier onlyERC20(uint256 _auctionId) {
+        require(
+            auctions[_auctionId].bidToken != address(0),
+            "No token contract address provided"
+        );
+        _;
+    }
+
+    modifier onlyWhenBidOnAllSlots(uint256 _auctionId) {
+        require(
+            auctions[_auctionId].numberOfBids >
+                auctions[_auctionId].numberOfSlots,
+            "All slots must have bids before a withdrawal can occur"
+        );
+        _;
+    }
+
+    modifier onlyWhenBidNotEligible(uint256 _auctionId) {
+        require(
+            auctions[_auctionId].balanceOf[msg.sender] <
+                auctions[_auctionId].lowestEligibleBid,
+            "Bid is still eligbile"
+        );
+        _;
+    }
+
+    modifier onlyIfWhitelistSupported(uint256 _auctionId) {
+        require(
+            auctions[_auctionId].supportsWhitelist,
+            "The auction should support whitelisting!"
+        );
+        _;
+    }
+
+    modifier onlyAuctionOwner(uint256 _auctionId) {
+        require(
+            auctions[_auctionId].auctionOwner == msg.sender,
+            "Only the auction owner can whitelist addresses!"
+        );
+        _;
+    }
+
     constructor() {}
 
     function createAuction(
@@ -78,14 +166,24 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
         address _bidToken
     ) external override returns (uint256) {
         uint256 blockNumber = block.number;
+
         require(
-            blockNumber <= _startBlockNumber,
+            blockNumber < _startBlockNumber,
             "Auction cannot begin before the current block"
         );
+
         require(
             _startBlockNumber < _endBlockNumber,
             "Auction cannot end before it is launched"
         );
+
+        require(_resetTimer > 0, "Reset timer must be higher than 0 seconds");
+
+        require(
+            _numberOfSlots > 0 && _numberOfSlots <= 2000,
+            "Auction can have between 1 and 2000 slots"
+        );
+
         uint256 _auctionId = totalAuctions.add(1);
 
         auctions[_auctionId].auctionOwner = msg.sender;
@@ -118,7 +216,14 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
         uint256 _slotIndex,
         uint256 _tokenId,
         address _tokenAddress
-    ) external override returns (uint256) {
+    )
+        external
+        override
+        onlyExistingAuction(_auctionId)
+        onlyAuctionNotStarted(_auctionId)
+        onlyAuctionNotCanceled(_auctionId)
+        returns (uint256)
+    {
         address _depositor = msg.sender;
 
         require(
@@ -186,19 +291,23 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
         return _nftSlotIndex;
     }
 
-    function bid(uint256 _auctionId) external payable override returns (bool) {
+    function bid(uint256 _auctionId)
+        external
+        payable
+        override
+        onlyExistingAuction(_auctionId)
+        onlyAuctionStarted(_auctionId)
+        onlyAuctionNotCanceled(_auctionId)
+        onlyETH(_auctionId)
+        onlyValidBidAmount(msg.value)
+        returns (bool)
+    {
         uint256 _bid = msg.value;
         address _bidder = msg.sender;
 
-        require(_auctionId <= totalAuctions, "Auction does not exist");
-        require(_bid > 0, "Bid amount must be higher than 0");
         require(
-            auctions[_auctionId].bidToken == address(0),
-            "No token contract address provided"
-        );
-        require(
-            (auctions[_auctionId].numberOfSlots >=
-                auctions[_auctionId].numberOfBids ||
+            (auctions[_auctionId].numberOfBids <
+                auctions[_auctionId].numberOfSlots ||
                 _bid > auctions[_auctionId].lowestEligibleBid),
             "Bid amount must be greater than the lowest eligble bid when all auction slots are filled"
         );
@@ -236,26 +345,26 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
     function bid(uint256 _auctionId, uint256 _amount)
         external
         override
+        onlyExistingAuction(_auctionId)
+        onlyAuctionStarted(_auctionId)
+        onlyAuctionNotCanceled(_auctionId)
+        onlyERC20(_auctionId)
+        onlyValidBidAmount(_amount)
         returns (bool)
     {
         uint256 _bid = _amount;
         address _bidder = msg.sender;
 
-        require(_auctionId <= totalAuctions, "Auction does not exist");
-        require(_bid > 0, "Bid amount must be higher than 0");
         require(
-            auctions[_auctionId].bidToken != address(0),
-            "No token contract address provided"
-        );
-        require(
-            (auctions[_auctionId].numberOfSlots >=
-                auctions[_auctionId].numberOfBids ||
+            (auctions[_auctionId].numberOfBids <
+                auctions[_auctionId].numberOfSlots ||
                 _bid > auctions[_auctionId].lowestEligibleBid),
             "Bid amount must be greater than the lowest eligble bid when all auction slots are filled"
         );
 
         IERC20 bidToken = IERC20(auctions[_auctionId].bidToken);
         uint256 allowance = bidToken.allowance(msg.sender, address(this));
+
         require(allowance >= _bid, "Token allowance too small");
 
         Auction storage auction = auctions[_auctionId];
@@ -288,24 +397,20 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
         return true;
     }
 
-    function finalize(uint256 auctionId) external override returns (bool) {}
-
     function withdrawERC20Bid(uint256 auctionId)
         external
         override
+        onlyExistingAuction(auctionId)
+        onlyAuctionStarted(auctionId)
+        onlyAuctionNotCanceled(auctionId)
+        onlyERC20(auctionId)
+        onlyWhenBidOnAllSlots(auctionId)
+        onlyWhenBidNotEligible(auctionId)
         returns (bool)
     {
-        require(auctionId <= totalAuctions, "Auction do not exists");
-
         Auction storage auction = auctions[auctionId];
         address _sender = msg.sender;
         uint256 _amount = auction.balanceOf[_sender];
-
-        require(
-            auction.numberOfBids > auction.numberOfSlots,
-            "All slots must have bids before a withdrawl can occur"
-        );
-        require(_amount < auction.lowestEligibleBid, "Bid is still eligbile");
 
         auction.balanceOf[_sender] = 0;
         IERC20 bidToken = IERC20(auction.bidToken);
@@ -319,19 +424,17 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
     function withdrawEthBid(uint256 _auctionId)
         external
         override
+        onlyExistingAuction(_auctionId)
+        onlyAuctionStarted(_auctionId)
+        onlyAuctionNotCanceled(_auctionId)
+        onlyETH(_auctionId)
+        onlyWhenBidOnAllSlots(_auctionId)
+        onlyWhenBidNotEligible(_auctionId)
         returns (bool)
     {
-        require(_auctionId <= totalAuctions, "Auction do not exists");
-
         Auction storage auction = auctions[_auctionId];
         address payable _recipient = msg.sender;
         uint256 _amount = auction.balanceOf[_recipient];
-
-        require(
-            auction.numberOfBids > auction.numberOfSlots,
-            "All slots must have bids before a withdrawl can occur"
-        );
-        require(_amount < auction.lowestEligibleBid, "Bid is still eligbile");
 
         require(_amount > 0, "You have 0 deposited");
 
@@ -348,13 +451,15 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
         uint256 auctionId,
         uint256 slotIndex,
         uint256 nftSlotIndex
-    ) external override returns (bool) {
+    )
+        external
+        override
+        onlyExistingAuction(auctionId)
+        onlyAuctionNotStarted(auctionId)
+        returns (bool)
+    {
         uint256 totalWithdrawnNftsInSlot =
             auctions[auctionId].slots[slotIndex].totalWithdrawnNfts;
-        require(
-            block.number < auctions[auctionId].startBlockNumber,
-            "You cannot withdraw if the auction has already started"
-        );
 
         DepositedERC721 memory nftForWithdrawal =
             auctions[auctionId].slots[slotIndex].depositedNfts[nftSlotIndex];
@@ -388,9 +493,21 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
         return true;
     }
 
-    function cancelAuction(uint256 _auctionId)
+    function finalize(uint256 _auctionId)
         external
         override
+        onlyExistingAuction(_auctionId)
+        onlyAuctionNotCanceled(_auctionId)
+        returns (bool)
+    {}
+
+    function cancelAuction(uint256 auctionId)
+        external
+        override
+        onlyExistingAuction(auctionId)
+        onlyAuctionNotStarted(auctionId)
+        onlyAuctionNotCanceled(auctionId)
+        onlyAuctionOwner(auctionId)
         returns (bool)
     {
         require(
@@ -419,10 +536,50 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
         return true;
     }
 
+    function whitelistAddress(uint256 auctionId, address addressToWhitelist)
+        external
+        override
+        onlyExistingAuction(auctionId)
+        onlyIfWhitelistSupported(auctionId)
+        onlyAuctionOwner(auctionId)
+        onlyAuctionNotStarted(auctionId)
+        onlyAuctionNotCanceled(auctionId)
+        returns (bool)
+    {
+        Auction storage auction = auctions[auctionId];
+
+        auction.whitelistAddresses[addressToWhitelist] = true;
+
+        return true;
+    }
+
+    function whitelistMultipleAddresses(
+        uint256 auctionId,
+        address[] calldata addressesToWhitelist
+    )
+        external
+        override
+        onlyExistingAuction(auctionId)
+        onlyIfWhitelistSupported(auctionId)
+        onlyAuctionOwner(auctionId)
+        onlyAuctionNotStarted(auctionId)
+        onlyAuctionNotCanceled(auctionId)
+        returns (bool)
+    {
+        Auction storage auction = auctions[auctionId];
+
+        for (uint256 i = 0; i < addressesToWhitelist.length; i++) {
+            auction.whitelistAddresses[addressesToWhitelist[i]] = true;
+        }
+
+        return true;
+    }
+
     function getDepositedNftsInSlot(uint256 auctionId, uint256 slotIndex)
         external
         view
         override
+        onlyExistingAuction(auctionId)
         returns (DepositedERC721[] memory)
     {
         uint256 nftsInSlot =
@@ -440,18 +597,35 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
         external
         view
         override
+        onlyExistingAuction(auctionId)
         returns (uint256)
     {
         return auctions[auctionId].balanceOf[bidder];
     }
 
-    function extendAuction(uint256 auctionId) internal returns (bool) {
+    function isAddressWhitelisted(uint256 auctionId, address addressToCheck)
+        external
+        view
+        override
+        onlyExistingAuction(auctionId)
+        returns (bool)
+    {
+        Auction storage auction = auctions[auctionId];
+        return auction.whitelistAddresses[addressToCheck];
+    }
+
+    function extendAuction(uint256 auctionId)
+        internal
+        onlyExistingAuction(auctionId)
+        returns (bool)
+    {
         Auction storage auction = auctions[auctionId];
 
         require(
             block.number < auction.endBlockNumber,
             "Cannot extend the auction if it has already ended!"
         );
+
         uint256 resetTimer = auction.resetTimer;
         auctions[auctionId].endBlockNumber = auction.endBlockNumber.add(
             resetTimer
