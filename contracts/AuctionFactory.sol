@@ -93,9 +93,10 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
     }
 
     modifier onlyAuctionNotCanceled(uint256 _auctionId) {
-        // TODO: Uncomment when isCanceled functionality is merged
-
-        // require(auctions[_auctionId].isCanceled == false, "Auction is canceled");
+        require(
+            auctions[_auctionId].isCanceled == false,
+            "Auction is canceled"
+        );
         _;
     }
 
@@ -263,6 +264,13 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
 
         auctions[_auctionId].slots[_slotIndex]
             .totalDepositedNfts = _nftSlotIndex;
+
+        if (auctions[_auctionId].isFilledSlot[_slotIndex] == false) {
+            auctions[_auctionId].filledSlots = auctions[_auctionId]
+                .filledSlots
+                .add(1);
+            auctions[_auctionId].isFilledSlot[_slotIndex] = true;
+        }
 
         IERC721(_tokenAddress).safeTransferFrom(
             _depositor,
@@ -501,7 +509,32 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         onlyAuctionNotCanceled(auctionId)
         onlyAuctionOwner(auctionId)
         returns (bool)
-    {}
+    {
+        require(
+            _auctionId > 0 && _auctionId <= totalAuctions,
+            "Invalid auction"
+        );
+
+        Auction storage auction = auctions[_auctionId];
+
+        require(
+            msg.sender == auction.auctionOwner,
+            "Only auction owner can cancel the auction"
+        );
+
+        require(block.number < auction.startBlockNumber, "Auction is started");
+
+        require(
+            auction.filledSlots < auction.numberOfSlots,
+            "All slots have been filled"
+        );
+
+        auction.isCanceled = true;
+
+        LogAuctionCanceled(_auctionId, block.timestamp);
+
+        return true;
+    }
 
     function whitelistAddress(uint256 auctionId, address addressToWhitelist)
         external
