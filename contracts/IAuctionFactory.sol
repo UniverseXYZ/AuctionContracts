@@ -16,12 +16,15 @@ interface IAuctionFactory {
         uint256 numberOfSlots;
         uint256 numberOfBids;
         uint256 lowestEligibleBid;
+        uint256 highestTotalBid;
         bool supportsWhitelist;
         bool isCanceled;
         address bidToken;
+        bool isFinalized;
         mapping(uint256 => Slot) slots;
         mapping(address => bool) whitelistAddresses;
         mapping(address => uint256) balanceOf;
+        mapping(uint256 => address) winners;
     }
 
     struct Slot {
@@ -90,7 +93,8 @@ interface IAuctionFactory {
 
     /// @notice Distributes all slot assets to the bidders and winning bids to the collector
     /// @param auctionId The auction id
-    function finalize(uint256 auctionId) external returns (bool);
+    /// @param winners Array of winners addresses to be vrified onchain
+    function finalizeAuction(uint256 auctionId, address[] calldata winners) external returns (bool);
 
     /// @notice Withdraws the bid amount from an auction (if slot is non-winning)
     /// @param auctionId The auction id
@@ -136,6 +140,14 @@ interface IAuctionFactory {
         external
         view
         returns (DepositedERC721[] memory);
+
+    /// @notice Gets slot winner for particular auction
+    /// @param auctionId The auction id
+    /// @param slotIndex The slot index
+    function getSlotWinner(uint256 auctionId, uint256 slotIndex)
+        external
+        view
+        returns (address);
 
     /// @notice Gets the bidder total bids in auction
     /// @param auctionId The auction id

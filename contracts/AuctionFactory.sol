@@ -366,6 +366,10 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         auction.balanceOf[_bidder] = auction.balanceOf[_bidder].add(_bid);
         auction.numberOfBids = auction.numberOfBids.add(1);
 
+        if (auction.balanceOf[_bidder] > auction.highestTotalBid) {
+            auction.highestTotalBid = auction.balanceOf[_bidder];
+        }
+
         emit LogBidSubmitted(
             _bidder,
             _auctionId,
@@ -419,6 +423,10 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
             extendAuction(_auctionId);
         }
 
+        if (auction.balanceOf[_bidder] > auction.highestTotalBid) {
+            auction.highestTotalBid = auction.balanceOf[_bidder];
+        }
+
         bidToken.transferFrom(_bidder, address(this), _bid);
 
         emit LogBidSubmitted(
@@ -430,6 +438,48 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         );
 
         return true;
+    }
+
+    function finalizeAuction(uint256 auctionId, address[] calldata winners)
+        external
+        override
+        onlyExistingAuction(auctionId)
+        onlyAuctionNotCanceled(auctionId)
+        returns (bool)
+    {
+        Auction storage auction = auctions[auctionId];
+        bool isValid = true;
+
+        require(
+            winners.length == auction.numberOfSlots,
+            "Incorrect number of winners"
+        );
+        require(
+            block.number > auction.endBlockNumber &&
+                auction.isFinalized == false,
+            "Auction has not finished yet"
+        );
+        require(
+            auction.balanceOf[winners[0]] == auction.highestTotalBid,
+            "First address should have submitted the highest bid"
+        );
+
+        for (uint256 i = 1; i < winners.length; i++) {
+            if (
+                auction.balanceOf[winners[i-1]] <
+                auction.balanceOf[winners[i]]
+            ) {
+                isValid = false;
+            }
+        }
+
+        if (isValid) {
+            for (uint256 i = 0; i < winners.length; i++) {
+                auction.winners[i + 1] = winners[i];
+            }
+            auction.isFinalized = true;
+        }
+        return isValid;
     }
 
     function withdrawERC20Bid(uint256 auctionId)
@@ -528,14 +578,6 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         return true;
     }
 
-    function finalize(uint256 _auctionId)
-        external
-        override
-        onlyExistingAuction(_auctionId)
-        onlyAuctionNotCanceled(_auctionId)
-        returns (bool)
-    {}
-
     function cancelAuction(uint256 _auctionId)
         external
         override
@@ -611,6 +653,15 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         return nfts;
     }
 
+    function getSlotWinner(uint256 auctionId, uint256 slotIndex)
+        external
+        view
+        override
+        returns (address)
+    {
+        return auctions[auctionId].winners[slotIndex];
+    }
+
     function getBidderBalance(uint256 auctionId, address bidder)
         external
         view
@@ -645,7 +696,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         );
 
         uint256 resetTimer = auction.resetTimer;
-        auctions[auctionId].endBlockNumber = auction.endBlockNumber.add(
+        auction.endBlockNumber = auction.endBlockNumber.add(
             resetTimer
         );
 
