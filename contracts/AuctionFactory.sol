@@ -137,6 +137,22 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
         _;
     }
 
+    modifier onlyIfWhitelistSupported(uint256 _auctionId) {
+        require(
+            auctions[_auctionId].supportsWhitelist,
+            "The auction should support whitelisting!"
+        );
+        _;
+    }
+
+    modifier onlyAuctionOwner(uint256 _auctionId) {
+        require(
+            auctions[_auctionId].auctionOwner == msg.sender,
+            "Only the auction owner can whitelist addresses!"
+        );
+        _;
+    }
+
     constructor() {}
 
     function createAuction(
@@ -281,8 +297,8 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
         address _bidder = msg.sender;
 
         require(
-            (auctions[_auctionId].numberOfSlots >=
-                auctions[_auctionId].numberOfBids ||
+            (auctions[_auctionId].numberOfBids <
+                auctions[_auctionId].numberOfSlots ||
                 _bid > auctions[_auctionId].lowestEligibleBid),
             "Bid amount must be greater than the lowest eligble bid when all auction slots are filled"
         );
@@ -331,8 +347,8 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
         address _bidder = msg.sender;
 
         require(
-            (auctions[_auctionId].numberOfSlots >=
-                auctions[_auctionId].numberOfBids ||
+            (auctions[_auctionId].numberOfBids <
+                auctions[_auctionId].numberOfSlots ||
                 _bid > auctions[_auctionId].lowestEligibleBid),
             "Bid amount must be greater than the lowest eligble bid when all auction slots are filled"
         );
@@ -482,8 +498,48 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
         onlyExistingAuction(auctionId)
         onlyAuctionNotStarted(auctionId)
         onlyAuctionNotCanceled(auctionId)
+        onlyAuctionOwner(auctionId)
         returns (bool)
     {}
+
+    function whitelistAddress(uint256 auctionId, address addressToWhitelist)
+        external
+        override
+        onlyExistingAuction(auctionId)
+        onlyIfWhitelistSupported(auctionId)
+        onlyAuctionOwner(auctionId)
+        onlyAuctionNotStarted(auctionId)
+        onlyAuctionNotCanceled(auctionId)
+        returns (bool)
+    {
+        Auction storage auction = auctions[auctionId];
+
+        auction.whitelistAddresses[addressToWhitelist] = true;
+
+        return true;
+    }
+
+    function whitelistMultipleAddresses(
+        uint256 auctionId,
+        address[] calldata addressesToWhitelist
+    )
+        external
+        override
+        onlyExistingAuction(auctionId)
+        onlyIfWhitelistSupported(auctionId)
+        onlyAuctionOwner(auctionId)
+        onlyAuctionNotStarted(auctionId)
+        onlyAuctionNotCanceled(auctionId)
+        returns (bool)
+    {
+        Auction storage auction = auctions[auctionId];
+
+        for (uint256 i = 0; i < addressesToWhitelist.length; i++) {
+            auction.whitelistAddresses[addressesToWhitelist[i]] = true;
+        }
+
+        return true;
+    }
 
     function getDepositedNftsInSlot(uint256 auctionId, uint256 slotIndex)
         external
@@ -511,6 +567,17 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
         returns (uint256)
     {
         return auctions[auctionId].balanceOf[bidder];
+    }
+
+    function isAddressWhitelisted(uint256 auctionId, address addressToCheck)
+        external
+        view
+        override
+        onlyExistingAuction(auctionId)
+        returns (bool)
+    {
+        Auction storage auction = auctions[auctionId];
+        return auction.whitelistAddresses[addressToCheck];
     }
 
     function extendAuction(uint256 auctionId)
