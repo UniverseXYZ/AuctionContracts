@@ -6,10 +6,11 @@ import "hardhat/console.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721Holder.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "./IAuctionFactory.sol";
 
-contract AuctionFactory is IAuctionFactory, ERC721Holder {
+contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
     using SafeMath for uint256;
 
     uint256 public totalAuctions;
@@ -67,6 +68,8 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
         uint256 time
     );
 
+    event LogAuctionCanceled(uint256 auctionId, uint256 time);
+
     modifier onlyExistingAuction(uint256 _auctionId) {
         require(
             _auctionId > 0 && _auctionId <= totalAuctions,
@@ -77,7 +80,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
 
     modifier onlyAuctionStarted(uint256 _auctionId) {
         require(
-            auctions[_auctionId].startBlockNumber <= block.number,
+            auctions[_auctionId].startBlockNumber < block.number,
             "Auction is not started yet"
         );
         _;
@@ -92,9 +95,10 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
     }
 
     modifier onlyAuctionNotCanceled(uint256 _auctionId) {
-        // TODO: Uncomment when isCanceled functionality is merged
-
-        // require(auctions[_auctionId].isCanceled == false, "Auction is canceled");
+        require(
+            auctions[_auctionId].isCanceled == false,
+            "Auction is canceled"
+        );
         _;
     }
 
@@ -123,7 +127,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
         require(
             auctions[_auctionId].numberOfBids >
                 auctions[_auctionId].numberOfSlots,
-            "All slots must have bids before a withdrawl can occur"
+            "All slots must have bids before a withdrawal can occur"
         );
         _;
     }
@@ -175,7 +179,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
             "Auction cannot end before it is launched"
         );
 
-        require(_resetTimer > 0, "Reset timer must be higher than 0seconds");
+        require(_resetTimer > 0, "Reset timer must be higher than 0 seconds");
 
         require(
             _numberOfSlots > 0 && _numberOfSlots <= 2000,
@@ -262,6 +266,13 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
 
         auctions[_auctionId].slots[_slotIndex]
             .totalDepositedNfts = _nftSlotIndex;
+
+        if (auctions[_auctionId].isFilledSlot[_slotIndex] == false) {
+            auctions[_auctionId].filledSlots = auctions[_auctionId]
+                .filledSlots
+                .add(1);
+            auctions[_auctionId].isFilledSlot[_slotIndex] = true;
+        }
 
         IERC721(_tokenAddress).safeTransferFrom(
             _depositor,
@@ -492,15 +503,28 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder {
         returns (bool)
     {}
 
-    function cancelAuction(uint256 auctionId)
+    function cancelAuction(uint256 _auctionId)
         external
         override
-        onlyExistingAuction(auctionId)
-        onlyAuctionNotStarted(auctionId)
-        onlyAuctionNotCanceled(auctionId)
-        onlyAuctionOwner(auctionId)
+        onlyExistingAuction(_auctionId)
+        onlyAuctionNotStarted(_auctionId)
+        onlyAuctionNotCanceled(_auctionId)
+        onlyAuctionOwner(_auctionId)
         returns (bool)
-    {}
+    {
+        Auction storage auction = auctions[_auctionId];
+
+        require(
+            auction.filledSlots < auction.numberOfSlots,
+            "All slots have been filled"
+        );
+
+        auction.isCanceled = true;
+
+        LogAuctionCanceled(_auctionId, block.timestamp);
+
+        return true;
+    }
 
     function whitelistAddress(uint256 auctionId, address addressToWhitelist)
         external
