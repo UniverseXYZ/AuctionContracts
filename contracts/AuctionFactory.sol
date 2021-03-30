@@ -15,7 +15,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
 
     uint256 public totalAuctions;
     mapping(uint256 => Auction) public auctions;
-    mapping(uint256 => uint256) public auctionRevenue;
+    mapping(uint256 => uint256) public auctionsRevenue;
 
     event LogERC721Deposit(
         address depositor,
@@ -75,6 +75,13 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         address recipient,
         uint256 auctionId,
         uint256 amount,
+        uint256 time
+    );
+
+    event LogERC721RewardsClaim(
+        address claimer,
+        uint256 auctionId,
+        uint256 slotIndex,
         uint256 time
     );
 
@@ -484,7 +491,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         if (isValid) {
             for (uint256 i = 0; i < winners.length; i++) {
                 auction.winners[i + 1] = winners[i];
-                auctionRevenue[auctionId] = auctionRevenue[auctionId].add(
+                auctionsRevenue[auctionId] = auctionsRevenue[auctionId].add(
                     auction.balanceOf[winners[i]]
                 );
             }
@@ -727,9 +734,9 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         Auction storage auction = auctions[auctionId];
         require(auction.isFinalized, "Auction should have ended!");
 
-        uint256 amountToWithdraw = auctionRevenue[auctionId];
+        uint256 amountToWithdraw = auctionsRevenue[auctionId];
 
-        auctionRevenue[auctionId] = 0;
+        auctionsRevenue[auctionId] = 0;
 
         if (auction.bidToken == address(0)) {
             payable(auction.auctionOwner).transfer(amountToWithdraw);
@@ -744,6 +751,45 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
             auction.auctionOwner,
             auctionId,
             amountToWithdraw,
+            block.timestamp
+        );
+
+        return true;
+    }
+
+    function claimERC721Rewards(uint256 auctionId, uint256 slotIndex)
+        external
+        override
+        returns (bool)
+    {
+        address claimer = msg.sender;
+
+        Auction storage auction = auctions[auctionId];
+        Slot storage winningSlot = auction.slots[slotIndex];
+
+        require(auction.isFinalized, "Auction should have ended!");
+        require(
+            auction.winners[slotIndex] == claimer,
+            "Only the winner can calim rewards!"
+        );
+
+        for (uint256 i = 0; i < winningSlot.totalDepositedNfts; i++) {
+            DepositedERC721 memory nftForWithdrawal =
+                winningSlot.depositedNfts[i + 1];
+
+            if (nftForWithdrawal.tokenId != 0) {
+                IERC721(nftForWithdrawal.tokenAddress).safeTransferFrom(
+                    address(this),
+                    claimer,
+                    nftForWithdrawal.tokenId
+                );
+            }
+        }
+
+        emit LogERC721RewardsClaim(
+            claimer,
+            auctionId,
+            slotIndex,
             block.timestamp
         );
 
