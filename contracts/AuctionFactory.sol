@@ -68,14 +68,10 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         uint256 time
     );
 
-<<<<<<< HEAD
-    event LogAuctionCanceled(uint256 auctionId, uint256 time);
-=======
     event LogAuctionCanceled(
         uint256 auctionId,
         uint256 time
     );
->>>>>>> test-create-auction
 
     modifier onlyExistingAuction(uint256 _auctionId) {
         require(
