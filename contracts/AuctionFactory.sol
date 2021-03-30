@@ -68,10 +68,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         uint256 time
     );
 
-    event LogAuctionCanceled(
-        uint256 auctionId,
-        uint256 time
-    );
+    event LogAuctionCanceled(uint256 auctionId, uint256 time);
 
     modifier onlyExistingAuction(uint256 _auctionId) {
         require(
@@ -269,13 +266,6 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
 
         auctions[_auctionId].slots[_slotIndex]
             .totalDepositedNfts = _nftSlotIndex;
-
-        if (auctions[_auctionId].isFilledSlot[_slotIndex] == false) {
-            auctions[_auctionId].filledSlots = auctions[_auctionId]
-                .filledSlots
-                .add(1);
-            auctions[_auctionId].isFilledSlot[_slotIndex] = true;
-        }
 
         IERC721(_tokenAddress).safeTransferFrom(
             _depositor,
@@ -515,13 +505,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         onlyAuctionOwner(_auctionId)
         returns (bool)
     {
-
         Auction storage auction = auctions[_auctionId];
-
-        require(
-            auction.filledSlots < auction.numberOfSlots,
-            "All slots have been filled"
-        );
 
         auction.isCanceled = true;
 

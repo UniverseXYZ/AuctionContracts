@@ -19,8 +19,6 @@ interface IAuctionFactory {
         bool supportsWhitelist;
         bool isCanceled;
         address bidToken;
-        uint256 filledSlots;
-        mapping(uint256 => bool) isFilledSlot;
         mapping(uint256 => Slot) slots;
         mapping(address => bool) whitelistAddresses;
         mapping(address => uint256) balanceOf;
@@ -107,12 +105,17 @@ interface IAuctionFactory {
     /// @notice Whitelist single address to be able to participate in auction
     /// @param auctionId The auction id
     /// @param addressToWhitelist The address which will be whitelisted
-    function whitelistAddress(uint256 auctionId, address addressToWhitelist) external returns (bool);
+    function whitelistAddress(uint256 auctionId, address addressToWhitelist)
+        external
+        returns (bool);
 
     /// @notice Whitelist multiple addresses which will be able to participate in the auction
     /// @param auctionId The auction id
     /// @param addressesToWhitelist The array of addresses which will be whitelisted
-    function whitelistMultipleAddresses(uint256 auctionId, address[] calldata addressesToWhitelist) external returns (bool);
+    function whitelistMultipleAddresses(
+        uint256 auctionId,
+        address[] calldata addressesToWhitelist
+    ) external returns (bool);
 
     /// @notice Gets deposited erc721s for slot
     /// @param auctionId The auction id
