@@ -164,4 +164,8 @@ interface IAuctionFactory {
         external
         view
         returns (bool);
+
+    /// @notice Withdraws the generated revenue from the auction to the auction owner
+    /// @param auctionId The auction id
+    function withdrawAuctionRevenue(uint256 auctionId) external returns (bool);
 }

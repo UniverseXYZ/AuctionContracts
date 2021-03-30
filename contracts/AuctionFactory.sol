@@ -15,6 +15,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
 
     uint256 public totalAuctions;
     mapping(uint256 => Auction) public auctions;
+    mapping(uint256 => uint256) public auctionRevenue;
 
     event LogERC721Deposit(
         address depositor,
@@ -57,7 +58,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
 
     event LogBidWithdrawal(
         address recipient,
-        uint256 auction,
+        uint256 auctionId,
         uint256 amount,
         uint256 time
     );
@@ -69,6 +70,13 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
     );
 
     event LogAuctionCanceled(uint256 auctionId, uint256 time);
+
+    event LogAuctionRevenueWithdrawal(
+        address recipient,
+        uint256 auctionId,
+        uint256 amount,
+        uint256 time
+    );
 
     modifier onlyExistingAuction(uint256 _auctionId) {
         require(
@@ -466,7 +474,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
 
         for (uint256 i = 1; i < winners.length; i++) {
             if (
-                auction.balanceOf[winners[i-1]] <
+                auction.balanceOf[winners[i - 1]] <
                 auction.balanceOf[winners[i]]
             ) {
                 isValid = false;
@@ -476,6 +484,9 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         if (isValid) {
             for (uint256 i = 0; i < winners.length; i++) {
                 auction.winners[i + 1] = winners[i];
+                auctionRevenue[auctionId] = auctionRevenue[auctionId].add(
+                    auction.balanceOf[winners[i]]
+                );
             }
             auction.isFinalized = true;
         }
@@ -696,13 +707,43 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         );
 
         uint256 resetTimer = auction.resetTimer;
-        auction.endBlockNumber = auction.endBlockNumber.add(
-            resetTimer
-        );
+        auction.endBlockNumber = auction.endBlockNumber.add(resetTimer);
 
         emit LogAuctionExtended(
             auctionId,
             auction.endBlockNumber,
+            block.timestamp
+        );
+
+        return true;
+    }
+
+    function withdrawAuctionRevenue(uint256 auctionId)
+        external
+        override
+        onlyExistingAuction(auctionId)
+        returns (bool)
+    {
+        Auction storage auction = auctions[auctionId];
+        require(auction.isFinalized, "Auction should have ended!");
+
+        uint256 amountToWithdraw = auctionRevenue[auctionId];
+
+        auctionRevenue[auctionId] = 0;
+
+        if (auction.bidToken == address(0)) {
+            payable(auction.auctionOwner).transfer(amountToWithdraw);
+        }
+
+        if (auction.bidToken != address(0)) {
+            IERC20 bidToken = IERC20(auction.bidToken);
+            bidToken.transfer(auction.auctionOwner, amountToWithdraw);
+        }
+
+        LogAuctionRevenueWithdrawal(
+            auction.auctionOwner,
+            auctionId,
+            amountToWithdraw,
             block.timestamp
         );
 
