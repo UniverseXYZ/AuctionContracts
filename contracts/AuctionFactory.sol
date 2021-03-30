@@ -68,7 +68,10 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         uint256 time
     );
 
-    event LogAuctionCanceled(uint256 auctionId, uint256 time);
+    event LogAuctionCanceled(
+        uint256 auctionId,
+        uint256 time
+    );
 
     modifier onlyExistingAuction(uint256 _auctionId) {
         require(
@@ -512,6 +515,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         onlyAuctionOwner(_auctionId)
         returns (bool)
     {
+        
         Auction storage auction = auctions[_auctionId];
 
         require(
