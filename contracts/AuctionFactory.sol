@@ -515,7 +515,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         onlyAuctionOwner(_auctionId)
         returns (bool)
     {
-        
+
         Auction storage auction = auctions[_auctionId];
 
         require(
