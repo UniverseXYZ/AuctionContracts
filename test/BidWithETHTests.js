@@ -1,0 +1,158 @@
+const { expect } = require('chai');
+const { waffle, ethers } = require('hardhat');
+const { loadFixture } = waffle;
+
+describe('Test bidding with ETH', () => {
+  const deployedContracts = async () => {
+    const AuctionFactory = await ethers.getContractFactory('AuctionFactory');
+    const MockNFT = await ethers.getContractFactory('MockNFT');
+
+    const auctionFactory = await AuctionFactory.deploy();
+    const mockNFT = await MockNFT.deploy();
+
+    return { auctionFactory, mockNFT };
+  };
+
+  it('should bid, withdraw and check lowestEligibleBid with ETH successfully', async () => {
+    let { auctionFactory, mockNFT } = await loadFixture(deployedContracts);
+
+    await createAuction(auctionFactory);
+
+    await depositNFT(auctionFactory, mockNFT);
+
+    await createAuction(auctionFactory);
+
+    expect(
+      await auctionFactory.functions['bid(uint256)'](1, {
+        value: '100000000000000000000',
+      })
+    ).to.be.emit(auctionFactory, 'LogBidSubmitted');
+
+    const [owner, addr1] = await ethers.getSigners();
+
+    expect(
+      await auctionFactory.connect(addr1).functions['bid(uint256)'](1, {
+        value: '200000000000000000000',
+      })
+    ).to.be.emit(auctionFactory, 'LogBidSubmitted');
+
+    expect(await auctionFactory.withdrawEthBid(1)).to.be.emit(auctionFactory, 'LogBidWithdrawal');
+
+    const auction = await auctionFactory.auctions(1);
+
+    const lowestEligibleBid = Number(ethers.utils.formatEther(auction.lowestEligibleBid));
+
+    expect(lowestEligibleBid).to.equal(200);
+  });
+
+  it('should revert if auction do not exists', async () => {
+    let { auctionFactory, mockNFT } = await loadFixture(deployedContracts);
+
+    await createAuction(auctionFactory);
+
+    await depositNFT(auctionFactory, mockNFT);
+
+    await createAuction(auctionFactory);
+
+    await expect(
+      auctionFactory.functions['bid(uint256)'](3, {
+        value: '100000000000000000000',
+      })
+    ).to.be.reverted;
+  });
+
+  it('should revert if amount is 0', async () => {
+    let { auctionFactory, mockNFT } = await loadFixture(deployedContracts);
+
+    await createAuction(auctionFactory);
+
+    await depositNFT(auctionFactory, mockNFT);
+
+    await createAuction(auctionFactory);
+
+    await expect(
+      auctionFactory.functions['bid(uint256)'](1, {
+        value: '100000000000000000000',
+      })
+    ).to.be.reverted;
+  });
+
+  it('should revert if auction is not started', async () => {
+    let { auctionFactory, mockNFT } = await loadFixture(deployedContracts);
+
+    await createAuction(auctionFactory);
+
+    await depositNFT(auctionFactory, mockNFT);
+
+    await expect(
+      auctionFactory.functions['bid(uint256)'](1, {
+        value: '0',
+      })
+    ).to.be.reverted;
+  });
+
+  it('should revert if auction accept only ERC20', async () => {
+    let { auctionFactory, mockNFT } = await loadFixture(deployedContracts);
+
+    const blockNumber = await ethers.provider.getBlockNumber();
+
+    const startBlockNumber = blockNumber + 5;
+    const endBlockNumber = blockNumber + 10;
+    const resetTimer = 3;
+    const numberOfSlots = 1;
+    const supportsWhitelist = false;
+    const tokenAddress = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
+
+    await auctionFactory.createAuction(
+      startBlockNumber,
+      endBlockNumber,
+      resetTimer,
+      numberOfSlots,
+      supportsWhitelist,
+      tokenAddress
+    );
+
+    await depositNFT(auctionFactory, mockNFT);
+
+    await createAuction(auctionFactory);
+
+    await expect(
+      auctionFactory.functions['bid(uint256)'](1, {
+        value: '100000000000000000000',
+      })
+    ).to.be.reverted;
+  });
+});
+
+const createAuction = async (auctionFactory) => {
+  const blockNumber = await ethers.provider.getBlockNumber();
+
+  const startBlockNumber = blockNumber + 5;
+  const endBlockNumber = blockNumber + 10;
+  const resetTimer = 3;
+  const numberOfSlots = 1;
+  const supportsWhitelist = false;
+  const ethAddress = '0x0000000000000000000000000000000000000000';
+
+  await auctionFactory.createAuction(
+    startBlockNumber,
+    endBlockNumber,
+    resetTimer,
+    numberOfSlots,
+    supportsWhitelist,
+    ethAddress
+  );
+};
+
+const depositNFT = async (auctionFactory, mockNFT) => {
+  const [owner] = await ethers.getSigners();
+
+  const auctionId = 1;
+  const slotIdx = 0;
+  const tokenId = 1;
+
+  await mockNFT.mint(owner.address, 'nftURI');
+  await mockNFT.approve(auctionFactory.address, tokenId);
+
+  await auctionFactory.depositERC721(auctionId, slotIdx, tokenId, mockNFT.address);
+};
