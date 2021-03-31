@@ -18,6 +18,8 @@
   },
   "dependencies": {
     "@openzeppelin/contracts": "^3.4.1",
-    "ganache-cli": "^6.12.2"
+    "chai": "^4.3.4",
+    "ganache-cli": "^6.12.2",
+    "solidity-coverage": "^0.7.16"
   }
 }

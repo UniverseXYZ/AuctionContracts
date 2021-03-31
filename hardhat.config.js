@@ -1,5 +1,6 @@
 require('@nomiclabs/hardhat-waffle');
 require('@nomiclabs/hardhat-etherscan');
+require('solidity-coverage');
 require('hardhat-contract-sizer');
 
 // This is a sample Hardhat task. To learn how to create your own go to
@@ -42,7 +43,7 @@ module.exports = {
       chainId: 4,
       url: `https://rinkeby.infura.io/v3/${process.env.INFURA_API_KEY}`,
       accounts: [process.env.PRIVATE_KEY]
-    },
+    }
   },
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY
@@ -50,6 +51,6 @@ module.exports = {
   contractSizer: {
     alphaSort: true,
     runOnCompile: true,
-    disambiguatePaths: false,
+    disambiguatePaths: false
   }
 };
