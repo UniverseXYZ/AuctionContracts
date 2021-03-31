@@ -13,9 +13,9 @@ import "./IAuctionFactory.sol";
 contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
     using SafeMath for uint256;
 
-    uint256 private totalAuctions;
+    uint256 public totalAuctions;
     mapping(uint256 => Auction) public auctions;
-    mapping(uint256 => uint256) private auctionsRevenue;
+    mapping(uint256 => uint256) public auctionsRevenue;
 
     event LogERC721Deposit(
         address depositor,
@@ -262,15 +262,10 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
 
         DepositedERC721 memory item =
             DepositedERC721({
-                auctionId: _auctionId,
-                slotIndex: _slotIndex,
                 tokenId: _tokenId,
                 tokenAddress: _tokenAddress,
                 depositor: _depositor
             });
-
-        auctions[_auctionId].slots[_slotIndex].auctionId = _auctionId;
-        auctions[_auctionId].slots[_slotIndex].slotIndex = _slotIndex;
 
         uint256 _nftSlotIndex =
             auctions[_auctionId].slots[_slotIndex].totalDepositedNfts.add(1);
@@ -608,21 +603,6 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         auctions[_auctionId].isCanceled = true;
 
         LogAuctionCanceled(_auctionId, block.timestamp);
-
-        return true;
-    }
-
-    function whitelistAddress(uint256 auctionId, address addressToWhitelist)
-        external
-        override
-        onlyExistingAuction(auctionId)
-        onlyIfWhitelistSupported(auctionId)
-        onlyAuctionOwner(auctionId)
-        onlyAuctionNotStarted(auctionId)
-        onlyAuctionNotCanceled(auctionId)
-        returns (bool)
-    {
-        auctions[auctionId].whitelistAddresses[addressToWhitelist] = true;
 
         return true;
     }

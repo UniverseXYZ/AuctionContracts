@@ -28,8 +28,6 @@ interface IAuctionFactory {
     }
 
     struct Slot {
-        uint256 auctionId;
-        uint256 slotIndex;
         uint256 totalDepositedNfts;
         uint256 totalWithdrawnNfts;
         mapping(uint256 => DepositedERC721) depositedNfts;
@@ -38,8 +36,6 @@ interface IAuctionFactory {
     struct DepositedERC721 {
         address tokenAddress;
         uint256 tokenId;
-        uint256 auctionId;
-        uint256 slotIndex;
         address depositor;
     }
 
@@ -117,13 +113,6 @@ interface IAuctionFactory {
     /// @notice Cancels an auction which has not started yet
     /// @param auctionId The auction id
     function cancelAuction(uint256 auctionId) external returns (bool);
-
-    /// @notice Whitelist single address to be able to participate in auction
-    /// @param auctionId The auction id
-    /// @param addressToWhitelist The address which will be whitelisted
-    function whitelistAddress(uint256 auctionId, address addressToWhitelist)
-        external
-        returns (bool);
 
     /// @notice Whitelist multiple addresses which will be able to participate in the auction
     /// @param auctionId The auction id
