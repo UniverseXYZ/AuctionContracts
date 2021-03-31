@@ -6,7 +6,7 @@ describe('Whitelist functionality', () => {
   const deployContracts = async () => {
     const [AuctionFactory, MockNFT] = await Promise.all([
       ethers.getContractFactory('AuctionFactory'),
-      ethers.getContractFactory('MockNFT'),
+      ethers.getContractFactory('MockNFT')
     ]);
 
     const [auctionFactory, mockNft] = await Promise.all([AuctionFactory.deploy(), MockNFT.deploy()]);
@@ -42,6 +42,10 @@ describe('Whitelist functionality', () => {
       auctionFactory,
       'LogERC721Deposit'
     );
+
+    const result = await auctionFactory.isAddressWhitelisted(1, addr1.address);
+
+    expect(result).to.be.true;
   });
 
   it('should revert when address is not whitelisted', async () => {
@@ -69,6 +73,32 @@ describe('Whitelist functionality', () => {
     await mockNft.connect(addr2).approve(auctionFactory.address, 2);
 
     await expect(auctionFactory.connect(addr2).depositERC721(auctionId, slotIdx, 2, mockNft.address)).to.be.reverted;
+  });
+
+  it('should revert if whitelist is not support for current auction', async () => {
+    const { auctionFactory, mockNft } = await loadFixture(deployContracts);
+
+    const blockNumber = await ethers.provider.getBlockNumber();
+
+    const startBlockNumber = blockNumber + 10;
+    const endBlockNumber = blockNumber + 15;
+    const resetTimer = 3;
+    const numberOfSlots = 1;
+    const supportsWhitelist = false;
+    const ethAddress = '0x0000000000000000000000000000000000000000';
+
+    await auctionFactory.createAuction(
+      startBlockNumber,
+      endBlockNumber,
+      resetTimer,
+      numberOfSlots,
+      supportsWhitelist,
+      ethAddress
+    );
+
+    const [addr1, addr2] = await ethers.getSigners();
+
+    await expect(auctionFactory.whitelistMultipleAddresses(1, [addr1.address])).to.be.reverted;
   });
 });
 
