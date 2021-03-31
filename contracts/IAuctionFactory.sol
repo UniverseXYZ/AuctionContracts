@@ -16,17 +16,18 @@ interface IAuctionFactory {
         uint256 numberOfSlots;
         uint256 numberOfBids;
         uint256 lowestEligibleBid;
+        uint256 highestTotalBid;
         bool supportsWhitelist;
         bool isCanceled;
         address bidToken;
+        bool isFinalized;
         mapping(uint256 => Slot) slots;
         mapping(address => bool) whitelistAddresses;
         mapping(address => uint256) balanceOf;
+        mapping(uint256 => address) winners;
     }
 
     struct Slot {
-        uint256 auctionId;
-        uint256 slotIndex;
         uint256 totalDepositedNfts;
         uint256 totalWithdrawnNfts;
         mapping(uint256 => DepositedERC721) depositedNfts;
@@ -35,8 +36,6 @@ interface IAuctionFactory {
     struct DepositedERC721 {
         address tokenAddress;
         uint256 tokenId;
-        uint256 auctionId;
-        uint256 slotIndex;
         address depositor;
     }
 
@@ -90,7 +89,8 @@ interface IAuctionFactory {
 
     /// @notice Distributes all slot assets to the bidders and winning bids to the collector
     /// @param auctionId The auction id
-    function finalize(uint256 auctionId) external returns (bool);
+    /// @param winners Array of winners addresses to be vrified onchain
+    function finalizeAuction(uint256 auctionId, address[] calldata winners) external returns (bool);
 
     /// @notice Withdraws the bid amount from an auction (if slot is non-winning)
     /// @param auctionId The auction id
@@ -114,13 +114,6 @@ interface IAuctionFactory {
     /// @param auctionId The auction id
     function cancelAuction(uint256 auctionId) external returns (bool);
 
-    /// @notice Whitelist single address to be able to participate in auction
-    /// @param auctionId The auction id
-    /// @param addressToWhitelist The address which will be whitelisted
-    function whitelistAddress(uint256 auctionId, address addressToWhitelist)
-        external
-        returns (bool);
-
     /// @notice Whitelist multiple addresses which will be able to participate in the auction
     /// @param auctionId The auction id
     /// @param addressesToWhitelist The array of addresses which will be whitelisted
@@ -137,6 +130,14 @@ interface IAuctionFactory {
         view
         returns (DepositedERC721[] memory);
 
+    /// @notice Gets slot winner for particular auction
+    /// @param auctionId The auction id
+    /// @param slotIndex The slot index
+    function getSlotWinner(uint256 auctionId, uint256 slotIndex)
+        external
+        view
+        returns (address);
+
     /// @notice Gets the bidder total bids in auction
     /// @param auctionId The auction id
     /// @param bidder The address of the bidder
@@ -152,4 +153,13 @@ interface IAuctionFactory {
         external
         view
         returns (bool);
+
+    /// @notice Withdraws the generated revenue from the auction to the auction owner
+    /// @param auctionId The auction id
+    function withdrawAuctionRevenue(uint256 auctionId) external returns (bool);
+
+    /// @notice Claims and distributes the NFTs from a winning slot
+    /// @param auctionId The auction id
+    /// @param slotIndex The slot index
+    function claimERC721Rewards(uint256 auctionId, uint256 slotIndex) external returns (bool);
 }
