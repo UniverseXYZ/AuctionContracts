@@ -29,7 +29,6 @@ interface IAuctionFactory {
 
     struct Slot {
         uint256 totalDepositedNfts;
-        uint256 totalWithdrawnNfts;
         mapping(uint256 => DepositedERC721) depositedNfts;
     }
 
