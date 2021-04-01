@@ -360,7 +360,7 @@ const depositNFT = async (auctionFactory, mockNFT) => {
   const [owner] = await ethers.getSigners();
 
   const auctionId = 1;
-  const slotIdx = 0;
+  const slotIdx = 1;
   const tokenId = 1;
 
   await mockNFT.mint(owner.address, 'nftURI');

@@ -13,9 +13,9 @@ import "./IAuctionFactory.sol";
 contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
     using SafeMath for uint256;
 
-    uint256 private totalAuctions;
+    uint256 public totalAuctions;
     mapping(uint256 => Auction) public auctions;
-    mapping(uint256 => uint256) private auctionsRevenue;
+    mapping(uint256 => uint256) public auctionsRevenue;
 
     event LogERC721Deposit(
         address depositor,

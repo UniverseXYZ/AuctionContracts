@@ -229,7 +229,7 @@ describe('Finalize auction ERC721 Tests', () => {
     const blockNumber = await ethers.provider.getBlockNumber();
 
     const startBlockNumber = blockNumber + 2;
-    const endBlockNumber = blockNumber + 5;
+    const endBlockNumber = blockNumber + 7;
     const resetTimer = 1;
     const numberOfSlots = 4;
     const supportsWhitelist = false;
