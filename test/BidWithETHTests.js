@@ -24,7 +24,7 @@ describe('Test bidding with ETH', () => {
 
     expect(
       await auctionFactory.functions['bid(uint256)'](1, {
-        value: '100000000000000000000',
+        value: '100000000000000000000'
       })
     ).to.be.emit(auctionFactory, 'LogBidSubmitted');
 
@@ -32,7 +32,7 @@ describe('Test bidding with ETH', () => {
 
     expect(
       await auctionFactory.connect(addr1).functions['bid(uint256)'](1, {
-        value: '200000000000000000000',
+        value: '200000000000000000000'
       })
     ).to.be.emit(auctionFactory, 'LogBidSubmitted');
 
@@ -56,7 +56,7 @@ describe('Test bidding with ETH', () => {
 
     await expect(
       auctionFactory.functions['bid(uint256)'](3, {
-        value: '100000000000000000000',
+        value: '100000000000000000000'
       })
     ).to.be.reverted;
   });
@@ -64,7 +64,23 @@ describe('Test bidding with ETH', () => {
   it('should revert if amount is 0', async () => {
     let { auctionFactory, mockNFT } = await loadFixture(deployedContracts);
 
-    await createAuction(auctionFactory);
+    const blockNumber = await ethers.provider.getBlockNumber();
+
+    const startBlockNumber = blockNumber + 1;
+    const endBlockNumber = blockNumber + 10;
+    const resetTimer = 3;
+    const numberOfSlots = 1;
+    const supportsWhitelist = false;
+    const ethAddress = '0x0000000000000000000000000000000000000000';
+
+    await auctionFactory.createAuction(
+      startBlockNumber,
+      endBlockNumber,
+      resetTimer,
+      numberOfSlots,
+      supportsWhitelist,
+      ethAddress
+    );
 
     await depositNFT(auctionFactory, mockNFT);
 
@@ -72,7 +88,7 @@ describe('Test bidding with ETH', () => {
 
     await expect(
       auctionFactory.functions['bid(uint256)'](1, {
-        value: '100000000000000000000',
+        value: '0'
       })
     ).to.be.reverted;
   });
@@ -86,7 +102,7 @@ describe('Test bidding with ETH', () => {
 
     await expect(
       auctionFactory.functions['bid(uint256)'](1, {
-        value: '0',
+        value: '0'
       })
     ).to.be.reverted;
   });
@@ -96,7 +112,7 @@ describe('Test bidding with ETH', () => {
 
     const blockNumber = await ethers.provider.getBlockNumber();
 
-    const startBlockNumber = blockNumber + 5;
+    const startBlockNumber = blockNumber + 1;
     const endBlockNumber = blockNumber + 10;
     const resetTimer = 3;
     const numberOfSlots = 1;
@@ -118,9 +134,205 @@ describe('Test bidding with ETH', () => {
 
     await expect(
       auctionFactory.functions['bid(uint256)'](1, {
-        value: '100000000000000000000',
+        value: '100000000000000000000'
       })
     ).to.be.reverted;
+  });
+
+  it('should revert if auction canceled', async () => {
+    let { auctionFactory, mockNFT } = await loadFixture(deployedContracts);
+
+    const blockNumber = await ethers.provider.getBlockNumber();
+
+    const startBlockNumber = blockNumber + 2;
+    const endBlockNumber = blockNumber + 10;
+    const resetTimer = 3;
+    const numberOfSlots = 1;
+    const supportsWhitelist = false;
+    const ethAddress = '0x0000000000000000000000000000000000000000';
+
+    await auctionFactory.createAuction(
+      startBlockNumber,
+      endBlockNumber,
+      resetTimer,
+      numberOfSlots,
+      supportsWhitelist,
+      ethAddress
+    );
+
+    await depositNFT(auctionFactory, mockNFT);
+
+    await auctionFactory.cancelAuction(1);
+
+    await createAuction(auctionFactory);
+
+    await expect(
+      auctionFactory.functions['bid(uint256)'](1, {
+        value: '100000000000000000000'
+      })
+    ).to.be.reverted;
+  });
+
+  it('should revert if there is no bid on all slots and user try to withdrawal', async () => {
+    let { auctionFactory, mockNFT } = await loadFixture(deployedContracts);
+
+    const blockNumber = await ethers.provider.getBlockNumber();
+
+    const startBlockNumber = blockNumber + 1;
+    const endBlockNumber = blockNumber + 10;
+    const resetTimer = 3;
+    const numberOfSlots = 1;
+    const supportsWhitelist = false;
+    const ethAddress = '0x0000000000000000000000000000000000000000';
+
+    await auctionFactory.createAuction(
+      startBlockNumber,
+      endBlockNumber,
+      resetTimer,
+      numberOfSlots,
+      supportsWhitelist,
+      ethAddress
+    );
+
+    await depositNFT(auctionFactory, mockNFT);
+
+    await createAuction(auctionFactory);
+
+    await createAuction(auctionFactory);
+
+    await createAuction(auctionFactory);
+
+    await auctionFactory.functions['bid(uint256)'](1, {
+      value: '100000000000000000000'
+    });
+
+    await expect(auctionFactory.withdrawEthBid(1)).to.be.reverted;
+  });
+
+  it('should revert if there is no bid on all slots and user try to withdrawal', async () => {
+    let { auctionFactory, mockNFT } = await loadFixture(deployedContracts);
+
+    const blockNumber = await ethers.provider.getBlockNumber();
+
+    const startBlockNumber = blockNumber + 1;
+    const endBlockNumber = blockNumber + 10;
+    const resetTimer = 3;
+    const numberOfSlots = 1;
+    const supportsWhitelist = false;
+    const ethAddress = '0x0000000000000000000000000000000000000000';
+
+    await auctionFactory.createAuction(
+      startBlockNumber,
+      endBlockNumber,
+      resetTimer,
+      numberOfSlots,
+      supportsWhitelist,
+      ethAddress
+    );
+
+    await depositNFT(auctionFactory, mockNFT);
+
+    await createAuction(auctionFactory);
+
+    await createAuction(auctionFactory);
+
+    await createAuction(auctionFactory);
+
+    await auctionFactory.functions['bid(uint256)'](1, {
+      value: '100000000000000000000'
+    });
+
+    await auctionFactory.functions['bid(uint256)'](1, {
+      value: '110000000000000000000'
+    });
+
+    await expect(auctionFactory.withdrawEthBid(1)).to.be.reverted;
+  });
+
+  it('should revert if bid is not greater than lowestEligibleBid', async () => {
+    let { auctionFactory, mockNFT } = await loadFixture(deployedContracts);
+
+    const blockNumber = await ethers.provider.getBlockNumber();
+
+    const startBlockNumber = blockNumber + 1;
+    const endBlockNumber = blockNumber + 2;
+    const resetTimer = 3;
+    const numberOfSlots = 1;
+    const supportsWhitelist = false;
+    const ethAddress = '0x0000000000000000000000000000000000000000';
+
+    await auctionFactory.createAuction(
+      startBlockNumber,
+      endBlockNumber,
+      resetTimer,
+      numberOfSlots,
+      supportsWhitelist,
+      ethAddress
+    );
+
+    await depositNFT(auctionFactory, mockNFT);
+
+    await createAuction(auctionFactory);
+
+    await createAuction(auctionFactory);
+
+    await createAuction(auctionFactory);
+
+    await createAuction(auctionFactory);
+
+    await auctionFactory.functions['bid(uint256)'](1, {
+      value: '100000000000000000000'
+    });
+
+    await expect(
+      auctionFactory.functions['bid(uint256)'](1, {
+        value: '100000000000000000000'
+      })
+    ).to.be.reverted;
+  });
+
+  it('should revert if sender have 0 deposited', async () => {
+    let { auctionFactory, mockNFT } = await loadFixture(deployedContracts);
+
+    const blockNumber = await ethers.provider.getBlockNumber();
+
+    const startBlockNumber = blockNumber + 1;
+    const endBlockNumber = blockNumber + 2;
+    const resetTimer = 3;
+    const numberOfSlots = 1;
+    const supportsWhitelist = false;
+    const ethAddress = '0x0000000000000000000000000000000000000000';
+
+    await auctionFactory.createAuction(
+      startBlockNumber,
+      endBlockNumber,
+      resetTimer,
+      numberOfSlots,
+      supportsWhitelist,
+      ethAddress
+    );
+
+    await depositNFT(auctionFactory, mockNFT);
+
+    await createAuction(auctionFactory);
+
+    await createAuction(auctionFactory);
+
+    await createAuction(auctionFactory);
+
+    await createAuction(auctionFactory);
+
+    const [signer, signer2, signer3] = await ethers.getSigners();
+
+    auctionFactory.connect(signer2).functions['bid(uint256)'](1, {
+      value: '100000000000000000000'
+    });
+
+    auctionFactory.connect(signer3).functions['bid(uint256)'](1, {
+      value: '110000000000000000000'
+    });
+
+    await expect(auctionFactory.connect(signer).withdrawEthBid(1)).to.be.reverted;
   });
 });
 
