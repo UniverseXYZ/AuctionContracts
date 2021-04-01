@@ -44,7 +44,7 @@ describe('AuctionFactory', () => {
 
     await mockNFT.mint(owner.address, 'testURI');
     mockNFT.approve(auctionFactory.address, 1);
-    depositData = await auctionFactory.depositERC721(1, 0, 1, mockNFT.address);
+    depositData = await auctionFactory.depositERC721(1, 1, 1, mockNFT.address);
 
     return { auctionFactory, mockNFT, mockToken };
   }
@@ -76,7 +76,7 @@ describe('AuctionFactory', () => {
   });
   it('Deposit NFT into Auction', async function () {
     const { auctionFactory, mockNFT, mockToken } = await loadFixture(depositERC721);
-    const deposited = await auctionFactory.getDepositedNftsInSlot(1, 0);
+    const deposited = await auctionFactory.getDepositedNftsInSlot(1, 1);
 
     expect(deposited[0]['tokenId'].toString()).to.equal('1');
   });
@@ -126,7 +126,7 @@ describe('AuctionFactory', () => {
     const [signer, signer2] = await ethers.getSigners();
 
     const auctionId = 1;
-    const slotIdx = 0;
+    const slotIdx = 1;
     const tokenId = 1;
 
     await mockNFT.mint(signer.address, 'nftURI');
@@ -167,7 +167,7 @@ describe('AuctionFactory', () => {
     const [signer] = await ethers.getSigners();
 
     const auctionId = 1;
-    const slotIdx = 0;
+    const slotIdx = 1;
     const tokenId = 1;
 
     await mockNFT.mint(signer.address, 'nftURI');
@@ -204,7 +204,7 @@ describe('AuctionFactory', () => {
     const [signer] = await ethers.getSigners();
 
     const auctionId = 1;
-    const slotIdx = 0;
+    const slotIdx = 1;
     const tokenId = 1;
 
     await mockNFT.mint(signer.address, 'nftURI');
@@ -241,7 +241,7 @@ describe('AuctionFactory', () => {
     const [signer, signer2] = await ethers.getSigners();
 
     const auctionId = 1;
-    const slotIdx = 0;
+    const slotIdx = 1;
     const tokenId = 1;
 
     await mockNFT.mint(signer.address, 'nftURI');

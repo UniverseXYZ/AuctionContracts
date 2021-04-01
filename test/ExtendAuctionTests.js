@@ -60,8 +60,8 @@ describe('Extend auction ERC721 Tests', () => {
     const blockNumber = await ethers.provider.getBlockNumber();
 
     const startBlockNumber = blockNumber + 1;
-    const endBlockNumber = blockNumber + 20;
-    const resetTimer = 3;
+    const endBlockNumber = blockNumber + 5;
+    const resetTimer = 2;
     const numberOfSlots = 3;
     const supportsWhitelist = false;
     const tokenAddress = mockToken.address;
@@ -144,7 +144,7 @@ const createAuction = async (auctionFactory) => {
   const blockNumber = await ethers.provider.getBlockNumber();
 
   const startBlockNumber = blockNumber + 5;
-  const endBlockNumber = blockNumber + 20;
+  const endBlockNumber = blockNumber + 10;
   const resetTimer = 3;
   const numberOfSlots = 3;
   const supportsWhitelist = false;

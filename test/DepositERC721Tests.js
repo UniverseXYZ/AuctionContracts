@@ -23,7 +23,7 @@ describe('DEPOSIT ERC721 Functionality', () => {
     const [owner] = await ethers.getSigners();
 
     const auctionId = 1;
-    const slotIdx = 0;
+    const slotIdx = 1;
     const tokenId = 1;
 
     await mockNFT.mint(owner.address, 'nftURI');
@@ -61,7 +61,7 @@ describe('DEPOSIT ERC721 Functionality', () => {
     const [owner] = await ethers.getSigners();
 
     const auctionId = 1;
-    const slotIdx = 0;
+    const slotIdx = 1;
     const tokenId = 1;
 
     await mockNFT.mint(owner.address, 'nftURI');
@@ -69,7 +69,7 @@ describe('DEPOSIT ERC721 Functionality', () => {
 
     await auctionFactory.depositERC721(auctionId, slotIdx, tokenId, mockNFT.address);
 
-    await expect(auctionFactory.withdrawDepositedERC721(1, 0, 1)).to.be.emit(auctionFactory, 'LogERC721Withdrawal');
+    await expect(auctionFactory.withdrawDepositedERC721(1, 1, 1)).to.be.emit(auctionFactory, 'LogERC721Withdrawal');
   });
 
   it('should revert if auctionId do not exists', async () => {
