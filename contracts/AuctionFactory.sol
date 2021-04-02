@@ -15,8 +15,10 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
 
     uint256 public totalAuctions;
     uint256 public maxNumberOfSlots;
+    uint256 public royaltyFeeMantissa;
     mapping(uint256 => Auction) public auctions;
     mapping(uint256 => uint256) public auctionsRevenue;
+    mapping(address => uint256) public royaltiesReserve;
 
     event LogERC721Deposit(
         address depositor,
@@ -83,6 +85,13 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         address claimer,
         uint256 auctionId,
         uint256 slotIndex,
+        uint256 time
+    );
+
+    event LogRoyaltiesWithdrawal(
+        uint256 amount,
+        address to,
+        address token,
         uint256 time
     );
 
@@ -500,6 +509,18 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
                     auction.balanceOf[winners[i]]
                 );
             }
+            uint256 _royaltyFee =
+                calculateRoyaltyFee(
+                    auctionsRevenue[auctionId],
+                    royaltyFeeMantissa
+                );
+            auctionsRevenue[auctionId] = auctionsRevenue[auctionId].sub(
+                _royaltyFee
+            );
+            royaltiesReserve[auction.bidToken] = royaltiesReserve[
+                auction.bidToken
+            ]
+                .add(_royaltyFee);
             auction.isFinalized = true;
         }
         return isValid;
@@ -772,5 +793,60 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         );
 
         return true;
+    }
+
+    function setRoyaltyFeeMantissa(uint256 _royaltyFeeMantissa)
+        external
+        override
+        onlyOwner
+        returns (uint256)
+    {
+        require(
+            _royaltyFeeMantissa < 100000000000000000,
+            "Should be less than 10%"
+        );
+        royaltyFeeMantissa = _royaltyFeeMantissa;
+
+        return royaltyFeeMantissa;
+    }
+
+    function calculateRoyaltyFee(uint256 amount, uint256 _royaltyFeeMantissa)
+        internal
+        pure
+        returns (uint256)
+    {
+        uint256 result = _royaltyFeeMantissa.mul(amount);
+        result = result.div(1e18);
+        return result;
+    }
+
+    function withdrawRoyalties(address _token, address _to)
+        external
+        override
+        onlyOwner
+        returns (uint256)
+    {
+        uint256 amountToWithdraw = royaltiesReserve[_token];
+        require(amountToWithdraw > 0, "Amount is 0");
+
+        royaltiesReserve[_token] = 0;
+
+        if (_token == address(0)) {
+            payable(_to).transfer(amountToWithdraw);
+        }
+
+        if (_token != address(0)) {
+            IERC20 token = IERC20(_token);
+            token.transfer(_to, amountToWithdraw);
+        }
+
+        emit LogRoyaltiesWithdrawal(
+            amountToWithdraw,
+            _to,
+            _token,
+            block.timestamp
+        );
+
+        return amountToWithdraw;
     }
 }
