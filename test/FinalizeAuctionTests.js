@@ -8,7 +8,7 @@ describe('Finalize auction ERC721 Tests', () => {
     const MockNFT = await ethers.getContractFactory('MockNFT');
     const MockToken = await ethers.getContractFactory('MockToken');
 
-    const auctionFactory = await AuctionFactory.deploy();
+    const auctionFactory = await AuctionFactory.deploy(2000);
     const mockNFT = await MockNFT.deploy();
     const mockToken = await MockToken.deploy(1000);
 
@@ -367,6 +367,54 @@ describe('Finalize auction ERC721 Tests', () => {
     await auctionFactory.finalizeAuction(1, [signer.address]);
 
     await auctionFactory.connect(signer).claimERC721Rewards(1, 1);
+  });
+
+  it('should revert if last address do not have lowest bid', async () => {
+    const { auctionFactory, mockNFT } = await loadFixture(deployedContracts);
+
+    const blockNumber = await ethers.provider.getBlockNumber();
+
+    const startBlockNumber = blockNumber + 1;
+    const endBlockNumber = blockNumber + 4;
+    const resetTimer = 1;
+    const numberOfSlots = 2;
+    const supportsWhitelist = false;
+    const ethAddress = '0x0000000000000000000000000000000000000000';
+
+    await auctionFactory.createAuction(
+      startBlockNumber,
+      endBlockNumber,
+      resetTimer,
+      numberOfSlots,
+      supportsWhitelist,
+      ethAddress
+    );
+
+    const [signer, signer2] = await ethers.getSigners();
+
+    for (let i = 0; i < 3; i++) {
+      await mockNFT.connect(signer).mint(signer.address, 'TOKEN_URI');
+
+      await mockNFT.connect(signer).approve(auctionFactory.address, 1);
+    }
+
+    await auctionFactory.depositERC721(1, 1, 1, mockNFT.address);
+
+    await createAuction(auctionFactory);
+
+    await auctionFactory.connect(signer).functions['bid(uint256)'](1, {
+      value: '100000000000000000000'
+    });
+
+    await auctionFactory.connect(signer2).functions['bid(uint256)'](1, {
+      value: '200000000000000000000'
+    });
+
+    await auctionFactory.connect(signer2).functions['bid(uint256)'](1, {
+      value: '300000000000000000000'
+    });
+
+    await expect(auctionFactory.finalizeAuction(1, [signer2.address, signer.address])).to.be.reverted;
   });
 });
 

@@ -8,7 +8,7 @@ describe('AuctionFactory', () => {
     const MockNFT = await ethers.getContractFactory('MockNFT');
     const MockToken = await ethers.getContractFactory('MockToken');
 
-    const auctionFactory = await AuctionFactory.deploy();
+    const auctionFactory = await AuctionFactory.deploy(2000);
     const mockNFT = await MockNFT.deploy();
     const mockToken = await MockToken.deploy(1000);
     const [owner, addr1] = await ethers.getSigners();
