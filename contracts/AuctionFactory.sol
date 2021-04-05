@@ -14,6 +14,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
     using SafeMath for uint256;
 
     uint256 public totalAuctions;
+    uint256 public maxNumberOfSlots;
     mapping(uint256 => Auction) public auctions;
     mapping(uint256 => uint256) public auctionsRevenue;
 
@@ -172,7 +173,10 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         _;
     }
 
-    constructor() {}
+    constructor(uint256 _maxNumberOfSlots) {
+        require(_maxNumberOfSlots > 0 && _maxNumberOfSlots <= 2000, "Number of slots cannot be more than 2000");
+        maxNumberOfSlots = _maxNumberOfSlots;
+    }
 
     function createAuction(
         uint256 _startBlockNumber,
@@ -197,7 +201,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         require(_resetTimer > 0, "Reset timer must be higher than 0 blocks");
 
         require(
-            _numberOfSlots > 0 && _numberOfSlots <= 2000,
+            _numberOfSlots > 0 && _numberOfSlots <= maxNumberOfSlots,
             "Auction can have between 1 and 2000 slots"
         );
 

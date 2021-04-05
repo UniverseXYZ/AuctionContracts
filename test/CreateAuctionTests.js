@@ -5,10 +5,20 @@ const { loadFixture } = waffle;
 describe('Create Auction Tests', () => {
   async function deployContract() {
     const AuctionFactory = await ethers.getContractFactory('AuctionFactory');
-    const auctionFactory = await AuctionFactory.deploy();
+    const auctionFactory = await AuctionFactory.deploy(2000);
 
     return { auctionFactory };
   }
+
+  it('should revert if numberOfSlots higher than 2000', async() => {
+    const AuctionFactory = await ethers.getContractFactory('AuctionFactory');
+    await expect(AuctionFactory.deploy(2001)).to.be.reverted;
+  })
+
+  it('should revert if numberOfSlots is 0', async() => {
+    const AuctionFactory = await ethers.getContractFactory('AuctionFactory');
+    await expect(AuctionFactory.deploy(2001)).to.be.reverted;
+  })
 
   it('should Deploy the AuctionFactory and MockNFT', async function () {
     const { auctionFactory } = await loadFixture(deployContract);

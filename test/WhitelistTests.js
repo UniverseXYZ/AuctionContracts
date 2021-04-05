@@ -9,7 +9,7 @@ describe('Whitelist functionality', () => {
       ethers.getContractFactory('MockNFT')
     ]);
 
-    const [auctionFactory, mockNft] = await Promise.all([AuctionFactory.deploy(), MockNFT.deploy()]);
+    const [auctionFactory, mockNft] = await Promise.all([AuctionFactory.deploy(2000), MockNFT.deploy()]);
 
     return { auctionFactory, mockNft };
   };

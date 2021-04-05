@@ -7,7 +7,7 @@ describe('Deposit multiple ERC721 Tests', () => {
     const AuctionFactory = await ethers.getContractFactory('AuctionFactory');
     const MockNFT = await ethers.getContractFactory('MockNFT');
 
-    const auctionFactory = await AuctionFactory.deploy();
+    const auctionFactory = await AuctionFactory.deploy(2000);
     const mockNFT = await MockNFT.deploy();
 
     return { auctionFactory, mockNFT };
