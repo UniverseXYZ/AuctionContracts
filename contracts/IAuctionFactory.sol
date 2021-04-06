@@ -161,4 +161,13 @@ interface IAuctionFactory {
     /// @param auctionId The auction id
     /// @param slotIndex The slot index
     function claimERC721Rewards(uint256 auctionId, uint256 slotIndex) external returns (bool);
+
+    /// @notice Sets the percentage of the royalty which wil be kept from each sale
+    /// @param royaltyFeeMantissa The royalty percentage
+    function setRoyaltyFeeMantissa(uint256 royaltyFeeMantissa) external returns (uint256);
+
+    /// @notice Withdraws the aggregated royalites amount of specific token to a specified address
+    /// @param token The address of the token to withdraw
+    /// @param to The address to which the royalties will be transfered
+    function withdrawRoyalties(address token, address to) external returns (uint256);
 }
