@@ -17,6 +17,7 @@ interface IAuctionFactory {
         uint256 numberOfBids;
         uint256 lowestEligibleBid;
         uint256 highestTotalBid;
+        uint256 lowestTotalBid;
         bool supportsWhitelist;
         bool isCanceled;
         address bidToken;

@@ -14,7 +14,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
     using SafeMath for uint256;
 
     uint256 public totalAuctions;
-    uint256 public maxNumberOfSlots;
+    uint256 public maxNumberOfSlotsPerAuction;
     uint256 public royaltyFeeMantissa;
     mapping(uint256 => Auction) public auctions;
     mapping(uint256 => uint256) public auctionsRevenue;
@@ -182,9 +182,12 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         _;
     }
 
-    constructor(uint256 _maxNumberOfSlots) {
-        require(_maxNumberOfSlots > 0 && _maxNumberOfSlots <= 2000, "Number of slots cannot be more than 2000");
-        maxNumberOfSlots = _maxNumberOfSlots;
+    constructor(uint256 _maxNumberOfSlotsPerAuction) {
+        require(
+            _maxNumberOfSlotsPerAuction > 0 && _maxNumberOfSlotsPerAuction <= 2000,
+            "Number of slots cannot be more than 2000"
+        );
+        maxNumberOfSlotsPerAuction = _maxNumberOfSlotsPerAuction;
     }
 
     function createAuction(
@@ -210,7 +213,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         require(_resetTimer > 0, "Reset timer must be higher than 0 blocks");
 
         require(
-            _numberOfSlots > 0 && _numberOfSlots <= maxNumberOfSlots,
+            _numberOfSlots > 0 && _numberOfSlots <= maxNumberOfSlotsPerAuction,
             "Auction can have between 1 and 2000 slots"
         );
 
@@ -394,6 +397,13 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
             auction.highestTotalBid = auction.balanceOf[_bidder];
         }
 
+        if (
+            auction.balanceOf[_bidder] < auction.lowestTotalBid ||
+            auction.lowestTotalBid == 0
+        ) {
+            auction.lowestTotalBid = auction.balanceOf[_bidder];
+        }
+
         emit LogBidSubmitted(
             _bidder,
             _auctionId,
@@ -451,6 +461,13 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
             auction.highestTotalBid = auction.balanceOf[_bidder];
         }
 
+        if (
+            auction.balanceOf[_bidder] < auction.lowestTotalBid ||
+            auction.lowestTotalBid == 0
+        ) {
+            auction.lowestTotalBid = auction.balanceOf[_bidder];
+        }
+
         bidToken.transferFrom(_bidder, address(this), _bid);
 
         emit LogBidSubmitted(
@@ -489,7 +506,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         );
         require(
             auction.balanceOf[winners[winners.length - 1]] ==
-                auction.lowestEligibleBid,
+                auction.lowestTotalBid,
             "Last address should have the lowest bid"
         );
 
