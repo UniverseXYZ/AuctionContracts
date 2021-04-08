@@ -414,7 +414,7 @@ describe('Finalize auction ERC721 Tests', () => {
       value: '300000000000000000000'
     });
 
-    await expect(auctionFactory.finalizeAuction(1, [signer2.address, signer.address])).to.be.reverted;
+    await expect(auctionFactory.finalizeAuction(1, [signer.address, signer2.address])).to.be.reverted;
   });
 });
 
