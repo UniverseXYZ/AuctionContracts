@@ -184,7 +184,8 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
 
     constructor(uint256 _maxNumberOfSlotsPerAuction) {
         require(
-            _maxNumberOfSlotsPerAuction > 0 && _maxNumberOfSlotsPerAuction <= 2000,
+            _maxNumberOfSlotsPerAuction > 0 &&
+                _maxNumberOfSlotsPerAuction <= 2000,
             "Number of slots cannot be more than 2000"
         );
         maxNumberOfSlotsPerAuction = _maxNumberOfSlotsPerAuction;
@@ -521,10 +522,18 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
 
         if (isValid) {
             for (uint256 i = 0; i < winners.length; i++) {
-                auction.winners[i + 1] = winners[i];
-                auctionsRevenue[auctionId] = auctionsRevenue[auctionId].add(
-                    auction.balanceOf[winners[i]]
-                );
+                if (
+                    auction.balanceOf[winners[i]] >=
+                    auction.slots[i + 1].reservePrice
+                ) {
+                    auction.slots[i + 1].reservePriceMet = true;
+                }
+                if (auction.slots[i + 1].reservePriceMet) {
+                    auction.winners[i + 1] = winners[i];
+                    auctionsRevenue[auctionId] = auctionsRevenue[auctionId].add(
+                        auction.balanceOf[winners[i]]
+                    );
+                }
             }
             uint256 _royaltyFee =
                 calculateRoyaltyFee(
@@ -612,6 +621,52 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         );
 
         delete auctions[auctionId].slots[slotIndex].depositedNfts[nftSlotIndex];
+
+        IERC721(nftForWithdrawal.tokenAddress).safeTransferFrom(
+            address(this),
+            nftForWithdrawal.depositor,
+            nftForWithdrawal.tokenId
+        );
+
+        emit LogERC721Withdrawal(
+            msg.sender,
+            nftForWithdrawal.tokenAddress,
+            nftForWithdrawal.tokenId,
+            auctionId,
+            slotIndex,
+            nftSlotIndex,
+            block.timestamp
+        );
+
+        return true;
+    }
+
+    function withdrawERC721FromNonWinningSlot(
+        uint256 auctionId,
+        uint256 slotIndex,
+        uint256 nftSlotIndex
+    )
+        external
+        override
+        onlyExistingAuction(auctionId)
+        onlyAuctionStarted(auctionId)
+        onlyAuctionNotCanceled(auctionId)
+        returns (bool)
+    {
+        DepositedERC721 memory nftForWithdrawal =
+            auctions[auctionId].slots[slotIndex].depositedNfts[nftSlotIndex];
+
+        require(
+            msg.sender == nftForWithdrawal.depositor,
+            "Only depositor can withdraw"
+        );
+
+        require(
+            auctions[auctionId].slots[slotIndex].reservePriceMet == false,
+            "Can withdraw only if reserve price is not met"
+        );
+
+        require(auctions[auctionId].isFinalized, "Auction should be finalized");
 
         IERC721(nftForWithdrawal.tokenAddress).safeTransferFrom(
             address(this),
@@ -788,6 +843,10 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
             auction.winners[slotIndex] == claimer,
             "Only the winner can claim rewards"
         );
+        require(
+            winningSlot.reservePriceMet,
+            "The reserve price hasn't been met"
+        );
 
         for (uint256 i = 0; i < winningSlot.totalDepositedNfts; i++) {
             DepositedERC721 memory nftForWithdrawal =
@@ -865,5 +924,39 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         );
 
         return amountToWithdraw;
+    }
+
+    function setMinimumReserveForAuctionSlots(
+        uint256 auctionId,
+        uint256[] calldata minimumReserveValues
+    )
+        external
+        override
+        onlyExistingAuction(auctionId)
+        onlyAuctionNotStarted(auctionId)
+        onlyAuctionNotCanceled(auctionId)
+        returns (bool)
+    {
+        Auction storage auction = auctions[auctionId];
+
+        require(
+            auction.numberOfSlots == minimumReserveValues.length,
+            "Incorrect number of slots"
+        );
+
+        for (uint256 i = 0; i < minimumReserveValues.length; i++) {
+            auction.slots[i + 1].reservePrice = minimumReserveValues[i];
+        }
+
+        return true;
+    }
+
+    function getMinimumReservePriceForSlot(uint256 auctionId, uint256 slotIndex)
+        external
+        view
+        override
+        returns (uint256)
+    {
+        return auctions[auctionId].slots[slotIndex].reservePrice;
     }
 }
