@@ -184,8 +184,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
 
     constructor(uint256 _maxNumberOfSlotsPerAuction) {
         require(
-            _maxNumberOfSlotsPerAuction > 0 &&
-                _maxNumberOfSlotsPerAuction <= 2000,
+            _maxNumberOfSlotsPerAuction > 0 && _maxNumberOfSlotsPerAuction <= 2000,
             "Number of slots cannot be more than 2000"
         );
         maxNumberOfSlotsPerAuction = _maxNumberOfSlotsPerAuction;
