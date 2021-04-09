@@ -10,7 +10,7 @@ describe('Test royalty fee functionality', () => {
 
     const auctionFactory = await AuctionFactory.deploy(5);
     const mockNFT = await MockNFT.deploy();
-    const mockToken = await MockToken.deploy(1000);
+    const mockToken = await MockToken.deploy("1000000000000000000");
 
     return { auctionFactory, mockNFT, mockToken };
   };
@@ -65,20 +65,24 @@ describe('Test royalty fee functionality', () => {
 
     await auctionFactory.depositERC721(1, 1, 1, mockNFT.address);
 
-    await auctionFactory.setRoyaltyFeeMantissa('90000000000000000');
+    await auctionFactory.setRoyaltyFeeMantissa('50000000000000000');
+
+    expect(await auctionFactory.royaltyFeeMantissa()).to.equal('50000000000000000')
 
     await auctionFactory.functions['bid(uint256)'](1, {
-      value: '100000000000000000000'
+      value: '1000000000000000000'
     });
 
     await auctionFactory.finalizeAuction(1, [signer.address]);
+
+    expect(await auctionFactory.royaltiesReserve(ethAddress)).to.equal('50000000000000000')
 
     await expect(auctionFactory.withdrawRoyalties(ethAddress, signer.address)).emit(
       auctionFactory,
       'LogRoyaltiesWithdrawal'
     );
 
-     expect(await auctionFactory.royaltiesReserve(signer.address)).to.equal('0')
+     expect(await auctionFactory.royaltiesReserve(ethAddress)).to.equal('0')
   });
 
   it('should withdraw royaltee with ERC20 successfully', async () => {
@@ -113,18 +117,22 @@ describe('Test royalty fee functionality', () => {
 
     await auctionFactory.depositERC721(1, 1, 1, mockNFT.address);
 
-    await auctionFactory.setRoyaltyFeeMantissa('90000000000000000');
+    await auctionFactory.setRoyaltyFeeMantissa('50000000000000000');
 
-    await auctionFactory.functions['bid(uint256,uint256)'](1, 50);
+    expect(await auctionFactory.royaltyFeeMantissa()).to.equal('50000000000000000')
+
+    await auctionFactory.functions['bid(uint256,uint256)'](1, "1000000000000000000");
 
     await auctionFactory.finalizeAuction(1, [signer.address]);
+
+    expect(await auctionFactory.royaltiesReserve(tokenAddress)).to.equal('50000000000000000')
 
     await expect(auctionFactory.withdrawRoyalties(tokenAddress, signer.address)).emit(
       auctionFactory,
       'LogRoyaltiesWithdrawal'
     );
 
-    expect(await auctionFactory.royaltiesReserve(signer.address)).to.equal('0')
+    expect(await auctionFactory.royaltiesReserve(tokenAddress)).to.equal('0')
   });
 
   it('should revert if amount is zero', async () => {
