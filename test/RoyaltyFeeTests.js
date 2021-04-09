@@ -77,9 +77,11 @@ describe('Test royalty fee functionality', () => {
       auctionFactory,
       'LogRoyaltiesWithdrawal'
     );
+
+     expect(await auctionFactory.royaltiesReserve(signer.address)).to.equal('0')
   });
 
-  it('should withdraw royaltee with eth successfully', async () => {
+  it('should withdraw royaltee with ERC20 successfully', async () => {
     const { auctionFactory, mockNFT, mockToken } = await loadFixture(deployContracts);
     const blockNumber = await ethers.provider.getBlockNumber();
 
@@ -121,6 +123,8 @@ describe('Test royalty fee functionality', () => {
       auctionFactory,
       'LogRoyaltiesWithdrawal'
     );
+
+    expect(await auctionFactory.royaltiesReserve(signer.address)).to.equal('0')
   });
 
   it('should revert if amount is zero', async () => {
