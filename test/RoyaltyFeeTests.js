@@ -19,6 +19,8 @@ describe('Test royalty fee functionality', () => {
     const { auctionFactory } = await loadFixture(deployContracts);
 
     await auctionFactory.setRoyaltyFeeMantissa('90000000000000000');
+
+    expect(await auctionFactory.royaltyFeeMantissa()).to.equal('90000000000000000');
   });
 
   it('should revert if not the contract owner try to set it', async () => {
@@ -67,7 +69,7 @@ describe('Test royalty fee functionality', () => {
 
     await auctionFactory.setRoyaltyFeeMantissa('50000000000000000');
 
-    expect(await auctionFactory.royaltyFeeMantissa()).to.equal('50000000000000000')
+    expect(await auctionFactory.royaltyFeeMantissa()).to.equal('50000000000000000');
 
     await auctionFactory.functions['bid(uint256)'](1, {
       value: '1000000000000000000'
@@ -75,7 +77,7 @@ describe('Test royalty fee functionality', () => {
 
     await auctionFactory.finalizeAuction(1, [signer.address]);
 
-    expect(await auctionFactory.royaltiesReserve(ethAddress)).to.equal('50000000000000000')
+    expect(await auctionFactory.royaltiesReserve(ethAddress)).to.equal('50000000000000000');
 
     await expect(auctionFactory.withdrawRoyalties(ethAddress, signer.address)).emit(
       auctionFactory,
@@ -119,13 +121,13 @@ describe('Test royalty fee functionality', () => {
 
     await auctionFactory.setRoyaltyFeeMantissa('50000000000000000');
 
-    expect(await auctionFactory.royaltyFeeMantissa()).to.equal('50000000000000000')
+    expect(await auctionFactory.royaltyFeeMantissa()).to.equal('50000000000000000');
 
     await auctionFactory.functions['bid(uint256,uint256)'](1, "1000000000000000000");
 
     await auctionFactory.finalizeAuction(1, [signer.address]);
 
-    expect(await auctionFactory.royaltiesReserve(tokenAddress)).to.equal('50000000000000000')
+    expect(await auctionFactory.royaltiesReserve(tokenAddress)).to.equal('50000000000000000');
 
     await expect(auctionFactory.withdrawRoyalties(tokenAddress, signer.address)).emit(
       auctionFactory,
