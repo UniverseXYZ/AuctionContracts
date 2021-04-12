@@ -537,9 +537,8 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
                         auction.balanceOf[firstNBidders[j]]
                     ) {
                         auction.slots[i + 1].reservePriceReached = true;
-                        auction.slots[i + 1].winningBidAmount = auction.balanceOf[
-                            firstNBidders[lastAwardedIndex]
-                        ];
+                        auction.slots[i + 1].winningBidAmount = auction
+                            .balanceOf[firstNBidders[lastAwardedIndex]];
                         auction.slots[i + 1].winner = firstNBidders[
                             lastAwardedIndex
                         ];
@@ -553,6 +552,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
                     auctionsRevenue[auctionId] = auctionsRevenue[auctionId].add(
                         auction.balanceOf[auction.slots[i + 1].winner]
                     );
+                    auction.balanceOf[auction.slots[i + 1].winner] = 0;
                 }
             }
 
@@ -597,6 +597,31 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         return true;
     }
 
+    function withdrawERC20BidAfterAuctionFinalized(uint256 auctionId)
+        external
+        override
+        onlyExistingAuction(auctionId)
+        onlyAuctionStarted(auctionId)
+        onlyAuctionNotCanceled(auctionId)
+        onlyERC20(auctionId)
+        returns (bool)
+    {
+        Auction storage auction = auctions[auctionId];
+        address _sender = msg.sender;
+        uint256 _amount = auction.balanceOf[_sender];
+
+        require(_amount > 0, "You have 0 deposited");
+        require(auction.isFinalized, "Auction should be finalized");
+
+        auction.balanceOf[_sender] = 0;
+        IERC20 bidToken = IERC20(auction.bidToken);
+        bidToken.transfer(_sender, _amount);
+
+        emit LogBidWithdrawal(_sender, auctionId, _amount, block.timestamp);
+
+        return true;
+    }
+
     function withdrawEthBid(uint256 _auctionId)
         external
         override
@@ -613,6 +638,30 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         uint256 _amount = auction.balanceOf[_recipient];
 
         require(_amount > 0, "You have 0 deposited");
+
+        auction.balanceOf[_recipient] = 0;
+        _recipient.transfer(_amount);
+
+        emit LogBidWithdrawal(_recipient, _auctionId, _amount, block.timestamp);
+
+        return true;
+    }
+
+    function withdrawEthBidAfterAuctionFinalized(uint256 _auctionId)
+        external
+        override
+        onlyExistingAuction(_auctionId)
+        onlyAuctionStarted(_auctionId)
+        onlyAuctionNotCanceled(_auctionId)
+        onlyETH(_auctionId)
+        returns (bool)
+    {
+        Auction storage auction = auctions[_auctionId];
+        address payable _recipient = msg.sender;
+        uint256 _amount = auction.balanceOf[_recipient];
+
+        require(_amount > 0, "You have 0 deposited");
+        require(auction.isFinalized, "Auction should be finalized");
 
         auction.balanceOf[_recipient] = 0;
         _recipient.transfer(_amount);

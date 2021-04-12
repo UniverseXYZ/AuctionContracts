@@ -38,6 +38,12 @@ describe('Finalize auction ERC721 Tests', () => {
       })
     ).to.be.emit(auctionFactory, 'LogBidSubmitted');
 
+    const bidderBalance = await auctionFactory.getBidderBalance(1, signer.address);
+
+    const balance = Number(ethers.utils.formatEther(bidderBalance).toString());
+
+    expect(balance).to.equal(200);
+
     await auctionFactory.finalizeAuction(1, [signer.address]);
 
     const auction = await auctionFactory.auctions(1);
@@ -47,12 +53,6 @@ describe('Finalize auction ERC721 Tests', () => {
     const slotWinner = await auctionFactory.getSlotWinner(1, 1);
 
     expect(slotWinner).to.equal(signer.address);
-
-    const bidderBalance = await auctionFactory.getBidderBalance(1, signer.address);
-
-    const balance = Number(ethers.utils.formatEther(bidderBalance).toString());
-
-    expect(balance).to.equal(200);
 
     await expect(auctionFactory.withdrawAuctionRevenue(1)).to.be.emit(auctionFactory, 'LogAuctionRevenueWithdrawal');
 

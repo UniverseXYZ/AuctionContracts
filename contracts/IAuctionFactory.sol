@@ -100,9 +100,17 @@ interface IAuctionFactory {
     /// @param auctionId The auction id
     function withdrawERC20Bid(uint256 auctionId) external returns (bool);
 
+    /// @notice Withdraws the bid amount after auction is finialized and bid is non winning
+    /// @param auctionId The auction id
+    function withdrawERC20BidAfterAuctionFinalized(uint256 auctionId) external returns (bool);
+
     /// @notice Withdraws the eth amount from an auction (if slot is non-winning)
     /// @param auctionId The auction id
     function withdrawEthBid(uint256 auctionId) external returns (bool);
+
+    /// @notice Withdraws the eth bid amount after auction is finalized and bid is non winning
+    /// @param auctionId The auction id
+    function withdrawEthBidAfterAuctionFinalized(uint256 auctionId) external returns (bool);
 
     /// @notice Withdraws the deposited ERC721 before an auction has started
     /// @param auctionId The auction id
