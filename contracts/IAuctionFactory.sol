@@ -31,7 +31,9 @@ interface IAuctionFactory {
     struct Slot {
         uint256 totalDepositedNfts;
         uint256 reservePrice;
-        bool reservePriceMet;
+        uint256 winningBidAmount;
+        bool reservePriceReached;
+        address winner;
         mapping(uint256 => DepositedERC721) depositedNfts;
     }
 

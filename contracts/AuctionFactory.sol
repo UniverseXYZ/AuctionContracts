@@ -482,7 +482,10 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         return true;
     }
 
-    function finalizeAuction(uint256 auctionId, address[] calldata winners)
+    function finalizeAuction(
+        uint256 auctionId,
+        address[] calldata firstNBidders
+    )
         external
         override
         onlyExistingAuction(auctionId)
@@ -493,7 +496,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         bool isValid = true;
 
         require(
-            winners.length == auction.numberOfSlots,
+            firstNBidders.length == auction.numberOfSlots,
             "Incorrect number of winners"
         );
         require(
@@ -502,39 +505,57 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
             "Auction has not finished"
         );
         require(
-            auction.balanceOf[winners[0]] == auction.highestTotalBid,
+            auction.balanceOf[firstNBidders[0]] == auction.highestTotalBid,
             "First address should have the highest bid"
         );
         require(
-            auction.balanceOf[winners[winners.length - 1]] ==
+            auction.balanceOf[firstNBidders[firstNBidders.length - 1]] ==
                 auction.lowestTotalBid,
             "Last address should have the lowest bid"
         );
 
-        for (uint256 i = 1; i < winners.length; i++) {
+        for (uint256 i = 1; i < firstNBidders.length; i++) {
             if (
-                auction.balanceOf[winners[i - 1]] <
-                auction.balanceOf[winners[i]]
+                auction.balanceOf[firstNBidders[i - 1]] <
+                auction.balanceOf[firstNBidders[i]]
             ) {
                 isValid = false;
             }
         }
 
         if (isValid) {
-            for (uint256 i = 0; i < winners.length; i++) {
-                if (
-                    auction.balanceOf[winners[i]] >=
-                    auction.slots[i + 1].reservePrice
+            uint256 lastAwardedIndex = 0;
+
+            for (uint256 i = 0; i < auction.numberOfSlots; i++) {
+                for (
+                    uint256 j = lastAwardedIndex;
+                    j < firstNBidders.length;
+                    j++
                 ) {
-                    auction.slots[i + 1].reservePriceMet = true;
+                    if (
+                        auction.slots[i + 1].reservePrice <
+                        auction.balanceOf[firstNBidders[j]]
+                    ) {
+                        auction.slots[i + 1].reservePriceReached = true;
+                        auction.slots[i + 1].winningBidAmount = auction.balanceOf[
+                            firstNBidders[lastAwardedIndex]
+                        ];
+                        auction.slots[i + 1].winner = firstNBidders[
+                            lastAwardedIndex
+                        ];
+                        lastAwardedIndex++;
+                        break;
+                    }
                 }
-                if (auction.slots[i + 1].reservePriceMet) {
-                    auction.winners[i + 1] = winners[i];
+
+                if (auction.slots[i + 1].reservePriceReached) {
+                    auction.winners[i + 1] = auction.slots[i + 1].winner;
                     auctionsRevenue[auctionId] = auctionsRevenue[auctionId].add(
-                        auction.balanceOf[winners[i]]
+                        auction.balanceOf[auction.slots[i + 1].winner]
                     );
                 }
             }
+
             uint256 _royaltyFee =
                 calculateRoyaltyFee(
                     auctionsRevenue[auctionId],
@@ -662,7 +683,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         );
 
         require(
-            auctions[auctionId].slots[slotIndex].reservePriceMet == false,
+            auctions[auctionId].slots[slotIndex].reservePriceReached == false,
             "Can withdraw only if reserve price is not met"
         );
 
@@ -844,7 +865,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
             "Only the winner can claim rewards"
         );
         require(
-            winningSlot.reservePriceMet,
+            winningSlot.reservePriceReached,
             "The reserve price hasn't been met"
         );
 
