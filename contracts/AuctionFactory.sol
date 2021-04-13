@@ -386,10 +386,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
             "Bid amount must be greater than the lowest eligible bid when all auction slots are filled"
         );
 
-        if (
-            _bid < auction.lowestEligibleBid ||
-            auction.numberOfSlots <= auction.numberOfBids
-        ) {
+        if (_bid < auction.lowestEligibleBid) {
             auction.lowestEligibleBid = _bid;
         }
 
@@ -450,10 +447,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
 
         require(allowance >= _bid, "Token allowance too small");
 
-        if (
-            _bid < auction.lowestEligibleBid ||
-            auction.numberOfSlots <= auction.numberOfBids
-        ) {
+        if (_bid < auction.lowestEligibleBid) {
             auction.lowestEligibleBid = _bid;
         }
 
