@@ -30,6 +30,10 @@ interface IAuctionFactory {
 
     struct Slot {
         uint256 totalDepositedNfts;
+        uint256 reservePrice;
+        uint256 winningBidAmount;
+        bool reservePriceReached;
+        address winner;
         mapping(uint256 => DepositedERC721) depositedNfts;
     }
 
@@ -96,15 +100,33 @@ interface IAuctionFactory {
     /// @param auctionId The auction id
     function withdrawERC20Bid(uint256 auctionId) external returns (bool);
 
+    /// @notice Withdraws the bid amount after auction is finialized and bid is non winning
+    /// @param auctionId The auction id
+    function withdrawERC20BidAfterAuctionFinalized(uint256 auctionId) external returns (bool);
+
     /// @notice Withdraws the eth amount from an auction (if slot is non-winning)
     /// @param auctionId The auction id
     function withdrawEthBid(uint256 auctionId) external returns (bool);
 
-    /// @notice Withdraws the deposited ERC721 if it hasn't been awarded
+    /// @notice Withdraws the eth bid amount after auction is finalized and bid is non winning
+    /// @param auctionId The auction id
+    function withdrawEthBidAfterAuctionFinalized(uint256 auctionId) external returns (bool);
+
+    /// @notice Withdraws the deposited ERC721 before an auction has started
     /// @param auctionId The auction id
     /// @param slotIndex The slot index
     /// @param nftSlotIndex The index of the NFT inside the particular slot - it is returned on depositERC721() call
     function withdrawDepositedERC721(
+        uint256 auctionId,
+        uint256 slotIndex,
+        uint256 nftSlotIndex
+    ) external returns (bool);
+
+    /// @notice Withdraws the deposited ERC721 if the reserve price is not reached
+    /// @param auctionId The auction id
+    /// @param slotIndex The slot index
+    /// @param nftSlotIndex The index of the NFT inside the particular slot - it is returned on depositERC721() call
+    function withdrawERC721FromNonWinningSlot(
         uint256 auctionId,
         uint256 slotIndex,
         uint256 nftSlotIndex
@@ -171,4 +193,20 @@ interface IAuctionFactory {
     /// @param token The address of the token to withdraw
     /// @param to The address to which the royalties will be transfered
     function withdrawRoyalties(address token, address to) external returns (uint256);
+
+    /// @notice Sets the minimum reserve price for auction slots
+    /// @param auctionId The auction id
+    /// @param minimumReserveValues The array of minimum reserve values to be set for each slot, starting from slot 1
+    function setMinimumReserveForAuctionSlots(
+        uint256 auctionId,
+        uint256[] calldata minimumReserveValues
+    ) external returns (bool);
+
+    /// @notice Gets the minimum reserve price for auciton slot
+    /// @param auctionId The auction id
+    /// @param slotIndex The slot index
+    function getMinimumReservePriceForSlot(uint256 auctionId, uint256 slotIndex)
+        external
+        view
+        returns (uint256);
 }

@@ -184,7 +184,8 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
 
     constructor(uint256 _maxNumberOfSlotsPerAuction) {
         require(
-            _maxNumberOfSlotsPerAuction > 0 && _maxNumberOfSlotsPerAuction <= 2000,
+            _maxNumberOfSlotsPerAuction > 0 &&
+                _maxNumberOfSlotsPerAuction <= 2000,
             "Number of slots cannot be more than 2000"
         );
         maxNumberOfSlotsPerAuction = _maxNumberOfSlotsPerAuction;
@@ -481,7 +482,10 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         return true;
     }
 
-    function finalizeAuction(uint256 auctionId, address[] calldata winners)
+    function finalizeAuction(
+        uint256 auctionId,
+        address[] calldata firstNBidders
+    )
         external
         override
         onlyExistingAuction(auctionId)
@@ -492,7 +496,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         bool isValid = true;
 
         require(
-            winners.length == auction.numberOfSlots,
+            firstNBidders.length == auction.numberOfSlots,
             "Incorrect number of winners"
         );
         require(
@@ -501,46 +505,63 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
             "Auction has not finished"
         );
         require(
-            auction.balanceOf[winners[0]] == auction.highestTotalBid,
+            auction.balanceOf[firstNBidders[0]] == auction.highestTotalBid,
             "First address should have the highest bid"
         );
         require(
-            auction.balanceOf[winners[winners.length - 1]] ==
+            auction.balanceOf[firstNBidders[firstNBidders.length - 1]] ==
                 auction.lowestTotalBid,
             "Last address should have the lowest bid"
         );
 
-        for (uint256 i = 1; i < winners.length; i++) {
+        for (uint256 i = 1; i < firstNBidders.length; i++) {
             if (
-                auction.balanceOf[winners[i - 1]] <
-                auction.balanceOf[winners[i]]
+                auction.balanceOf[firstNBidders[i - 1]] <
+                auction.balanceOf[firstNBidders[i]]
             ) {
                 isValid = false;
             }
         }
 
-        if (isValid) {
-            for (uint256 i = 0; i < winners.length; i++) {
-                auction.winners[i + 1] = winners[i];
-                auctionsRevenue[auctionId] = auctionsRevenue[auctionId].add(
-                    auction.balanceOf[winners[i]]
-                );
-            }
-            uint256 _royaltyFee =
-                calculateRoyaltyFee(
-                    auctionsRevenue[auctionId],
-                    royaltyFeeMantissa
-                );
-            auctionsRevenue[auctionId] = auctionsRevenue[auctionId].sub(
-                _royaltyFee
-            );
-            royaltiesReserve[auction.bidToken] = royaltiesReserve[
-                auction.bidToken
-            ]
-                .add(_royaltyFee);
-            auction.isFinalized = true;
+        if (!isValid) {
+            return false;
         }
-        return isValid;
+
+        uint256 lastAwardedIndex = 0;
+
+        for (uint256 i = 0; i < firstNBidders.length; i++) {
+            for (lastAwardedIndex; lastAwardedIndex < auction.numberOfSlots; lastAwardedIndex++) {
+                if (
+                    auction.balanceOf[firstNBidders[i]] >=
+                    auction.slots[lastAwardedIndex + 1].reservePrice
+                ) {
+                    auction.slots[lastAwardedIndex + 1].reservePriceReached = true;
+                    auction.slots[lastAwardedIndex + 1].winningBidAmount = auction.balanceOf[firstNBidders[i]];
+                    auction.slots[lastAwardedIndex + 1].winner = firstNBidders[i];
+                    lastAwardedIndex++;
+                    break;
+                }
+            }
+
+            if (auction.slots[i + 1].reservePriceReached) {
+                auction.winners[i + 1] = auction.slots[i + 1].winner;
+                auctionsRevenue[auctionId] = auctionsRevenue[auctionId].add(
+                    auction.balanceOf[auction.slots[i + 1].winner]
+                );
+                auction.balanceOf[auction.slots[i + 1].winner] = 0;
+            }
+        }
+
+        uint256 _royaltyFee =
+            calculateRoyaltyFee(auctionsRevenue[auctionId], royaltyFeeMantissa);
+        auctionsRevenue[auctionId] = auctionsRevenue[auctionId].sub(
+            _royaltyFee
+        );
+        royaltiesReserve[auction.bidToken] = royaltiesReserve[auction.bidToken]
+            .add(_royaltyFee);
+        auction.isFinalized = true;
+
+        return true;
     }
 
     function withdrawERC20Bid(uint256 auctionId)
@@ -557,6 +578,31 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         Auction storage auction = auctions[auctionId];
         address _sender = msg.sender;
         uint256 _amount = auction.balanceOf[_sender];
+
+        auction.balanceOf[_sender] = 0;
+        IERC20 bidToken = IERC20(auction.bidToken);
+        bidToken.transfer(_sender, _amount);
+
+        emit LogBidWithdrawal(_sender, auctionId, _amount, block.timestamp);
+
+        return true;
+    }
+
+    function withdrawERC20BidAfterAuctionFinalized(uint256 auctionId)
+        external
+        override
+        onlyExistingAuction(auctionId)
+        onlyAuctionStarted(auctionId)
+        onlyAuctionNotCanceled(auctionId)
+        onlyERC20(auctionId)
+        returns (bool)
+    {
+        Auction storage auction = auctions[auctionId];
+        address _sender = msg.sender;
+        uint256 _amount = auction.balanceOf[_sender];
+
+        require(_amount > 0, "You have 0 deposited");
+        require(auction.isFinalized, "Auction should be finalized");
 
         auction.balanceOf[_sender] = 0;
         IERC20 bidToken = IERC20(auction.bidToken);
@@ -592,6 +638,30 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         return true;
     }
 
+    function withdrawEthBidAfterAuctionFinalized(uint256 _auctionId)
+        external
+        override
+        onlyExistingAuction(_auctionId)
+        onlyAuctionStarted(_auctionId)
+        onlyAuctionNotCanceled(_auctionId)
+        onlyETH(_auctionId)
+        returns (bool)
+    {
+        Auction storage auction = auctions[_auctionId];
+        address payable _recipient = msg.sender;
+        uint256 _amount = auction.balanceOf[_recipient];
+
+        require(_amount > 0, "You have 0 deposited");
+        require(auction.isFinalized, "Auction should be finalized");
+
+        auction.balanceOf[_recipient] = 0;
+        _recipient.transfer(_amount);
+
+        emit LogBidWithdrawal(_recipient, _auctionId, _amount, block.timestamp);
+
+        return true;
+    }
+
     function withdrawDepositedERC721(
         uint256 auctionId,
         uint256 slotIndex,
@@ -612,6 +682,52 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         );
 
         delete auctions[auctionId].slots[slotIndex].depositedNfts[nftSlotIndex];
+
+        IERC721(nftForWithdrawal.tokenAddress).safeTransferFrom(
+            address(this),
+            nftForWithdrawal.depositor,
+            nftForWithdrawal.tokenId
+        );
+
+        emit LogERC721Withdrawal(
+            msg.sender,
+            nftForWithdrawal.tokenAddress,
+            nftForWithdrawal.tokenId,
+            auctionId,
+            slotIndex,
+            nftSlotIndex,
+            block.timestamp
+        );
+
+        return true;
+    }
+
+    function withdrawERC721FromNonWinningSlot(
+        uint256 auctionId,
+        uint256 slotIndex,
+        uint256 nftSlotIndex
+    )
+        external
+        override
+        onlyExistingAuction(auctionId)
+        onlyAuctionStarted(auctionId)
+        onlyAuctionNotCanceled(auctionId)
+        returns (bool)
+    {
+        DepositedERC721 memory nftForWithdrawal =
+            auctions[auctionId].slots[slotIndex].depositedNfts[nftSlotIndex];
+
+        require(
+            msg.sender == nftForWithdrawal.depositor,
+            "Only depositor can withdraw"
+        );
+
+        require(
+            auctions[auctionId].slots[slotIndex].reservePriceReached == false,
+            "Can withdraw only if reserve price is not met"
+        );
+
+        require(auctions[auctionId].isFinalized, "Auction should be finalized");
 
         IERC721(nftForWithdrawal.tokenAddress).safeTransferFrom(
             address(this),
@@ -788,6 +904,10 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
             auction.winners[slotIndex] == claimer,
             "Only the winner can claim rewards"
         );
+        require(
+            winningSlot.reservePriceReached,
+            "The reserve price hasn't been met"
+        );
 
         for (uint256 i = 0; i < winningSlot.totalDepositedNfts; i++) {
             DepositedERC721 memory nftForWithdrawal =
@@ -865,5 +985,39 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         );
 
         return amountToWithdraw;
+    }
+
+    function setMinimumReserveForAuctionSlots(
+        uint256 auctionId,
+        uint256[] calldata minimumReserveValues
+    )
+        external
+        override
+        onlyExistingAuction(auctionId)
+        onlyAuctionNotStarted(auctionId)
+        onlyAuctionNotCanceled(auctionId)
+        returns (bool)
+    {
+        Auction storage auction = auctions[auctionId];
+
+        require(
+            auction.numberOfSlots == minimumReserveValues.length,
+            "Incorrect number of slots"
+        );
+
+        for (uint256 i = 0; i < minimumReserveValues.length; i++) {
+            auction.slots[i + 1].reservePrice = minimumReserveValues[i];
+        }
+
+        return true;
+    }
+
+    function getMinimumReservePriceForSlot(uint256 auctionId, uint256 slotIndex)
+        external
+        view
+        override
+        returns (uint256)
+    {
+        return auctions[auctionId].slots[slotIndex].reservePrice;
     }
 }
