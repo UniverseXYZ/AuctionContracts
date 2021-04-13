@@ -523,54 +523,45 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
             }
         }
 
-        if (isValid) {
-            uint256 lastAwardedIndex = 0;
+        if (!isValid) {
+            return false;
+        }
 
-            for (uint256 i = 0; i < auction.numberOfSlots; i++) {
-                for (
-                    uint256 j = lastAwardedIndex;
-                    j < firstNBidders.length;
-                    j++
+        uint256 lastAwardedIndex = 0;
+
+        for (uint256 i = 0; i < firstNBidders.length; i++) {
+            for (lastAwardedIndex; lastAwardedIndex < auction.numberOfSlots; lastAwardedIndex++) {
+                if (
+                    auction.balanceOf[firstNBidders[i]] >=
+                    auction.slots[lastAwardedIndex + 1].reservePrice
                 ) {
-                    if (
-                        auction.slots[i + 1].reservePrice <
-                        auction.balanceOf[firstNBidders[j]]
-                    ) {
-                        auction.slots[i + 1].reservePriceReached = true;
-                        auction.slots[i + 1].winningBidAmount = auction
-                            .balanceOf[firstNBidders[lastAwardedIndex]];
-                        auction.slots[i + 1].winner = firstNBidders[
-                            lastAwardedIndex
-                        ];
-                        lastAwardedIndex++;
-                        break;
-                    }
-                }
-
-                if (auction.slots[i + 1].reservePriceReached) {
-                    auction.winners[i + 1] = auction.slots[i + 1].winner;
-                    auctionsRevenue[auctionId] = auctionsRevenue[auctionId].add(
-                        auction.balanceOf[auction.slots[i + 1].winner]
-                    );
-                    auction.balanceOf[auction.slots[i + 1].winner] = 0;
+                    auction.slots[lastAwardedIndex + 1].reservePriceReached = true;
+                    auction.slots[lastAwardedIndex + 1].winningBidAmount = auction.balanceOf[firstNBidders[i]];
+                    auction.slots[lastAwardedIndex + 1].winner = firstNBidders[i];
+                    lastAwardedIndex++;
+                    break;
                 }
             }
 
-            uint256 _royaltyFee =
-                calculateRoyaltyFee(
-                    auctionsRevenue[auctionId],
-                    royaltyFeeMantissa
+            if (auction.slots[i + 1].reservePriceReached) {
+                auction.winners[i + 1] = auction.slots[i + 1].winner;
+                auctionsRevenue[auctionId] = auctionsRevenue[auctionId].add(
+                    auction.balanceOf[auction.slots[i + 1].winner]
                 );
-            auctionsRevenue[auctionId] = auctionsRevenue[auctionId].sub(
-                _royaltyFee
-            );
-            royaltiesReserve[auction.bidToken] = royaltiesReserve[
-                auction.bidToken
-            ]
-                .add(_royaltyFee);
-            auction.isFinalized = true;
+                auction.balanceOf[auction.slots[i + 1].winner] = 0;
+            }
         }
-        return isValid;
+
+        uint256 _royaltyFee =
+            calculateRoyaltyFee(auctionsRevenue[auctionId], royaltyFeeMantissa);
+        auctionsRevenue[auctionId] = auctionsRevenue[auctionId].sub(
+            _royaltyFee
+        );
+        royaltiesReserve[auction.bidToken] = royaltiesReserve[auction.bidToken]
+            .add(_royaltyFee);
+        auction.isFinalized = true;
+
+        return true;
     }
 
     function withdrawERC20Bid(uint256 auctionId)
