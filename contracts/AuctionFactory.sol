@@ -397,8 +397,12 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
             extendAuction(_auctionId);
         }
 
+        uint256 bidderBalance = auction.balanceOf[_bidder];
         auction.balanceOf[_bidder] = auction.balanceOf[_bidder].add(_bid);
-        auction.numberOfBids = auction.numberOfBids.add(1);
+
+        if (bidderBalance == 0) {
+            auction.numberOfBids = auction.numberOfBids.add(1);
+        }
 
         if (auction.balanceOf[_bidder] > auction.highestTotalBid) {
             auction.highestTotalBid = auction.balanceOf[_bidder];
@@ -451,9 +455,13 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
             auction.lowestEligibleBid = _bid;
         }
 
+        uint256 bidderBalance = auction.balanceOf[_bidder];
         auction.balanceOf[_bidder] = auction.balanceOf[_bidder].add(_bid);
-        auction.numberOfBids = auction.numberOfBids.add(1);
 
+        if (bidderBalance == 0) {
+            auction.numberOfBids = auction.numberOfBids.add(1);
+        }
+        
         if (
             _bid > auction.lowestEligibleBid &&
             auction.endBlockNumber.sub(block.number) < auction.resetTimer
@@ -499,8 +507,9 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         bool isValid = true;
 
         require(
-            firstNBidders.length == auction.numberOfSlots,
-            "Incorrect number of winners"
+            (firstNBidders.length == auction.numberOfSlots && auction.numberOfSlots <= auction.numberOfBids) || 
+            (firstNBidders.length == auction.numberOfBids && auction.numberOfSlots > auction.numberOfBids),
+            "Incorrect number of bidders"
         );
         require(
             block.number > auction.endBlockNumber &&
