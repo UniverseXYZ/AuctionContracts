@@ -1,5 +1,5 @@
 const { expect } = require('chai');
-const { waffle, ethers } = require('hardhat');
+const { waffle, ethers, network } = require('hardhat');
 const { loadFixture } = waffle;
 
 describe('Finalize auction ERC721 Tests', () => {
@@ -415,6 +415,74 @@ describe('Finalize auction ERC721 Tests', () => {
     });
 
     await expect(auctionFactory.finalizeAuction(1, [signer.address, signer2.address])).to.be.reverted;
+  });
+
+  it('should do something', async () => {
+    const { auctionFactory, mockNFT } = await loadFixture(deployedContracts);
+
+    const blockNumber = await ethers.provider.getBlockNumber();
+
+    const startBlockNumber = blockNumber + 3;
+    const endBlockNumber = blockNumber + 4;
+    const resetTimer = 3;
+    const numberOfSlots = 5;
+    const supportsWhitelist = false;
+    const ethAddress = '0x0000000000000000000000000000000000000000';
+
+    await auctionFactory.createAuction(
+      startBlockNumber,
+      endBlockNumber,
+      resetTimer,
+      numberOfSlots,
+      supportsWhitelist,
+      ethAddress
+    );
+
+    const [signer, signer2, signer3, signer4, signer5] = await ethers.getSigners();
+
+    await auctionFactory.setMinimumReserveForAuctionSlots(1, [
+      '140000000000000000',
+      '130000000000000000',
+      '120000000000000000',
+      '110000000000000000',
+      '60000000000000000'
+    ]);
+
+    await mockNFT.mint(signer.address, 1);
+
+    await mockNFT.approve(auctionFactory.address, 1);
+
+    for (let i = 0; i < 7; i++) {
+      await network.provider.send('evm_mine');
+    }
+
+    await auctionFactory.functions['bid(uint256)'](1, {
+      value: '170000000000000000'
+    });
+
+    await auctionFactory.connect(signer2).functions['bid(uint256)'](1, {
+      value: '150000000000000000'
+    });
+
+    await auctionFactory.connect(signer3).functions['bid(uint256)'](1, {
+      value: '120000000000000000'
+    });
+
+    await auctionFactory.connect(signer4).functions['bid(uint256)'](1, {
+      value: '90000000000000000'
+    });
+
+    await auctionFactory.connect(signer5).functions['bid(uint256)'](1, {
+      value: '70000000000000000'
+    });
+
+    await auctionFactory.finalizeAuction(1, [
+      signer.address,
+      signer2.address,
+      signer3.address,
+      signer4.address,
+      signer5.address
+    ]);
   });
 });
 
