@@ -157,24 +157,6 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         _;
     }
 
-    modifier onlyWhenBidOnAllSlots(uint256 _auctionId) {
-        require(
-            auctions[_auctionId].numberOfBids >
-                auctions[_auctionId].numberOfSlots,
-            "All slots must have bids before a withdrawal can occur"
-        );
-        _;
-    }
-
-    modifier onlyWhenBidNotEligible(uint256 _auctionId) {
-        require(
-            auctions[_auctionId].balanceOf[msg.sender] <
-                auctions[_auctionId].lowestEligibleBid,
-            "Bid is still eligible"
-        );
-        _;
-    }
-
     modifier onlyIfWhitelistSupported(uint256 _auctionId) {
         require(
             auctions[_auctionId].supportsWhitelist,
@@ -234,7 +216,6 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         auctions[_auctionId].endBlockNumber = _endBlockNumber;
         auctions[_auctionId].resetTimer = _resetTimer;
         auctions[_auctionId].numberOfSlots = _numberOfSlots;
-        auctions[_auctionId].lowestEligibleBid = uint256(-1);
         auctions[_auctionId].supportsWhitelist = _supportsWhitelist;
         auctions[_auctionId].bidToken = _bidToken;
 
@@ -380,18 +361,9 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         address _bidder = msg.sender;
         Auction storage auction = auctions[_auctionId];
 
-        require(
-            (auction.numberOfBids < auction.numberOfSlots ||
-                _bid > auction.lowestEligibleBid),
-            "Bid amount must be greater than the lowest eligible bid when all auction slots are filled"
-        );
-
-        if (_bid < auction.lowestEligibleBid) {
-            auction.lowestEligibleBid = _bid;
-        }
-
         if (
-            _bid > auction.lowestEligibleBid &&
+            auction.numberOfBids >= auction.numberOfSlots &&
+            _bid > auction.lowestTotalBid &&
             auction.endBlockNumber.sub(block.number) < auction.resetTimer
         ) {
             extendAuction(_auctionId);
@@ -440,20 +412,10 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         address _bidder = msg.sender;
         Auction storage auction = auctions[_auctionId];
 
-        require(
-            (auction.numberOfBids < auction.numberOfSlots ||
-                _bid > auction.lowestEligibleBid),
-            "Bid amount must be greater than the lowest eligible bid when all auction slots are filled"
-        );
-
         IERC20 bidToken = IERC20(auction.bidToken);
         uint256 allowance = bidToken.allowance(msg.sender, address(this));
 
         require(allowance >= _bid, "Token allowance too small");
-
-        if (_bid < auction.lowestEligibleBid) {
-            auction.lowestEligibleBid = _bid;
-        }
 
         uint256 bidderBalance = auction.balanceOf[_bidder];
         auction.balanceOf[_bidder] = auction.balanceOf[_bidder].add(_bid);
@@ -461,9 +423,10 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         if (bidderBalance == 0) {
             auction.numberOfBids = auction.numberOfBids.add(1);
         }
-        
+
         if (
-            _bid > auction.lowestEligibleBid &&
+            auction.numberOfBids >= auction.numberOfSlots &&
+            _bid > auction.lowestTotalBid &&
             auction.endBlockNumber.sub(block.number) < auction.resetTimer
         ) {
             extendAuction(_auctionId);
@@ -493,10 +456,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         return true;
     }
 
-    function finalizeAuction(
-        uint256 auctionId,
-        address[] calldata firstNBidders
-    )
+    function finalizeAuction(uint256 auctionId, address[] calldata bidders)
         external
         override
         onlyExistingAuction(auctionId)
@@ -507,8 +467,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         bool isValid = true;
 
         require(
-            (firstNBidders.length == auction.numberOfSlots && auction.numberOfSlots <= auction.numberOfBids) || 
-            (firstNBidders.length == auction.numberOfBids && auction.numberOfSlots > auction.numberOfBids),
+            (bidders.length == auction.numberOfBids),
             "Incorrect number of bidders"
         );
         require(
@@ -517,19 +476,19 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
             "Auction has not finished"
         );
         require(
-            auction.balanceOf[firstNBidders[0]] == auction.highestTotalBid,
+            auction.balanceOf[bidders[0]] == auction.highestTotalBid,
             "First address should have the highest bid"
         );
         require(
-            auction.balanceOf[firstNBidders[firstNBidders.length - 1]] ==
+            auction.balanceOf[bidders[bidders.length - 1]] ==
                 auction.lowestTotalBid,
             "Last address should have the lowest bid"
         );
 
-        for (uint256 i = 1; i < firstNBidders.length; i++) {
+        for (uint256 i = 1; i < bidders.length; i++) {
             if (
-                auction.balanceOf[firstNBidders[i - 1]] <
-                auction.balanceOf[firstNBidders[i]]
+                auction.balanceOf[bidders[i - 1]] <
+                auction.balanceOf[bidders[i]]
             ) {
                 isValid = false;
             }
@@ -541,29 +500,38 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
 
         uint256 lastAwardedIndex = 0;
 
-        for (uint256 i = 0; i < firstNBidders.length; i++) {
-            for (lastAwardedIndex; lastAwardedIndex < auction.numberOfSlots; lastAwardedIndex++) {
+        for (uint256 i = 0; i < bidders.length; i++) {
+            for (
+                lastAwardedIndex;
+                lastAwardedIndex < auction.numberOfSlots;
+                lastAwardedIndex++
+            ) {
                 if (
-                    auction.balanceOf[firstNBidders[i]] >=
+                    auction.balanceOf[bidders[i]] >=
                     auction.slots[lastAwardedIndex + 1].reservePrice
                 ) {
-                    auction.slots[lastAwardedIndex + 1].reservePriceReached = true;
-                    auction.slots[lastAwardedIndex + 1].winningBidAmount = auction.balanceOf[firstNBidders[i]];
-                    auction.slots[lastAwardedIndex + 1].winner = firstNBidders[i];
+                    auction.slots[lastAwardedIndex + 1]
+                        .reservePriceReached = true;
+                    auction.slots[lastAwardedIndex + 1]
+                        .winningBidAmount = auction.balanceOf[bidders[i]];
+                    auction.slots[lastAwardedIndex + 1].winner = bidders[i];
                     lastAwardedIndex++;
 
                     emit LogBidMatched(
-                        auctionId, 
-                        lastAwardedIndex + 1, 
-                        auction.slots[lastAwardedIndex + 1].reservePrice, 
-                        auction.slots[lastAwardedIndex + 1].winningBidAmount, 
+                        auctionId,
+                        lastAwardedIndex + 1,
+                        auction.slots[lastAwardedIndex + 1].reservePrice,
+                        auction.slots[lastAwardedIndex + 1].winningBidAmount,
                         auction.slots[lastAwardedIndex + 1].winner,
-                        block.timestamp);
+                        block.timestamp
+                    );
 
                     break;
                 }
             }
+        }
 
+        for (uint256 i = 0; i < auction.numberOfSlots; i++) {
             if (auction.slots[i + 1].reservePriceReached) {
                 auction.winners[i + 1] = auction.slots[i + 1].winner;
                 auctionsRevenue[auctionId] = auctionsRevenue[auctionId].add(
@@ -592,30 +560,6 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         onlyAuctionStarted(auctionId)
         onlyAuctionNotCanceled(auctionId)
         onlyERC20(auctionId)
-        onlyWhenBidOnAllSlots(auctionId)
-        onlyWhenBidNotEligible(auctionId)
-        returns (bool)
-    {
-        Auction storage auction = auctions[auctionId];
-        address _sender = msg.sender;
-        uint256 _amount = auction.balanceOf[_sender];
-
-        auction.balanceOf[_sender] = 0;
-        IERC20 bidToken = IERC20(auction.bidToken);
-        bidToken.transfer(_sender, _amount);
-
-        emit LogBidWithdrawal(_sender, auctionId, _amount, block.timestamp);
-
-        return true;
-    }
-
-    function withdrawERC20BidAfterAuctionFinalized(uint256 auctionId)
-        external
-        override
-        onlyExistingAuction(auctionId)
-        onlyAuctionStarted(auctionId)
-        onlyAuctionNotCanceled(auctionId)
-        onlyERC20(auctionId)
         returns (bool)
     {
         Auction storage auction = auctions[auctionId];
@@ -635,31 +579,6 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
     }
 
     function withdrawEthBid(uint256 _auctionId)
-        external
-        override
-        onlyExistingAuction(_auctionId)
-        onlyAuctionStarted(_auctionId)
-        onlyAuctionNotCanceled(_auctionId)
-        onlyETH(_auctionId)
-        onlyWhenBidOnAllSlots(_auctionId)
-        onlyWhenBidNotEligible(_auctionId)
-        returns (bool)
-    {
-        Auction storage auction = auctions[_auctionId];
-        address payable _recipient = msg.sender;
-        uint256 _amount = auction.balanceOf[_recipient];
-
-        require(_amount > 0, "You have 0 deposited");
-
-        auction.balanceOf[_recipient] = 0;
-        _recipient.transfer(_amount);
-
-        emit LogBidWithdrawal(_recipient, _auctionId, _amount, block.timestamp);
-
-        return true;
-    }
-
-    function withdrawEthBidAfterAuctionFinalized(uint256 _auctionId)
         external
         override
         onlyExistingAuction(_auctionId)
@@ -780,7 +699,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
     {
         auctions[_auctionId].isCanceled = true;
 
-        LogAuctionCanceled(_auctionId, block.timestamp);
+        emit LogAuctionCanceled(_auctionId, block.timestamp);
 
         return true;
     }
@@ -900,7 +819,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
             bidToken.transfer(auction.auctionOwner, amountToWithdraw);
         }
 
-        LogAuctionRevenueWithdrawal(
+        emit LogAuctionRevenueWithdrawal(
             auction.auctionOwner,
             auctionId,
             amountToWithdraw,
