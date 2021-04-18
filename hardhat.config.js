@@ -2,7 +2,7 @@ require('@nomiclabs/hardhat-waffle');
 require('@nomiclabs/hardhat-etherscan');
 require('solidity-coverage');
 require('hardhat-contract-sizer');
-
+require('hardhat-deploy');
 // This is a sample Hardhat task. To learn how to create your own go to
 // https://hardhat.org/guides/create-task.html
 task('accounts', 'Prints the list of accounts', async () => {
@@ -20,6 +20,11 @@ task('accounts', 'Prints the list of accounts', async () => {
  * @type import('hardhat/config').HardhatUserConfig
  */
 module.exports = {
+  namedAccounts: {
+		deployer: {
+			default: 0, // here this will by default take the first account as deployer
+		},
+	},
   solidity: {
     version: '0.7.3',
     settings: {
