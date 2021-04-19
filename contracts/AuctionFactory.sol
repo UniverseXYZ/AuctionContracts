@@ -361,6 +361,11 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         address _bidder = msg.sender;
         Auction storage auction = auctions[_auctionId];
 
+        require(
+             block.number < auction.endBlockNumber,
+            "Auction has ended"
+        );
+
         if (
             auction.numberOfBids >= auction.numberOfSlots &&
             _bid > auction.lowestTotalBid &&
@@ -411,6 +416,11 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         uint256 _bid = _amount;
         address _bidder = msg.sender;
         Auction storage auction = auctions[_auctionId];
+
+        require(
+             block.number < auction.endBlockNumber,
+            "Auction has ended"
+        );
 
         IERC20 bidToken = IERC20(auction.bidToken);
         uint256 allowance = bidToken.allowance(msg.sender, address(this));

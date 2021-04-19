@@ -371,7 +371,7 @@ describe('Withdraw functionalities', () => {
 
     await auctionFactory.finalizeAuction(1, [signer3.address, signer2.address, signer.address]);
 
-    await expect(auctionFactory.withdrawERC20BidAfterAuctionFinalized(1)).emit(auctionFactory, 'LogBidWithdrawal');
+    await expect(auctionFactory.withdrawERC20Bid(1)).emit(auctionFactory, 'LogBidWithdrawal');
 
     const balance = await auctionFactory.getBidderBalance(1, signer.address);
 
@@ -421,7 +421,7 @@ describe('Withdraw functionalities', () => {
 
     await auctionFactory.finalizeAuction(1, [signer3.address, signer2.address, signer.address]);
 
-    await expect(auctionFactory.connect(signer4).withdrawERC20BidAfterAuctionFinalized(1)).revertedWith(
+    await expect(auctionFactory.connect(signer4).withdrawERC20Bid(1)).revertedWith(
       'You have 0 deposited'
     );
   });
@@ -465,7 +465,7 @@ describe('Withdraw functionalities', () => {
 
     await auctionFactory.connect(signer3).functions['bid(uint256,uint256)'](1, 120);
 
-    await expect(auctionFactory.withdrawERC20BidAfterAuctionFinalized(1)).revertedWith('Auction should be finalized');
+    await expect(auctionFactory.withdrawERC20Bid(1)).revertedWith('Auction should be finalized');
   });
 });
 
