@@ -15,7 +15,6 @@ interface IAuctionFactory {
         uint256 resetTimer;
         uint256 numberOfSlots;
         uint256 numberOfBids;
-        uint256 lowestEligibleBid;
         uint256 highestTotalBid;
         uint256 lowestTotalBid;
         bool supportsWhitelist;
@@ -94,23 +93,17 @@ interface IAuctionFactory {
     /// @notice Distributes all slot assets to the bidders and winning bids to the collector
     /// @param auctionId The auction id
     /// @param winners Array of winners addresses to be vrified onchain
-    function finalizeAuction(uint256 auctionId, address[] calldata winners) external returns (bool);
-
-    /// @notice Withdraws the bid amount from an auction (if slot is non-winning)
-    /// @param auctionId The auction id
-    function withdrawERC20Bid(uint256 auctionId) external returns (bool);
+    function finalizeAuction(uint256 auctionId, address[] calldata winners)
+        external
+        returns (bool);
 
     /// @notice Withdraws the bid amount after auction is finialized and bid is non winning
     /// @param auctionId The auction id
-    function withdrawERC20BidAfterAuctionFinalized(uint256 auctionId) external returns (bool);
-
-    /// @notice Withdraws the eth amount from an auction (if slot is non-winning)
-    /// @param auctionId The auction id
-    function withdrawEthBid(uint256 auctionId) external returns (bool);
+    function withdrawERC20Bid(uint256 auctionId) external returns (bool);
 
     /// @notice Withdraws the eth bid amount after auction is finalized and bid is non winning
     /// @param auctionId The auction id
-    function withdrawEthBidAfterAuctionFinalized(uint256 auctionId) external returns (bool);
+    function withdrawEthBid(uint256 auctionId) external returns (bool);
 
     /// @notice Withdraws the deposited ERC721 before an auction has started
     /// @param auctionId The auction id
@@ -183,16 +176,22 @@ interface IAuctionFactory {
     /// @notice Claims and distributes the NFTs from a winning slot
     /// @param auctionId The auction id
     /// @param slotIndex The slot index
-    function claimERC721Rewards(uint256 auctionId, uint256 slotIndex) external returns (bool);
+    function claimERC721Rewards(uint256 auctionId, uint256 slotIndex)
+        external
+        returns (bool);
 
     /// @notice Sets the percentage of the royalty which wil be kept from each sale
     /// @param royaltyFeeMantissa The royalty percentage
-    function setRoyaltyFeeMantissa(uint256 royaltyFeeMantissa) external returns (uint256);
+    function setRoyaltyFeeMantissa(uint256 royaltyFeeMantissa)
+        external
+        returns (uint256);
 
     /// @notice Withdraws the aggregated royalites amount of specific token to a specified address
     /// @param token The address of the token to withdraw
     /// @param to The address to which the royalties will be transfered
-    function withdrawRoyalties(address token, address to) external returns (uint256);
+    function withdrawRoyalties(address token, address to)
+        external
+        returns (uint256);
 
     /// @notice Sets the minimum reserve price for auction slots
     /// @param auctionId The auction id
