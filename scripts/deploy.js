@@ -1,4 +1,4 @@
-// We require the Hardhat Runtime Environment explicitly here. This is optional 
+// We require the Hardhat Runtime Environment explicitly here. This is optional
 // but useful for running the script in a standalone fashion through `node <script>`.
 //
 // When running the script with `hardhat run <script>` you'll find the Hardhat
@@ -9,13 +9,16 @@ async function main() {
   // Hardhat always runs the compile task when running scripts with its command
   // line interface.
   //
-  // If this script is run directly using `node` you may want to call compile 
+  // If this script is run directly using `node` you may want to call compile
   // manually to make sure everything is compiled
   // await hre.run('compile');
 
+  // We get the max number of slots
+  const MAX_SLOT = process.env.MAX_SLOT;
+
   // We get the contract to deploy
   const AuctionFactory = await hre.ethers.getContractFactory("AuctionFactory");
-  const auctionFactory = await AuctionFactory.deploy();
+  const auctionFactory = await AuctionFactory.deploy(MAX_SLOT);
 
   await auctionFactory.deployed();
 
@@ -26,7 +29,7 @@ async function main() {
 // and properly handle errors.
 main()
   .then(() => process.exit(0))
-  .catch(error => {
+  .catch((error) => {
     console.error(error);
     process.exit(1);
   });
