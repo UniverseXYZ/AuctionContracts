@@ -1,4 +1,5 @@
 const { expect } = require('chai');
+
 const { waffle, ethers, network } = require('hardhat');
 const { loadFixture } = waffle;
 
@@ -24,8 +25,6 @@ describe('Finalize auction ERC721 Tests', () => {
 
     await createAuction(auctionFactory);
 
-    await createAuction(auctionFactory);
-
     const [signer] = await ethers.getSigners();
 
     await mockNFT.mint(signer.address, 1);
@@ -43,6 +42,10 @@ describe('Finalize auction ERC721 Tests', () => {
     const balance = Number(ethers.utils.formatEther(bidderBalance).toString());
 
     expect(balance).to.equal(200);
+
+    for (let i = 0; i < 10; i++) {
+      await network.provider.send('evm_mine');
+    }
 
     await auctionFactory.finalizeAuction(1, [signer.address]);
 
@@ -149,8 +152,8 @@ describe('Finalize auction ERC721 Tests', () => {
     const blockNumber = await ethers.provider.getBlockNumber();
 
     const startBlockNumber = blockNumber + 3;
-    const endBlockNumber = blockNumber + 4;
-    const resetTimer = 3;
+    const endBlockNumber = blockNumber + 5;
+    const resetTimer = 1;
     const numberOfSlots = 1;
     const supportsWhitelist = false;
     const tokenAddress = mockToken.address;
@@ -174,6 +177,8 @@ describe('Finalize auction ERC721 Tests', () => {
 
     await auctionFactory.functions['bid(uint256,uint256)'](1, '100');
 
+    await network.provider.send('evm_mine');
+
     await auctionFactory.finalizeAuction(1, [signer.address]);
 
     await auctionFactory.withdrawAuctionRevenue(1);
@@ -193,8 +198,8 @@ describe('Finalize auction ERC721 Tests', () => {
     const blockNumber = await ethers.provider.getBlockNumber();
 
     const startBlockNumber = blockNumber + 2;
-    const endBlockNumber = blockNumber + 3;
-    const resetTimer = 3;
+    const endBlockNumber = blockNumber + 4;
+    const resetTimer = 1;
     const numberOfSlots = 1;
     const supportsWhitelist = false;
     const tokenAddress = '0x0000000000000000000000000000000000000000';
@@ -217,6 +222,8 @@ describe('Finalize auction ERC721 Tests', () => {
     await auctionFactory.connect(signer).functions['bid(uint256)'](1, {
       value: '200000000000000000000'
     });
+
+    await network.provider.send('evm_mine');
 
     await auctionFactory.finalizeAuction(1, [signer.address]);
 
@@ -279,7 +286,7 @@ describe('Finalize auction ERC721 Tests', () => {
     const blockNumber = await ethers.provider.getBlockNumber();
 
     const startBlockNumber = blockNumber + 1;
-    const endBlockNumber = blockNumber + 2;
+    const endBlockNumber = blockNumber + 3;
     const resetTimer = 1;
     const numberOfSlots = 1;
     const supportsWhitelist = false;
@@ -304,65 +311,15 @@ describe('Finalize auction ERC721 Tests', () => {
 
     await auctionFactory.withdrawDepositedERC721(1, 1, 1);
 
-    await createAuction(auctionFactory);
-
-    await createAuction(auctionFactory);
-
-    await createAuction(auctionFactory);
-
-    await createAuction(auctionFactory);
+    for (let i = 0; i < 4; i++) {
+      await network.provider.send('evm_mine');
+    }
 
     await auctionFactory.connect(signer).functions['bid(uint256)'](1, {
       value: '500000000000000000000'
     });
 
-    await auctionFactory.finalizeAuction(1, [signer.address]);
-
-    await auctionFactory.connect(signer).claimERC721Rewards(1, 1);
-  });
-
-  it('should have 0 id for nft', async () => {
-    const { auctionFactory, mockNFT } = await loadFixture(deployedContracts);
-
-    const blockNumber = await ethers.provider.getBlockNumber();
-
-    const startBlockNumber = blockNumber + 1;
-    const endBlockNumber = blockNumber + 2;
-    const resetTimer = 1;
-    const numberOfSlots = 1;
-    const supportsWhitelist = false;
-    const tokenAddress = '0x0000000000000000000000000000000000000000';
-
-    await auctionFactory.createAuction(
-      startBlockNumber,
-      endBlockNumber,
-      resetTimer,
-      numberOfSlots,
-      supportsWhitelist,
-      tokenAddress
-    );
-
-    const [signer] = await ethers.getSigners();
-
-    await mockNFT.connect(signer).mint(signer.address, 1);
-
-    await mockNFT.connect(signer).approve(auctionFactory.address, 1);
-
-    await auctionFactory.depositERC721(1, 1, 1, mockNFT.address);
-
-    await createAuction(auctionFactory);
-
-    await createAuction(auctionFactory);
-
-    await createAuction(auctionFactory);
-
-    await createAuction(auctionFactory);
-
-    await createAuction(auctionFactory);
-
-    await auctionFactory.connect(signer).functions['bid(uint256)'](1, {
-      value: '500000000000000000000'
-    });
+    await network.provider.send('evm_mine');
 
     await auctionFactory.finalizeAuction(1, [signer.address]);
 
@@ -375,8 +332,8 @@ describe('Finalize auction ERC721 Tests', () => {
     const blockNumber = await ethers.provider.getBlockNumber();
 
     const startBlockNumber = blockNumber + 1;
-    const endBlockNumber = blockNumber + 4;
-    const resetTimer = 1;
+    const endBlockNumber = blockNumber + 15;
+    const resetTimer = 6;
     const numberOfSlots = 2;
     const supportsWhitelist = false;
     const ethAddress = '0x0000000000000000000000000000000000000000';
@@ -392,15 +349,15 @@ describe('Finalize auction ERC721 Tests', () => {
 
     const [signer, signer2] = await ethers.getSigners();
 
-    for (let i = 0; i < 3; i++) {
-      await mockNFT.connect(signer).mint(signer.address, 'TOKEN_URI');
+    await mockNFT.connect(signer).mint(signer.address, 'TOKEN_URI');
 
-      await mockNFT.connect(signer).approve(auctionFactory.address, 1);
-    }
+    await mockNFT.connect(signer).approve(auctionFactory.address, 1);
 
     await auctionFactory.depositERC721(1, 1, 1, mockNFT.address);
 
-    await createAuction(auctionFactory);
+    for (let i = 0; i < 5; i++) {
+      await network.provider.send('evm_mine');
+    }
 
     await auctionFactory.connect(signer).functions['bid(uint256)'](1, {
       value: '100000000000000000000'
@@ -416,81 +373,13 @@ describe('Finalize auction ERC721 Tests', () => {
 
     await expect(auctionFactory.finalizeAuction(1, [signer.address, signer2.address])).to.be.reverted;
   });
-
-  it('should do something', async () => {
-    const { auctionFactory, mockNFT } = await loadFixture(deployedContracts);
-
-    const blockNumber = await ethers.provider.getBlockNumber();
-
-    const startBlockNumber = blockNumber + 3;
-    const endBlockNumber = blockNumber + 4;
-    const resetTimer = 3;
-    const numberOfSlots = 5;
-    const supportsWhitelist = false;
-    const ethAddress = '0x0000000000000000000000000000000000000000';
-
-    await auctionFactory.createAuction(
-      startBlockNumber,
-      endBlockNumber,
-      resetTimer,
-      numberOfSlots,
-      supportsWhitelist,
-      ethAddress
-    );
-
-    const [signer, signer2, signer3, signer4, signer5] = await ethers.getSigners();
-
-    await auctionFactory.setMinimumReserveForAuctionSlots(1, [
-      '140000000000000000',
-      '130000000000000000',
-      '120000000000000000',
-      '110000000000000000',
-      '60000000000000000'
-    ]);
-
-    await mockNFT.mint(signer.address, 1);
-
-    await mockNFT.approve(auctionFactory.address, 1);
-
-    for (let i = 0; i < 7; i++) {
-      await network.provider.send('evm_mine');
-    }
-
-    await auctionFactory.functions['bid(uint256)'](1, {
-      value: '170000000000000000'
-    });
-
-    await auctionFactory.connect(signer2).functions['bid(uint256)'](1, {
-      value: '150000000000000000'
-    });
-
-    await auctionFactory.connect(signer3).functions['bid(uint256)'](1, {
-      value: '120000000000000000'
-    });
-
-    await auctionFactory.connect(signer4).functions['bid(uint256)'](1, {
-      value: '90000000000000000'
-    });
-
-    await auctionFactory.connect(signer5).functions['bid(uint256)'](1, {
-      value: '70000000000000000'
-    });
-
-    await auctionFactory.finalizeAuction(1, [
-      signer.address,
-      signer2.address,
-      signer3.address,
-      signer4.address,
-      signer5.address
-    ]);
-  });
 });
 
 const createAuction = async (auctionFactory) => {
   const blockNumber = await ethers.provider.getBlockNumber();
 
   const startBlockNumber = blockNumber + 3;
-  const endBlockNumber = blockNumber + 4;
+  const endBlockNumber = blockNumber + 10;
   const resetTimer = 3;
   const numberOfSlots = 1;
   const supportsWhitelist = false;

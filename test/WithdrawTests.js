@@ -18,7 +18,23 @@ describe('Withdraw functionalities', () => {
   it('should withdraw ERC721 from non winning slot', async () => {
     const { auctionFactory, mockNFT } = await loadFixture(deployContract);
 
-    await createAuction(auctionFactory);
+    const blockNumber = await ethers.provider.getBlockNumber();
+
+    const startBlockNumber = blockNumber + 6;
+    const endBlockNumber = blockNumber + 10;
+    const resetTimer = 1;
+    const numberOfSlots = 3;
+    const supportsWhitelist = false;
+    const ethAddress = '0x0000000000000000000000000000000000000000';
+
+    await auctionFactory.createAuction(
+      startBlockNumber,
+      endBlockNumber,
+      resetTimer,
+      numberOfSlots,
+      supportsWhitelist,
+      ethAddress
+    );
 
     const [signer, signer2, signer3] = await ethers.getSigners();
     const auctionId = 1;
@@ -54,6 +70,8 @@ describe('Withdraw functionalities', () => {
     const reserveForFirstSlot = await auctionFactory.getMinimumReservePriceForSlot(1, 1);
 
     expect(reserveForFirstSlot.toString()).to.equal('100000000000000000000');
+
+    await network.provider.send('evm_mine');
 
     await auctionFactory.finalizeAuction(1, [signer.address, signer2.address, signer3.address]);
 
@@ -95,6 +113,10 @@ describe('Withdraw functionalities', () => {
     await auctionFactory.connect(signer3).functions['bid(uint256)'](1, {
       value: '10000000000000000000'
     });
+
+    for (let i = 0; i < 5; i++) {
+      await network.provider.send('evm_mine');
+    }
 
     await auctionFactory.finalizeAuction(1, [signer.address, signer2.address, signer3.address]);
 
@@ -178,62 +200,15 @@ describe('Withdraw functionalities', () => {
       value: '1000000000000000000'
     });
 
+    for (let i = 0; i < 5; i++) {
+      await network.provider.send('evm_mine');
+    }
+
     await auctionFactory.finalizeAuction(1, [signer.address, signer2.address, signer3.address]);
 
     await expect(auctionFactory.withdrawERC721FromNonWinningSlot(1, 1, 1)).revertedWith(
       'Can withdraw only if reserve price is not met'
     );
-  });
-
-  it('should withdraw ETH after auction is finalized', async () => {
-    const { auctionFactory, mockNFT } = await loadFixture(deployContract);
-
-    await createAuction(auctionFactory);
-
-    const [signer, signer2, signer3, signer4] = await ethers.getSigners();
-    const auctionId = 1;
-    const slotIdx = 1;
-    const tokenId = 1;
-
-    await mockNFT.mint(signer.address, 'NFT_URI');
-
-    await mockNFT.approve(auctionFactory.address, tokenId);
-
-    await auctionFactory.depositERC721(auctionId, slotIdx, tokenId, mockNFT.address);
-
-    await auctionFactory.setMinimumReserveForAuctionSlots(1, [
-      '10000000000000000000',
-      '10000000000000000000',
-      '10000000000000000000'
-    ]);
-
-    await network.provider.send('evm_mine');
-
-    await auctionFactory.functions['bid(uint256)'](1, {
-      value: '100000000000000000000'
-    });
-
-    await auctionFactory.connect(signer2).functions['bid(uint256)'](1, {
-      value: '100000000000000000001'
-    });
-
-    await auctionFactory.connect(signer3).functions['bid(uint256)'](1, {
-      value: '100000000000000000002'
-    });
-
-    await auctionFactory.connect(signer4).functions['bid(uint256)'](1, {
-      value: '100000000000000000003'
-    });
-
-    await network.provider.send('evm_mine');
-
-    await auctionFactory.finalizeAuction(1, [signer4.address, signer3.address, signer2.address]);
-
-    await expect(auctionFactory.withdrawEthBidAfterAuctionFinalized(1)).emit(auctionFactory, 'LogBidWithdrawal');
-
-    const balance = await auctionFactory.getBidderBalance(1, signer.address);
-
-    expect(balance.toString()).equal('0');
   });
 
   it('should revert with You have 0 deposited', async () => {
@@ -276,13 +251,13 @@ describe('Withdraw functionalities', () => {
       value: '100000000000000000003'
     });
 
-    await network.provider.send('evm_mine');
+    for (let i = 0; i < 5; i++) {
+      await network.provider.send('evm_mine');
+    }
 
-    await auctionFactory.finalizeAuction(1, [signer4.address, signer3.address, signer2.address]);
+    await auctionFactory.finalizeAuction(1, [signer4.address, signer3.address, signer2.address, signer.address]);
 
-    await expect(auctionFactory.connect(signer5).withdrawEthBidAfterAuctionFinalized(1)).revertedWith(
-      'You have 0 deposited'
-    );
+    await expect(auctionFactory.connect(signer5).withdrawEthBid(1)).revertedWith('You have 0 deposited');
   });
 
   it('should revert with Auction should be finalized', async () => {
@@ -325,7 +300,7 @@ describe('Withdraw functionalities', () => {
       value: '100000000000000000003'
     });
 
-    await expect(auctionFactory.withdrawEthBidAfterAuctionFinalized(1)).revertedWith('Auction should be finalized');
+    await expect(auctionFactory.withdrawEthBid(1)).revertedWith('Auction should be finalized');
   });
 
   it('should withdraw erc20', async () => {
@@ -411,7 +386,7 @@ describe('Withdraw functionalities', () => {
 
     await network.provider.send('evm_mine');
 
-    await auctionFactory.functions['bid(uint256,uint256)'](1, 100);
+    await auctionFactory.connect(signer).functions['bid(uint256,uint256)'](1, 100);
 
     await auctionFactory.connect(signer2).functions['bid(uint256,uint256)'](1, 110);
 
@@ -421,9 +396,7 @@ describe('Withdraw functionalities', () => {
 
     await auctionFactory.finalizeAuction(1, [signer3.address, signer2.address, signer.address]);
 
-    await expect(auctionFactory.connect(signer4).withdrawERC20Bid(1)).revertedWith(
-      'You have 0 deposited'
-    );
+    await expect(auctionFactory.connect(signer4).withdrawERC20Bid(1)).revertedWith('You have 0 deposited');
   });
 
   it('should revert with Auction should be finalized', async () => {
@@ -473,7 +446,7 @@ const createAuction = async (auctionFactory) => {
   const blockNumber = await ethers.provider.getBlockNumber();
 
   const startBlockNumber = blockNumber + 6;
-  const endBlockNumber = blockNumber + 9;
+  const endBlockNumber = blockNumber + 11;
   const resetTimer = 2;
   const numberOfSlots = 3;
   const supportsWhitelist = false;

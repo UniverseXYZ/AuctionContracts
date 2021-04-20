@@ -1,5 +1,5 @@
 const { expect } = require('chai');
-const { waffle, ethers } = require('hardhat');
+const { waffle, ethers, network } = require('hardhat');
 const { loadFixture } = waffle;
 
 describe('Extend auction ERC721 Tests', () => {
@@ -36,7 +36,7 @@ describe('Extend auction ERC721 Tests', () => {
     ).to.be.emit(auctionFactory, 'LogBidSubmitted');
 
     await expect(
-      auctionFactory.functions['bid(uint256)'](1, {
+      auctionFactory.connect(signer2).functions['bid(uint256)'](1, {
         value: '200000000000000000000'
       })
     ).to.be.emit(auctionFactory, 'LogBidSubmitted');
@@ -59,10 +59,10 @@ describe('Extend auction ERC721 Tests', () => {
 
     const blockNumber = await ethers.provider.getBlockNumber();
 
-    const startBlockNumber = blockNumber + 1;
-    const endBlockNumber = blockNumber + 5;
+    const startBlockNumber = blockNumber + 8;
+    const endBlockNumber = blockNumber + 12;
     const resetTimer = 2;
-    const numberOfSlots = 3;
+    const numberOfSlots = 2;
     const supportsWhitelist = false;
     const tokenAddress = mockToken.address;
 
@@ -79,16 +79,26 @@ describe('Extend auction ERC721 Tests', () => {
 
     await mockNFT.mint(singer.address, 'NFT_URI');
     await mockNFT.approve(auctionFactory.address, 1);
+    await mockToken.transfer(signer2.address, 100);
 
-    mockToken.approve(auctionFactory.address, 100);
+    await mockToken.approve(auctionFactory.address, 100);
+
+    await mockToken.connect(signer2).approve(auctionFactory.address, 100);
 
     await auctionFactory.depositERC721(1, 1, 1, mockNFT.address);
 
+    for (let i = 0; i < 5; i++) {
+      await network.provider.send('evm_mine');
+    }
+
     await expect(auctionFactory.functions['bid(uint256,uint256)'](1, 1)).to.be.emit(auctionFactory, 'LogBidSubmitted');
 
-    await expect(auctionFactory.functions['bid(uint256,uint256)'](1, 2)).to.be.emit(auctionFactory, 'LogBidSubmitted');
+    await expect(auctionFactory.connect(signer2).functions['bid(uint256,uint256)'](1, 2)).to.be.emit(
+      auctionFactory,
+      'LogBidSubmitted'
+    );
 
-    await expect(auctionFactory.functions['bid(uint256,uint256)'](1, 3)).to.be.emit(
+    await expect(auctionFactory.functions['bid(uint256,uint256)'](1, 10)).to.be.emit(
       auctionFactory,
       'LogAuctionExtended'
     );
@@ -146,7 +156,7 @@ const createAuction = async (auctionFactory) => {
   const startBlockNumber = blockNumber + 5;
   const endBlockNumber = blockNumber + 10;
   const resetTimer = 3;
-  const numberOfSlots = 3;
+  const numberOfSlots = 2;
   const supportsWhitelist = false;
   const ethAddress = '0x0000000000000000000000000000000000000000';
 
