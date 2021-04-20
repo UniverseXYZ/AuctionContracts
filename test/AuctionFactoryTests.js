@@ -92,56 +92,6 @@ describe('AuctionFactory', () => {
     expect(bidderBalance).to.equal(balance.toString());
     expect('0').to.equal(newBalance);
   });
-  it('Withdraw Bid', async function () {
-    var { auctionFactory, mockNFT, mockToken } = await loadFixture(bid);
-    const auction = await auctionFactory.auctions(1);
-    const [owner] = await ethers.getSigners();
-    const bidderBalance = await auctionFactory.getBidderBalance(1, owner.address);
-    await auctionFactory.withdrawERC20Bid(1);
-    const balance = await mockToken.balanceOf(owner.address);
-    expect(bidderBalance.toString()).to.equal(bidderBalance);
-  });
-
-  it('should revert if bid is lower than  lowest eligible bid', async () => {
-    const { auctionFactory, mockNFT, mockToken } = await loadFixture(deployContract);
-
-    const blockNumber = await ethers.provider.getBlockNumber();
-
-    const startBlockNumber = blockNumber + 5;
-    const endBlockNumber = blockNumber + 10;
-    const resetTimer = 3;
-    const numberOfSlots = 1;
-    const supportsWhitelist = false;
-    const tokenAddress = mockToken.address;
-
-    await auctionFactory.createAuction(
-      startBlockNumber,
-      endBlockNumber,
-      resetTimer,
-      numberOfSlots,
-      supportsWhitelist,
-      tokenAddress
-    );
-
-    const [signer, signer2] = await ethers.getSigners();
-
-    const auctionId = 1;
-    const slotIdx = 1;
-    const tokenId = 1;
-
-    await mockNFT.mint(signer.address, 'nftURI');
-    await mockNFT.approve(auctionFactory.address, tokenId);
-
-    await auctionFactory.depositERC721(auctionId, slotIdx, tokenId, mockNFT.address);
-
-    mockToken.connect(signer).approve(auctionFactory.address, 100);
-
-    await auctionFactory.connect(signer).functions['bid(uint256,uint256)'](1, '100');
-
-    mockToken.connect(signer2).approve(auctionFactory.address, 100);
-
-    await expect(auctionFactory.connect(signer2).functions['bid(uint256,uint256)'](1, '100')).to.be.reverted;
-  });
 
   it('should revert if allowance is too small', async () => {
     const { auctionFactory, mockNFT, mockToken } = await loadFixture(deployContract);

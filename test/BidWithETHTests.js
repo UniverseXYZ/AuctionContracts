@@ -1,5 +1,5 @@
 const { expect } = require('chai');
-const { waffle, ethers } = require('hardhat');
+const { waffle, ethers, network } = require('hardhat');
 const { loadFixture } = waffle;
 
 describe('Test bidding with ETH', () => {
@@ -35,14 +35,6 @@ describe('Test bidding with ETH', () => {
         value: '200000000000000000000'
       })
     ).to.be.emit(auctionFactory, 'LogBidSubmitted');
-
-    expect(await auctionFactory.withdrawEthBid(1)).to.be.emit(auctionFactory, 'LogBidWithdrawal');
-
-    const auction = await auctionFactory.auctions(1);
-
-    const lowestEligibleBid = Number(ethers.utils.formatEther(auction.lowestEligibleBid));
-
-    expect(lowestEligibleBid).to.equal(200);
   });
 
   it('should revert if auction do not exists', async () => {
@@ -249,55 +241,13 @@ describe('Test bidding with ETH', () => {
     await expect(auctionFactory.withdrawEthBid(1)).to.be.reverted;
   });
 
-  it('should revert if bid is not greater than lowestEligibleBid', async () => {
-    let { auctionFactory, mockNFT } = await loadFixture(deployedContracts);
-
-    const blockNumber = await ethers.provider.getBlockNumber();
-
-    const startBlockNumber = blockNumber + 1;
-    const endBlockNumber = blockNumber + 2;
-    const resetTimer = 3;
-    const numberOfSlots = 1;
-    const supportsWhitelist = false;
-    const ethAddress = '0x0000000000000000000000000000000000000000';
-
-    await auctionFactory.createAuction(
-      startBlockNumber,
-      endBlockNumber,
-      resetTimer,
-      numberOfSlots,
-      supportsWhitelist,
-      ethAddress
-    );
-
-    await depositNFT(auctionFactory, mockNFT);
-
-    await createAuction(auctionFactory);
-
-    await createAuction(auctionFactory);
-
-    await createAuction(auctionFactory);
-
-    await createAuction(auctionFactory);
-
-    await auctionFactory.functions['bid(uint256)'](1, {
-      value: '100000000000000000000'
-    });
-
-    await expect(
-      auctionFactory.functions['bid(uint256)'](1, {
-        value: '100000000000000000000'
-      })
-    ).to.be.reverted;
-  });
-
   it('should revert if sender have 0 deposited', async () => {
     let { auctionFactory, mockNFT } = await loadFixture(deployedContracts);
 
     const blockNumber = await ethers.provider.getBlockNumber();
 
     const startBlockNumber = blockNumber + 1;
-    const endBlockNumber = blockNumber + 2;
+    const endBlockNumber = blockNumber + 10;
     const resetTimer = 3;
     const numberOfSlots = 1;
     const supportsWhitelist = false;
@@ -316,11 +266,9 @@ describe('Test bidding with ETH', () => {
 
     await createAuction(auctionFactory);
 
-    await createAuction(auctionFactory);
-
-    await createAuction(auctionFactory);
-
-    await createAuction(auctionFactory);
+    for (let i = 0; i < 3; i++) {
+      await network.provider.send('evm_mine');
+    }
 
     const [signer, signer2, signer3] = await ethers.getSigners();
 
@@ -341,7 +289,7 @@ const createAuction = async (auctionFactory) => {
 
   const startBlockNumber = blockNumber + 5;
   const endBlockNumber = blockNumber + 10;
-  const resetTimer = 3;
+  const resetTimer = 10;
   const numberOfSlots = 1;
   const supportsWhitelist = false;
   const ethAddress = '0x0000000000000000000000000000000000000000';

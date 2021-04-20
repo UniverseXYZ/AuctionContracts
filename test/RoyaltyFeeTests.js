@@ -10,7 +10,7 @@ describe('Test royalty fee functionality', () => {
 
     const auctionFactory = await AuctionFactory.deploy(5);
     const mockNFT = await MockNFT.deploy();
-    const mockToken = await MockToken.deploy("1000000000000000000");
+    const mockToken = await MockToken.deploy('1000000000000000000');
 
     return { auctionFactory, mockNFT, mockToken };
   };
@@ -44,7 +44,7 @@ describe('Test royalty fee functionality', () => {
     const blockNumber = await ethers.provider.getBlockNumber();
 
     const startBlockNumber = blockNumber + 5;
-    const endBlockNumber = blockNumber + 6;
+    const endBlockNumber = blockNumber + 7;
     const resetTimer = 3;
     const numberOfSlots = 1;
     const supportsWhitelist = false;
@@ -75,6 +75,8 @@ describe('Test royalty fee functionality', () => {
       value: '1000000000000000000'
     });
 
+    await network.provider.send('evm_mine');
+
     await auctionFactory.finalizeAuction(1, [signer.address]);
 
     expect(await auctionFactory.royaltiesReserve(ethAddress)).to.equal('50000000000000000');
@@ -84,7 +86,7 @@ describe('Test royalty fee functionality', () => {
       'LogRoyaltiesWithdrawal'
     );
 
-     expect(await auctionFactory.royaltiesReserve(ethAddress)).to.equal('0')
+    expect(await auctionFactory.royaltiesReserve(ethAddress)).to.equal('0');
   });
 
   it('should withdraw royaltee with ERC20 successfully', async () => {
@@ -98,8 +100,8 @@ describe('Test royalty fee functionality', () => {
     await mockToken.approve(auctionFactory.address, balance.toString());
 
     const startBlockNumber = blockNumber + 6;
-    const endBlockNumber = blockNumber + 7;
-    const resetTimer = 3;
+    const endBlockNumber = blockNumber + 8;
+    const resetTimer = 1;
     const numberOfSlots = 1;
     const supportsWhitelist = false;
     const tokenAddress = mockToken.address;
@@ -123,7 +125,9 @@ describe('Test royalty fee functionality', () => {
 
     expect(await auctionFactory.royaltyFeeMantissa()).to.equal('50000000000000000');
 
-    await auctionFactory.functions['bid(uint256,uint256)'](1, "1000000000000000000");
+    await auctionFactory.functions['bid(uint256,uint256)'](1, '1000000000000000000');
+
+    await network.provider.send('evm_mine');
 
     await auctionFactory.finalizeAuction(1, [signer.address]);
 
@@ -134,7 +138,7 @@ describe('Test royalty fee functionality', () => {
       'LogRoyaltiesWithdrawal'
     );
 
-    expect(await auctionFactory.royaltiesReserve(tokenAddress)).to.equal('0')
+    expect(await auctionFactory.royaltiesReserve(tokenAddress)).to.equal('0');
   });
 
   it('should revert if amount is zero', async () => {

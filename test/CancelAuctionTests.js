@@ -6,14 +6,14 @@ describe('Test cancel functionality', () => {
   const deployContracts = async () => {
     const [AuctionFactory, MockNFT] = await Promise.all([
       ethers.getContractFactory('AuctionFactory'),
-      ethers.getContractFactory('MockNFT'),
+      ethers.getContractFactory('MockNFT')
     ]);
 
     const [auctionFactory, mockNft] = await Promise.all([AuctionFactory.deploy(2000), MockNFT.deploy()]);
 
     return {
       auctionFactory,
-      mockNft,
+      mockNft
     };
   };
 
