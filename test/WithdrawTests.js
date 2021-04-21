@@ -55,15 +55,15 @@ describe('Withdraw functionalities', () => {
 
     await network.provider.send('evm_mine');
 
-    await auctionFactory.functions['bid(uint256)'](1, {
+    await auctionFactory.functions['ethBid(uint256)'](1, {
       value: '10000000000000000000'
     });
 
-    await auctionFactory.connect(signer2).functions['bid(uint256)'](1, {
+    await auctionFactory.connect(signer2).functions['ethBid(uint256)'](1, {
       value: '10000000000000000000'
     });
 
-    await auctionFactory.connect(signer3).functions['bid(uint256)'](1, {
+    await auctionFactory.connect(signer3).functions['ethBid(uint256)'](1, {
       value: '10000000000000000000'
     });
 
@@ -102,15 +102,15 @@ describe('Withdraw functionalities', () => {
 
     await network.provider.send('evm_mine');
 
-    await auctionFactory.functions['bid(uint256)'](1, {
+    await auctionFactory.functions['ethBid(uint256)'](1, {
       value: '10000000000000000000'
     });
 
-    await auctionFactory.connect(signer2).functions['bid(uint256)'](1, {
+    await auctionFactory.connect(signer2).functions['ethBid(uint256)'](1, {
       value: '10000000000000000000'
     });
 
-    await auctionFactory.connect(signer3).functions['bid(uint256)'](1, {
+    await auctionFactory.connect(signer3).functions['ethBid(uint256)'](1, {
       value: '10000000000000000000'
     });
 
@@ -149,15 +149,15 @@ describe('Withdraw functionalities', () => {
 
     await network.provider.send('evm_mine');
 
-    await auctionFactory.functions['bid(uint256)'](1, {
+    await auctionFactory.functions['ethBid(uint256)'](1, {
       value: '10000000000000000000'
     });
 
-    await auctionFactory.connect(signer2).functions['bid(uint256)'](1, {
+    await auctionFactory.connect(signer2).functions['ethBid(uint256)'](1, {
       value: '10000000000000000000'
     });
 
-    await auctionFactory.connect(signer3).functions['bid(uint256)'](1, {
+    await auctionFactory.connect(signer3).functions['ethBid(uint256)'](1, {
       value: '10000000000000000000'
     });
 
@@ -188,15 +188,15 @@ describe('Withdraw functionalities', () => {
 
     await network.provider.send('evm_mine');
 
-    await auctionFactory.connect(signer).functions['bid(uint256)'](1, {
+    await auctionFactory.connect(signer).functions['ethBid(uint256)'](1, {
       value: '1000000000000000000'
     });
 
-    await auctionFactory.connect(signer2).functions['bid(uint256)'](1, {
+    await auctionFactory.connect(signer2).functions['ethBid(uint256)'](1, {
       value: '1000000000000000000'
     });
 
-    await auctionFactory.connect(signer3).functions['bid(uint256)'](1, {
+    await auctionFactory.connect(signer3).functions['ethBid(uint256)'](1, {
       value: '1000000000000000000'
     });
 
@@ -235,19 +235,19 @@ describe('Withdraw functionalities', () => {
 
     await network.provider.send('evm_mine');
 
-    await auctionFactory.functions['bid(uint256)'](1, {
+    await auctionFactory.functions['ethBid(uint256)'](1, {
       value: '100000000000000000000'
     });
 
-    await auctionFactory.connect(signer2).functions['bid(uint256)'](1, {
+    await auctionFactory.connect(signer2).functions['ethBid(uint256)'](1, {
       value: '100000000000000000001'
     });
 
-    await auctionFactory.connect(signer3).functions['bid(uint256)'](1, {
+    await auctionFactory.connect(signer3).functions['ethBid(uint256)'](1, {
       value: '100000000000000000002'
     });
 
-    await auctionFactory.connect(signer4).functions['bid(uint256)'](1, {
+    await auctionFactory.connect(signer4).functions['ethBid(uint256)'](1, {
       value: '100000000000000000003'
     });
 
@@ -284,19 +284,19 @@ describe('Withdraw functionalities', () => {
 
     await network.provider.send('evm_mine');
 
-    await auctionFactory.functions['bid(uint256)'](1, {
+    await auctionFactory.functions['ethBid(uint256)'](1, {
       value: '100000000000000000000'
     });
 
-    await auctionFactory.connect(signer2).functions['bid(uint256)'](1, {
+    await auctionFactory.connect(signer2).functions['ethBid(uint256)'](1, {
       value: '100000000000000000001'
     });
 
-    await auctionFactory.connect(signer3).functions['bid(uint256)'](1, {
+    await auctionFactory.connect(signer3).functions['ethBid(uint256)'](1, {
       value: '100000000000000000002'
     });
 
-    await auctionFactory.connect(signer4).functions['bid(uint256)'](1, {
+    await auctionFactory.connect(signer4).functions['ethBid(uint256)'](1, {
       value: '100000000000000000003'
     });
 
@@ -336,11 +336,11 @@ describe('Withdraw functionalities', () => {
 
     await network.provider.send('evm_mine');
 
-    await auctionFactory.functions['bid(uint256,uint256)'](1, 100);
+    await auctionFactory.functions['erc20Bid(uint256,uint256)'](1, 100);
 
-    await auctionFactory.connect(signer2).functions['bid(uint256,uint256)'](1, 110);
+    await auctionFactory.connect(signer2).functions['erc20Bid(uint256,uint256)'](1, 110);
 
-    await auctionFactory.connect(signer3).functions['bid(uint256,uint256)'](1, 120);
+    await auctionFactory.connect(signer3).functions['erc20Bid(uint256,uint256)'](1, 120);
 
     await network.provider.send('evm_mine');
 
@@ -386,11 +386,11 @@ describe('Withdraw functionalities', () => {
 
     await network.provider.send('evm_mine');
 
-    await auctionFactory.connect(signer).functions['bid(uint256,uint256)'](1, 100);
+    await auctionFactory.connect(signer).functions['erc20Bid(uint256,uint256)'](1, 100);
 
-    await auctionFactory.connect(signer2).functions['bid(uint256,uint256)'](1, 110);
+    await auctionFactory.connect(signer2).functions['erc20Bid(uint256,uint256)'](1, 110);
 
-    await auctionFactory.connect(signer3).functions['bid(uint256,uint256)'](1, 120);
+    await auctionFactory.connect(signer3).functions['erc20Bid(uint256,uint256)'](1, 120);
 
     await network.provider.send('evm_mine');
 
@@ -432,11 +432,11 @@ describe('Withdraw functionalities', () => {
 
     await network.provider.send('evm_mine');
 
-    await auctionFactory.functions['bid(uint256,uint256)'](1, 100);
+    await auctionFactory.functions['erc20Bid(uint256,uint256)'](1, 100);
 
-    await auctionFactory.connect(signer2).functions['bid(uint256,uint256)'](1, 110);
+    await auctionFactory.connect(signer2).functions['erc20Bid(uint256,uint256)'](1, 110);
 
-    await auctionFactory.connect(signer3).functions['bid(uint256,uint256)'](1, 120);
+    await auctionFactory.connect(signer3).functions['erc20Bid(uint256,uint256)'](1, 120);
 
     await expect(auctionFactory.withdrawERC20Bid(1)).revertedWith('Auction should be finalized');
   });

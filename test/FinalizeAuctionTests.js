@@ -32,7 +32,7 @@ describe('Finalize auction ERC721 Tests', () => {
     await mockNFT.approve(auctionFactory.address, 1);
 
     await expect(
-      auctionFactory.functions['bid(uint256)'](1, {
+      auctionFactory.functions['ethBid(uint256)'](1, {
         value: '200000000000000000000'
       })
     ).to.be.emit(auctionFactory, 'LogBidSubmitted');
@@ -76,7 +76,7 @@ describe('Finalize auction ERC721 Tests', () => {
     await mockNFT.approve(auctionFactory.address, 1);
 
     await expect(
-      auctionFactory.functions['bid(uint256)'](1, {
+      auctionFactory.functions['ethBid(uint256)'](1, {
         value: '200000000000000000000'
       })
     ).to.be.emit(auctionFactory, 'LogBidSubmitted');
@@ -111,7 +111,7 @@ describe('Finalize auction ERC721 Tests', () => {
 
     await mockNFT.approve(auctionFactory.address, 1);
 
-    auctionFactory.functions['bid(uint256)'](1, {
+    auctionFactory.functions['ethBid(uint256)'](1, {
       value: '200000000000000000000'
     });
 
@@ -131,7 +131,7 @@ describe('Finalize auction ERC721 Tests', () => {
 
     await mockNFT.approve(auctionFactory.address, 1);
 
-    auctionFactory.functions['bid(uint256)'](1, {
+    auctionFactory.functions['ethBid(uint256)'](1, {
       value: '200000000000000000000'
     });
 
@@ -175,7 +175,7 @@ describe('Finalize auction ERC721 Tests', () => {
 
     await mockToken.approve(auctionFactory.address, 100);
 
-    await auctionFactory.functions['bid(uint256,uint256)'](1, '100');
+    await auctionFactory.functions['erc20Bid(uint256,uint256)'](1, '100');
 
     await network.provider.send('evm_mine');
 
@@ -219,7 +219,7 @@ describe('Finalize auction ERC721 Tests', () => {
 
     await mockNFT.connect(signer).approve(auctionFactory.address, 1);
 
-    await auctionFactory.connect(signer).functions['bid(uint256)'](1, {
+    await auctionFactory.connect(signer).functions['ethBid(uint256)'](1, {
       value: '200000000000000000000'
     });
 
@@ -257,19 +257,19 @@ describe('Finalize auction ERC721 Tests', () => {
 
     await mockNFT.connect(signer).approve(auctionFactory.address, 1);
 
-    await auctionFactory.connect(signer).functions['bid(uint256)'](1, {
+    await auctionFactory.connect(signer).functions['ethBid(uint256)'](1, {
       value: '200000000000000000000'
     });
 
-    await auctionFactory.connect(signer2).functions['bid(uint256)'](1, {
+    await auctionFactory.connect(signer2).functions['ethBid(uint256)'](1, {
       value: '300000000000000000000'
     });
 
-    await auctionFactory.connect(signer3).functions['bid(uint256)'](1, {
+    await auctionFactory.connect(signer3).functions['ethBid(uint256)'](1, {
       value: '400000000000000000000'
     });
 
-    await auctionFactory.connect(signer4).functions['bid(uint256)'](1, {
+    await auctionFactory.connect(signer4).functions['ethBid(uint256)'](1, {
       value: '500000000000000000000'
     });
 
@@ -315,7 +315,7 @@ describe('Finalize auction ERC721 Tests', () => {
       await network.provider.send('evm_mine');
     }
 
-    await auctionFactory.connect(signer).functions['bid(uint256)'](1, {
+    await auctionFactory.connect(signer).functions['ethBid(uint256)'](1, {
       value: '500000000000000000000'
     });
 
@@ -359,15 +359,15 @@ describe('Finalize auction ERC721 Tests', () => {
       await network.provider.send('evm_mine');
     }
 
-    await auctionFactory.connect(signer).functions['bid(uint256)'](1, {
+    await auctionFactory.connect(signer).functions['ethBid(uint256)'](1, {
       value: '100000000000000000000'
     });
 
-    await auctionFactory.connect(signer2).functions['bid(uint256)'](1, {
+    await auctionFactory.connect(signer2).functions['ethBid(uint256)'](1, {
       value: '200000000000000000000'
     });
 
-    await auctionFactory.connect(signer2).functions['bid(uint256)'](1, {
+    await auctionFactory.connect(signer2).functions['ethBid(uint256)'](1, {
       value: '300000000000000000000'
     });
 

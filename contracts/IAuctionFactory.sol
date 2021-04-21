@@ -84,11 +84,11 @@ interface IAuctionFactory {
 
     /// @notice Sends a bid (ETH) to the specified auciton
     /// @param auctionId The auction id
-    function bid(uint256 auctionId) external payable returns (bool);
+    function ethBid(uint256 auctionId) external payable returns (bool);
 
     /// @notice Sends a bid (ERC20) to the specified auciton
     /// @param auctionId The auction id
-    function bid(uint256 auctionId, uint256 amount) external returns (bool);
+    function erc20Bid(uint256 auctionId, uint256 amount) external returns (bool);
 
     /// @notice Distributes all slot assets to the bidders and winning bids to the collector
     /// @param auctionId The auction id

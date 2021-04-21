@@ -346,7 +346,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         return _nftSlotIndexes;
     }
 
-    function bid(uint256 _auctionId)
+    function ethBid(uint256 _auctionId)
         external
         payable
         override
@@ -403,7 +403,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         return true;
     }
 
-    function bid(uint256 _auctionId, uint256 _amount)
+    function erc20Bid(uint256 _auctionId, uint256 _amount)
         external
         override
         onlyExistingAuction(_auctionId)

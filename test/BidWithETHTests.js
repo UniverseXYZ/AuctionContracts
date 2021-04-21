@@ -23,7 +23,7 @@ describe('Test bidding with ETH', () => {
     await createAuction(auctionFactory);
 
     expect(
-      await auctionFactory.functions['bid(uint256)'](1, {
+      await auctionFactory.functions['ethBid(uint256)'](1, {
         value: '100000000000000000000'
       })
     ).to.be.emit(auctionFactory, 'LogBidSubmitted');
@@ -31,7 +31,7 @@ describe('Test bidding with ETH', () => {
     const [owner, addr1] = await ethers.getSigners();
 
     expect(
-      await auctionFactory.connect(addr1).functions['bid(uint256)'](1, {
+      await auctionFactory.connect(addr1).functions['ethBid(uint256)'](1, {
         value: '200000000000000000000'
       })
     ).to.be.emit(auctionFactory, 'LogBidSubmitted');
@@ -47,7 +47,7 @@ describe('Test bidding with ETH', () => {
     await createAuction(auctionFactory);
 
     await expect(
-      auctionFactory.functions['bid(uint256)'](3, {
+      auctionFactory.functions['ethBid(uint256)'](3, {
         value: '100000000000000000000'
       })
     ).to.be.reverted;
@@ -79,7 +79,7 @@ describe('Test bidding with ETH', () => {
     await createAuction(auctionFactory);
 
     await expect(
-      auctionFactory.functions['bid(uint256)'](1, {
+      auctionFactory.functions['ethBid(uint256)'](1, {
         value: '0'
       })
     ).to.be.reverted;
@@ -93,7 +93,7 @@ describe('Test bidding with ETH', () => {
     await depositNFT(auctionFactory, mockNFT);
 
     await expect(
-      auctionFactory.functions['bid(uint256)'](1, {
+      auctionFactory.functions['ethBid(uint256)'](1, {
         value: '0'
       })
     ).to.be.reverted;
@@ -125,7 +125,7 @@ describe('Test bidding with ETH', () => {
     await createAuction(auctionFactory);
 
     await expect(
-      auctionFactory.functions['bid(uint256)'](1, {
+      auctionFactory.functions['ethBid(uint256)'](1, {
         value: '100000000000000000000'
       })
     ).to.be.reverted;
@@ -159,7 +159,7 @@ describe('Test bidding with ETH', () => {
     await createAuction(auctionFactory);
 
     await expect(
-      auctionFactory.functions['bid(uint256)'](1, {
+      auctionFactory.functions['ethBid(uint256)'](1, {
         value: '100000000000000000000'
       })
     ).to.be.reverted;
@@ -194,7 +194,7 @@ describe('Test bidding with ETH', () => {
 
     await createAuction(auctionFactory);
 
-    await auctionFactory.functions['bid(uint256)'](1, {
+    await auctionFactory.functions['ethBid(uint256)'](1, {
       value: '100000000000000000000'
     });
 
@@ -230,11 +230,11 @@ describe('Test bidding with ETH', () => {
 
     await createAuction(auctionFactory);
 
-    await auctionFactory.functions['bid(uint256)'](1, {
+    await auctionFactory.functions['ethBid(uint256)'](1, {
       value: '100000000000000000000'
     });
 
-    await auctionFactory.functions['bid(uint256)'](1, {
+    await auctionFactory.functions['ethBid(uint256)'](1, {
       value: '110000000000000000000'
     });
 
@@ -272,11 +272,11 @@ describe('Test bidding with ETH', () => {
 
     const [signer, signer2, signer3] = await ethers.getSigners();
 
-    auctionFactory.connect(signer2).functions['bid(uint256)'](1, {
+    auctionFactory.connect(signer2).functions['ethBid(uint256)'](1, {
       value: '100000000000000000000'
     });
 
-    auctionFactory.connect(signer3).functions['bid(uint256)'](1, {
+    auctionFactory.connect(signer3).functions['ethBid(uint256)'](1, {
       value: '110000000000000000000'
     });
 

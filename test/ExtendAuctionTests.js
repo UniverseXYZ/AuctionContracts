@@ -30,25 +30,25 @@ describe('Extend auction ERC721 Tests', () => {
     await createAuction(auctionFactory);
 
     await expect(
-      auctionFactory.functions['bid(uint256)'](1, {
+      auctionFactory.functions['ethBid(uint256)'](1, {
         value: '100000000000000000000'
       })
     ).to.be.emit(auctionFactory, 'LogBidSubmitted');
 
     await expect(
-      auctionFactory.connect(signer2).functions['bid(uint256)'](1, {
+      auctionFactory.connect(signer2).functions['ethBid(uint256)'](1, {
         value: '200000000000000000000'
       })
     ).to.be.emit(auctionFactory, 'LogBidSubmitted');
 
     await expect(
-      auctionFactory.functions['bid(uint256)'](1, {
+      auctionFactory.functions['ethBid(uint256)'](1, {
         value: '300000000000000000000'
       })
     ).to.be.emit(auctionFactory, 'LogAuctionExtended');
 
     await expect(
-      auctionFactory.connect(signer2).functions['bid(uint256)'](1, {
+      auctionFactory.connect(signer2).functions['ethBid(uint256)'](1, {
         value: '400000000000000000000'
       })
     ).to.be.emit(auctionFactory, 'LogBidSubmitted');
@@ -91,19 +91,19 @@ describe('Extend auction ERC721 Tests', () => {
       await network.provider.send('evm_mine');
     }
 
-    await expect(auctionFactory.functions['bid(uint256,uint256)'](1, 1)).to.be.emit(auctionFactory, 'LogBidSubmitted');
+    await expect(auctionFactory.functions['erc20Bid(uint256,uint256)'](1, 1)).to.be.emit(auctionFactory, 'LogBidSubmitted');
 
-    await expect(auctionFactory.connect(signer2).functions['bid(uint256,uint256)'](1, 2)).to.be.emit(
+    await expect(auctionFactory.connect(signer2).functions['erc20Bid(uint256,uint256)'](1, 2)).to.be.emit(
       auctionFactory,
       'LogBidSubmitted'
     );
 
-    await expect(auctionFactory.functions['bid(uint256,uint256)'](1, 10)).to.be.emit(
+    await expect(auctionFactory.functions['erc20Bid(uint256,uint256)'](1, 10)).to.be.emit(
       auctionFactory,
       'LogAuctionExtended'
     );
 
-    await expect(auctionFactory.functions['bid(uint256,uint256)'](1, 4)).to.be.emit(auctionFactory, 'LogBidSubmitted');
+    await expect(auctionFactory.functions['erc20Bid(uint256,uint256)'](1, 4)).to.be.emit(auctionFactory, 'LogBidSubmitted');
   });
 
   it('should revert if auction is ended', async () => {
@@ -137,13 +137,13 @@ describe('Extend auction ERC721 Tests', () => {
     await createAuction(auctionFactory);
 
     await expect(
-      auctionFactory.functions['bid(uint256)'](1, {
+      auctionFactory.functions['ethBid(uint256)'](1, {
         value: '100000000000000000000'
       })
     ).to.be.emit(auctionFactory, 'LogBidSubmitted');
 
     await expect(
-      auctionFactory.functions['bid(uint256)'](1, {
+      auctionFactory.functions['ethBid(uint256)'](1, {
         value: '200000000000000000000'
       })
     ).to.be.reverted;

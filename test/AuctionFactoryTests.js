@@ -54,11 +54,11 @@ describe('AuctionFactory', () => {
 
     const balanceOwner = await mockToken.balanceOf(owner.address);
     await mockToken.approve(auctionFactory.address, balanceOwner.toString());
-    await auctionFactory.functions['bid(uint256,uint256)'](1, balanceOwner.toString());
+    await auctionFactory.functions['erc20Bid(uint256,uint256)'](1, balanceOwner.toString());
 
     const balanceAddr1 = await mockToken.balanceOf(addr1.address);
     await mockToken.connect(addr1).approve(auctionFactory.address, balanceAddr1.toString());
-    await auctionFactory.connect(addr1).functions['bid(uint256,uint256)'](1, balanceAddr1.toString());
+    await auctionFactory.connect(addr1).functions['erc20Bid(uint256,uint256)'](1, balanceAddr1.toString());
 
     return { auctionFactory, mockNFT, mockToken };
   }
@@ -127,7 +127,7 @@ describe('AuctionFactory', () => {
 
     mockToken.connect(signer).approve(auctionFactory.address, 100);
 
-    await expect(auctionFactory.connect(signer).functions['bid(uint256,uint256)'](1, '101')).to.be.reverted;
+    await expect(auctionFactory.connect(signer).functions['erc20Bid(uint256,uint256)'](1, '101')).to.be.reverted;
   });
 
   it('should revert if some one try to bid with ETH', async () => {
@@ -164,7 +164,7 @@ describe('AuctionFactory', () => {
 
     mockToken.connect(signer).approve(auctionFactory.address, 100);
 
-    await expect(auctionFactory.connect(signer).functions['bid(uint256,uint256)'](1, 10)).to.be.reverted;
+    await expect(auctionFactory.connect(signer).functions['erc20Bid(uint256,uint256)'](1, 10)).to.be.reverted;
   });
 
   it('should skip setting new high balance if the bid is lower', async () => {
@@ -203,9 +203,9 @@ describe('AuctionFactory', () => {
 
     mockToken.connect(signer2).approve(auctionFactory.address, 100);
 
-    await auctionFactory.connect(signer).functions['bid(uint256,uint256)'](1, 10);
+    await auctionFactory.connect(signer).functions['erc20Bid(uint256,uint256)'](1, 10);
 
-    await auctionFactory.connect(signer2).functions['bid(uint256,uint256)'](1, 9);
+    await auctionFactory.connect(signer2).functions['erc20Bid(uint256,uint256)'](1, 9);
 
     const auction = await auctionFactory.auctions(1);
 

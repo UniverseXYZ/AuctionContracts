@@ -71,7 +71,7 @@ describe('Test royalty fee functionality', () => {
 
     expect(await auctionFactory.royaltyFeeMantissa()).to.equal('50000000000000000');
 
-    await auctionFactory.functions['bid(uint256)'](1, {
+    await auctionFactory.functions['ethBid(uint256)'](1, {
       value: '1000000000000000000'
     });
 
@@ -125,7 +125,7 @@ describe('Test royalty fee functionality', () => {
 
     expect(await auctionFactory.royaltyFeeMantissa()).to.equal('50000000000000000');
 
-    await auctionFactory.functions['bid(uint256,uint256)'](1, '1000000000000000000');
+    await auctionFactory.functions['erc20Bid(uint256,uint256)'](1, '1000000000000000000');
 
     await network.provider.send('evm_mine');
 
