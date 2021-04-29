@@ -70,6 +70,20 @@ interface IAuctionFactory {
         address tokenAddress
     ) external returns (uint256);
 
+    /// @notice Register directly minted to the auction contract ERC721 tokens (only called from the ERC721 contract)
+    /// @param auctionId The auction id
+    /// @param slotIndex Index of the slot
+    /// @param tokenId Id of the ERC721 token
+    /// @param tokenAddress Address of the ERC721 contract
+    /// @param depositor Address of the depositor on whose behalf the deposit is registered
+    function registerDepositERC721WithoutTransfer(
+        uint256 auctionId,
+        uint256 slotIndex,
+        uint256 tokenId,
+        address tokenAddress,
+        address depositor
+    ) external returns (uint256);
+
     /// @notice Deposit ERC721 assets to the specified Auction
     /// @param auctionId The auction id
     /// @param slotIndex Index of the slot

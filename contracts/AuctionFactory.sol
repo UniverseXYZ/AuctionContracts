@@ -302,6 +302,71 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         return _nftSlotIndex;
     }
 
+    function registerDepositERC721WithoutTransfer(
+        uint256 _auctionId,
+        uint256 _slotIndex,
+        uint256 _tokenId,
+        address _tokenAddress,
+        address _depositor
+    )
+        public
+        override
+        onlyExistingAuction(_auctionId)
+        onlyAuctionNotStarted(_auctionId)
+        onlyAuctionNotCanceled(_auctionId)
+        returns (uint256)
+    {
+        require(
+            msg.sender == _tokenAddress,
+            "Only the ERC721 contract can deposit on behalf of user"
+        );
+
+        require(
+            auctions[_auctionId].supportsWhitelist == false ||
+                auctions[_auctionId].whitelistAddresses[_depositor] == true,
+            "You are not allowed to deposit"
+        );
+
+        require(
+            auctions[_auctionId].numberOfSlots >= _slotIndex && _slotIndex > 0,
+            "You are trying to deposit into a non-existing slot"
+        );
+
+        require(
+            IERC721(_tokenAddress).ownerOf(_tokenId) == address(this),
+            "Token should be existing inside the auction"
+        );
+
+        DepositedERC721 memory item =
+            DepositedERC721({
+                tokenId: _tokenId,
+                tokenAddress: _tokenAddress,
+                depositor: _depositor
+            });
+
+        uint256 _nftSlotIndex =
+            auctions[_auctionId].slots[_slotIndex].totalDepositedNfts.add(1);
+
+        auctions[_auctionId].slots[_slotIndex].depositedNfts[
+            _nftSlotIndex
+        ] = item;
+
+        auctions[_auctionId].slots[_slotIndex]
+            .totalDepositedNfts = _nftSlotIndex;
+
+        emit LogERC721Deposit(
+            _depositor,
+            _tokenAddress,
+            _tokenId,
+            _auctionId,
+            _slotIndex,
+            _nftSlotIndex,
+            block.timestamp
+        );
+
+        return _nftSlotIndex;
+    }
+
     function depositMultipleERC721(
         uint256 _auctionId,
         uint256 _slotIndex,
@@ -361,10 +426,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         address _bidder = msg.sender;
         Auction storage auction = auctions[_auctionId];
 
-        require(
-             block.number < auction.endBlockNumber,
-            "Auction has ended"
-        );
+        require(block.number < auction.endBlockNumber, "Auction has ended");
 
         if (
             auction.numberOfBids >= auction.numberOfSlots &&
@@ -417,10 +479,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         address _bidder = msg.sender;
         Auction storage auction = auctions[_auctionId];
 
-        require(
-             block.number < auction.endBlockNumber,
-            "Auction has ended"
-        );
+        require(block.number < auction.endBlockNumber, "Auction has ended");
 
         IERC20 bidToken = IERC20(auction.bidToken);
         uint256 allowance = bidToken.allowance(msg.sender, address(this));
