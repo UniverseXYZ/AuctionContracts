@@ -14,7 +14,6 @@ contract UniverseERC721 is ERC721, Ownable {
     IAuctionFactory public universeAuction;
 
     constructor(address _universeAuction)
-        public
         ERC721("Non-Fungible Universe", "NFU")
     {
         universeAuction = IAuctionFactory(_universeAuction);
@@ -93,13 +92,13 @@ contract UniverseERC721 is ERC721, Ownable {
         returns (uint256[] memory)
     {
         uint256 tokenBalance = balanceOf(ownerAddress);
-        uint256[] memory ownedTokens = new uint256[](tokenBalance);
+        uint256[] memory tokens = new uint256[](tokenBalance);
 
         for (uint256 i = 0; i < tokenBalance; i++) {
             uint256 tokenId = tokenOfOwnerByIndex(ownerAddress, i);
-            ownedTokens[i] = tokenId;
+            tokens[i] = tokenId;
         }
 
-        return ownedTokens;
+        return tokens;
     }
 }

@@ -17,7 +17,8 @@
     "ethers": "^5.0.32",
     "hardhat": "^2.1.1",
     "hardhat-contract-sizer": "^2.0.3",
-    "hardhat-deploy": "^0.7.5"
+    "hardhat-deploy": "^0.7.5",
+    "hardhat-gas-reporter": "^1.0.4"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^3.4.1",

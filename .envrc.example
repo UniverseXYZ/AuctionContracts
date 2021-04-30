@@ -9,3 +9,9 @@ export ETHERSCAN_API_KEY=''
 
 # Max number of slots
 export MAX_SLOT='10'
+
+# On test reports gas if exist
+export REPORT_GAS='true'
+
+# Coinmarketcap key for calculating gas price
+export CMC_API_KEY=''
