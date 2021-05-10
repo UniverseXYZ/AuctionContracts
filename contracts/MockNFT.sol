@@ -8,7 +8,7 @@ contract MockNFT is ERC721 {
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
 
-    constructor() public ERC721("MockNFT", "NFT") {}
+    constructor() ERC721("MockNFT", "NFT") {}
 
     function mint(address reciever, string memory tokenURI)
         public
