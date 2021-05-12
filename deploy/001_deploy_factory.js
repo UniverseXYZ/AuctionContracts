@@ -19,9 +19,15 @@ module.exports = async function () {
       });
       console.log("AuctionFactory deployed to:", auctionFactoryDeployment.address);
 
-      const universeERC721Deployment = await deployments.deploy("UniverseERC721", {
+      const universeERC721FactoryDeployment = await deployments.deploy("UniverseERC721Factory", {
         from: namedAccounts.deployer,
         args: [auctionFactoryDeployment.address],
+      });
+      console.log("UniverseERC721Factory deployed to:", universeERC721FactoryDeployment.address);
+
+      const universeERC721Deployment = await deployments.deploy("UniverseERC721", {
+        from: namedAccounts.deployer,
+        args: [auctionFactoryDeployment.address, "Non Fungible Universe", "NFU"],
       });
       console.log("UniverseERC721 deployed to:", universeERC721Deployment.address);
     } else {
