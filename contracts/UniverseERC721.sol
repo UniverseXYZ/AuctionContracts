@@ -26,7 +26,7 @@ contract UniverseERC721 is ERC721, Ownable, HasSecondarySaleFees {
         address receiver,
         string memory tokenURI,
         Fee[] memory fees
-    ) public returns (uint256) {
+    ) public onlyOwner returns (uint256) {
         _tokenIds.increment();
 
         uint256 newItemId = _tokenIds.current();
@@ -51,7 +51,7 @@ contract UniverseERC721 is ERC721, Ownable, HasSecondarySaleFees {
         address receiver,
         string[] calldata tokenURIs,
         Fee[] memory fees
-    ) public returns (uint256[] memory) {
+    ) public onlyOwner returns (uint256[] memory) {
         require(
             tokenURIs.length <= 40,
             "Cannot mint more than 40 ERC721 tokens in a single call"
@@ -72,7 +72,7 @@ contract UniverseERC721 is ERC721, Ownable, HasSecondarySaleFees {
         uint256 slotIndex,
         string[] calldata tokenURIs,
         Fee[] memory fees
-    ) public returns (uint256[] memory) {
+    ) public onlyOwner returns (uint256[] memory) {
         uint256[] memory mintedTokenIds =
             batchMint(address(universeAuction), tokenURIs, fees);
 
