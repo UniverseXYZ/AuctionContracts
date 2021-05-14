@@ -78,18 +78,18 @@ describe('Whitelist functionality', () => {
   it('should revert if whitelist is not support for current auction', async () => {
     const { auctionFactory, mockNft } = await loadFixture(deployContracts);
 
-    const blockNumber = await ethers.provider.getBlockNumber();
+    const currentTime = Math.round((new Date()).getTime() / 1000);
 
-    const startBlockNumber = blockNumber + 10;
-    const endBlockNumber = blockNumber + 15;
+    const startTime = currentTime + 10000;
+    const endTime = startTime + 500;
     const resetTimer = 3;
     const numberOfSlots = 1;
     const supportsWhitelist = false;
     const ethAddress = '0x0000000000000000000000000000000000000000';
 
     await auctionFactory.createAuction(
-      startBlockNumber,
-      endBlockNumber,
+      startTime,
+      endTime,
       resetTimer,
       numberOfSlots,
       supportsWhitelist,
@@ -103,18 +103,18 @@ describe('Whitelist functionality', () => {
 });
 
 const createAuction = async (auctionFactory) => {
-  const blockNumber = await ethers.provider.getBlockNumber();
+  const currentTime = Math.round((new Date()).getTime() / 1000);
 
-  const startBlockNumber = blockNumber + 10;
-  const endBlockNumber = blockNumber + 15;
+  const startTime = currentTime + 10000;
+  const endTime = startTime + 500;
   const resetTimer = 3;
   const numberOfSlots = 1;
   const supportsWhitelist = true;
   const ethAddress = '0x0000000000000000000000000000000000000000';
 
   await auctionFactory.createAuction(
-    startBlockNumber,
-    endBlockNumber,
+    startTime,
+    endTime,
     resetTimer,
     numberOfSlots,
     supportsWhitelist,

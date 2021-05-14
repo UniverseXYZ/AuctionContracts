@@ -16,11 +16,28 @@ describe('Test bidding with ETH', () => {
   it('should bid, withdraw and check lowestEligibleBid with ETH successfully', async () => {
     let { auctionFactory, mockNFT } = await loadFixture(deployedContracts);
 
-    await createAuction(auctionFactory);
+    const currentTime = Math.round((new Date()).getTime() / 1000);
+
+    const startTime = currentTime + 1000;
+    const endTime = startTime + 500;
+    const resetTimer = 10;
+    const numberOfSlots = 1;
+    const supportsWhitelist = false;
+    const ethAddress = '0x0000000000000000000000000000000000000000';
+  
+    await auctionFactory.createAuction(
+      startTime,
+      endTime,
+      resetTimer,
+      numberOfSlots,
+      supportsWhitelist,
+      ethAddress
+    );
 
     await depositNFT(auctionFactory, mockNFT);
 
-    await createAuction(auctionFactory);
+    await ethers.provider.send('evm_setNextBlockTimestamp', [startTime + 100]); 
+    await ethers.provider.send('evm_mine');
 
     expect(
       await auctionFactory.functions['ethBid(uint256)'](1, {
@@ -44,8 +61,6 @@ describe('Test bidding with ETH', () => {
 
     await depositNFT(auctionFactory, mockNFT);
 
-    await createAuction(auctionFactory);
-
     await expect(
       auctionFactory.functions['ethBid(uint256)'](3, {
         value: '100000000000000000000'
@@ -56,18 +71,18 @@ describe('Test bidding with ETH', () => {
   it('should revert if amount is 0', async () => {
     let { auctionFactory, mockNFT } = await loadFixture(deployedContracts);
 
-    const blockNumber = await ethers.provider.getBlockNumber();
+    const currentTime = Math.round((new Date()).getTime() / 1000);
 
-    const startBlockNumber = blockNumber + 1;
-    const endBlockNumber = blockNumber + 10;
+    const startTime = currentTime + 1000;
+    const endTime = startTime + 500;
     const resetTimer = 3;
     const numberOfSlots = 1;
     const supportsWhitelist = false;
     const ethAddress = '0x0000000000000000000000000000000000000000';
 
     await auctionFactory.createAuction(
-      startBlockNumber,
-      endBlockNumber,
+      startTime,
+      endTime,
       resetTimer,
       numberOfSlots,
       supportsWhitelist,
@@ -75,8 +90,6 @@ describe('Test bidding with ETH', () => {
     );
 
     await depositNFT(auctionFactory, mockNFT);
-
-    await createAuction(auctionFactory);
 
     await expect(
       auctionFactory.functions['ethBid(uint256)'](1, {
@@ -102,18 +115,18 @@ describe('Test bidding with ETH', () => {
   it('should revert if auction accept only ERC20', async () => {
     let { auctionFactory, mockNFT } = await loadFixture(deployedContracts);
 
-    const blockNumber = await ethers.provider.getBlockNumber();
+    const currentTime = Math.round((new Date()).getTime() / 1000);
 
-    const startBlockNumber = blockNumber + 1;
-    const endBlockNumber = blockNumber + 10;
+    const startTime = currentTime + 1000;
+    const endTime = startTime + 500;
     const resetTimer = 3;
     const numberOfSlots = 1;
     const supportsWhitelist = false;
     const tokenAddress = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
 
     await auctionFactory.createAuction(
-      startBlockNumber,
-      endBlockNumber,
+      startTime,
+      endTime,
       resetTimer,
       numberOfSlots,
       supportsWhitelist,
@@ -121,8 +134,6 @@ describe('Test bidding with ETH', () => {
     );
 
     await depositNFT(auctionFactory, mockNFT);
-
-    await createAuction(auctionFactory);
 
     await expect(
       auctionFactory.functions['ethBid(uint256)'](1, {
@@ -134,18 +145,18 @@ describe('Test bidding with ETH', () => {
   it('should revert if auction canceled', async () => {
     let { auctionFactory, mockNFT } = await loadFixture(deployedContracts);
 
-    const blockNumber = await ethers.provider.getBlockNumber();
+    const currentTime = Math.round((new Date()).getTime() / 1000);
 
-    const startBlockNumber = blockNumber + 2;
-    const endBlockNumber = blockNumber + 10;
+    const startTime = currentTime + 1000;
+    const endTime = startTime + 500;
     const resetTimer = 3;
     const numberOfSlots = 1;
     const supportsWhitelist = false;
     const ethAddress = '0x0000000000000000000000000000000000000000';
 
     await auctionFactory.createAuction(
-      startBlockNumber,
-      endBlockNumber,
+      startTime,
+      endTime,
       resetTimer,
       numberOfSlots,
       supportsWhitelist,
@@ -155,8 +166,6 @@ describe('Test bidding with ETH', () => {
     await depositNFT(auctionFactory, mockNFT);
 
     await auctionFactory.cancelAuction(1);
-
-    await createAuction(auctionFactory);
 
     await expect(
       auctionFactory.functions['ethBid(uint256)'](1, {
@@ -168,18 +177,18 @@ describe('Test bidding with ETH', () => {
   it('should revert if there is no bid on all slots and user try to withdrawal', async () => {
     let { auctionFactory, mockNFT } = await loadFixture(deployedContracts);
 
-    const blockNumber = await ethers.provider.getBlockNumber();
+    const currentTime = Math.round((new Date()).getTime() / 1000);
 
-    const startBlockNumber = blockNumber + 1;
-    const endBlockNumber = blockNumber + 10;
+    const startTime = currentTime + 1000;
+    const endTime = startTime + 500;
     const resetTimer = 3;
     const numberOfSlots = 1;
     const supportsWhitelist = false;
     const ethAddress = '0x0000000000000000000000000000000000000000';
 
     await auctionFactory.createAuction(
-      startBlockNumber,
-      endBlockNumber,
+      startTime,
+      endTime,
       resetTimer,
       numberOfSlots,
       supportsWhitelist,
@@ -188,11 +197,8 @@ describe('Test bidding with ETH', () => {
 
     await depositNFT(auctionFactory, mockNFT);
 
-    await createAuction(auctionFactory);
-
-    await createAuction(auctionFactory);
-
-    await createAuction(auctionFactory);
+    await ethers.provider.send('evm_setNextBlockTimestamp', [startTime + 10]); 
+    await ethers.provider.send('evm_mine');
 
     await auctionFactory.functions['ethBid(uint256)'](1, {
       value: '100000000000000000000'
@@ -204,18 +210,18 @@ describe('Test bidding with ETH', () => {
   it('should revert if there is no bid on all slots and user try to withdrawal', async () => {
     let { auctionFactory, mockNFT } = await loadFixture(deployedContracts);
 
-    const blockNumber = await ethers.provider.getBlockNumber();
+    const currentTime = Math.round((new Date()).getTime() / 1000);
 
-    const startBlockNumber = blockNumber + 1;
-    const endBlockNumber = blockNumber + 10;
+    const startTime = currentTime + 1000;
+    const endTime = startTime + 500;
     const resetTimer = 3;
     const numberOfSlots = 1;
     const supportsWhitelist = false;
     const ethAddress = '0x0000000000000000000000000000000000000000';
 
     await auctionFactory.createAuction(
-      startBlockNumber,
-      endBlockNumber,
+      startTime,
+      endTime,
       resetTimer,
       numberOfSlots,
       supportsWhitelist,
@@ -224,11 +230,8 @@ describe('Test bidding with ETH', () => {
 
     await depositNFT(auctionFactory, mockNFT);
 
-    await createAuction(auctionFactory);
-
-    await createAuction(auctionFactory);
-
-    await createAuction(auctionFactory);
+    await ethers.provider.send('evm_setNextBlockTimestamp', [startTime + 10]); 
+    await ethers.provider.send('evm_mine');
 
     await auctionFactory.functions['ethBid(uint256)'](1, {
       value: '100000000000000000000'
@@ -244,18 +247,18 @@ describe('Test bidding with ETH', () => {
   it('should revert if sender have 0 deposited', async () => {
     let { auctionFactory, mockNFT } = await loadFixture(deployedContracts);
 
-    const blockNumber = await ethers.provider.getBlockNumber();
+    const currentTime = Math.round((new Date()).getTime() / 1000);
 
-    const startBlockNumber = blockNumber + 1;
-    const endBlockNumber = blockNumber + 10;
+    const startTime = currentTime + 1000;
+    const endTime = startTime + 500;
     const resetTimer = 3;
     const numberOfSlots = 1;
     const supportsWhitelist = false;
     const ethAddress = '0x0000000000000000000000000000000000000000';
 
     await auctionFactory.createAuction(
-      startBlockNumber,
-      endBlockNumber,
+      startTime,
+      endTime,
       resetTimer,
       numberOfSlots,
       supportsWhitelist,
@@ -264,11 +267,8 @@ describe('Test bidding with ETH', () => {
 
     await depositNFT(auctionFactory, mockNFT);
 
-    await createAuction(auctionFactory);
-
-    for (let i = 0; i < 3; i++) {
-      await network.provider.send('evm_mine');
-    }
+    await ethers.provider.send('evm_setNextBlockTimestamp', [startTime + 100]); 
+    await ethers.provider.send('evm_mine');
 
     const [signer, signer2, signer3] = await ethers.getSigners();
 
@@ -285,18 +285,18 @@ describe('Test bidding with ETH', () => {
 });
 
 const createAuction = async (auctionFactory) => {
-  const blockNumber = await ethers.provider.getBlockNumber();
+  const currentTime = Math.round((new Date()).getTime() / 1000);
 
-  const startBlockNumber = blockNumber + 5;
-  const endBlockNumber = blockNumber + 10;
+  const startTime = currentTime + 1000;
+  const endTime = startTime + 500;
   const resetTimer = 10;
   const numberOfSlots = 1;
   const supportsWhitelist = false;
   const ethAddress = '0x0000000000000000000000000000000000000000';
 
   await auctionFactory.createAuction(
-    startBlockNumber,
-    endBlockNumber,
+    startTime,
+    endTime,
     resetTimer,
     numberOfSlots,
     supportsWhitelist,

@@ -38,18 +38,18 @@ describe('DEPOSIT ERC721 Functionality', () => {
   it('should withdrawDepositedERC721 deposited nft', async () => {
     const { auctionFactory, mockNFT } = await loadFixture(deployedContracts);
 
-    const blockNumber = await ethers.provider.getBlockNumber();
+    const currentTime = Math.round((new Date()).getTime() / 1000);
 
-    const startBlockNumber = blockNumber + 10;
-    const endBlockNumber = blockNumber + 15;
+    const startTime = currentTime + 1500;
+    const endTime = startTime + 500;
     const resetTimer = 3;
     const numberOfSlots = 10;
     const supportsWhitelist = false;
     const bidToken = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
 
     await auctionFactory.createAuction(
-      startBlockNumber,
-      endBlockNumber,
+      startTime,
+      endTime,
       resetTimer,
       numberOfSlots,
       supportsWhitelist,
@@ -163,18 +163,18 @@ describe('DEPOSIT ERC721 Functionality', () => {
 
   it('should deposit only if part of whitelist', async () => {
     const { auctionFactory, mockNFT } = await loadFixture(deployedContracts);
-    const blockNumber = await ethers.provider.getBlockNumber();
+    const currentTime = Math.round((new Date()).getTime() / 1000);
 
-    const startBlockNumber = blockNumber + 5;
-    const endBlockNumber = blockNumber + 15;
+    const startTime = currentTime + 1500;
+    const endTime = startTime + 500;
     const resetTimer = 3;
     const numberOfSlots = 10;
     const supportsWhitelist = true;
     const bidToken = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
 
     await auctionFactory.createAuction(
-      startBlockNumber,
-      endBlockNumber,
+      startTime,
+      endTime,
       resetTimer,
       numberOfSlots,
       supportsWhitelist,
@@ -215,18 +215,18 @@ describe('DEPOSIT ERC721 Functionality', () => {
   it('should revert cuz Only depositor can withdraw', async () => {
     const { auctionFactory, mockNFT } = await loadFixture(deployedContracts);
 
-    const blockNumber = await ethers.provider.getBlockNumber();
+    const currentTime = Math.round((new Date()).getTime() / 1000);
 
-    const startBlockNumber = blockNumber + 7;
-    const endBlockNumber = blockNumber + 15;
+    const startTime = currentTime + 1500;
+    const endTime = startTime + 500;
     const resetTimer = 3;
     const numberOfSlots = 10;
     const supportsWhitelist = false;
     const bidToken = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
 
     await auctionFactory.createAuction(
-      startBlockNumber,
-      endBlockNumber,
+      startTime,
+      endTime,
       resetTimer,
       numberOfSlots,
       supportsWhitelist,
@@ -249,18 +249,18 @@ describe('DEPOSIT ERC721 Functionality', () => {
 
 const createAuction = async (deployedContracts) => {
   const { auctionFactory, mockNft } = await loadFixture(deployedContracts);
-  const blockNumber = await ethers.provider.getBlockNumber();
+  const currentTime = Math.round((new Date()).getTime() / 1000);
 
-  const startBlockNumber = blockNumber + 5;
-  const endBlockNumber = blockNumber + 15;
+  const startTime = currentTime + 1500;
+  const endTime = startTime + 500;
   const resetTimer = 3;
   const numberOfSlots = 10;
   const supportsWhitelist = false;
   const bidToken = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
 
   await auctionFactory.createAuction(
-    startBlockNumber,
-    endBlockNumber,
+    startTime,
+    endTime,
     resetTimer,
     numberOfSlots,
     supportsWhitelist,

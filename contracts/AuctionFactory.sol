@@ -44,8 +44,8 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         uint256 auctionId,
         address auctionOwner,
         uint256 numberOfSlots,
-        uint256 startBlockNumber,
-        uint256 endBlockNumber,
+        uint256 startTime,
+        uint256 endTime,
         uint256 resetTimer,
         bool supportsWhitelist,
         uint256 time
@@ -77,7 +77,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
 
     event LogAuctionExtended(
         uint256 auctionId,
-        uint256 endBlockNumber,
+        uint256 endTime,
         uint256 time
     );
 
@@ -114,7 +114,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
 
     modifier onlyAuctionStarted(uint256 _auctionId) {
         require(
-            auctions[_auctionId].startBlockNumber < block.number,
+            auctions[_auctionId].startTime < block.timestamp,
             "Auction hasn't started"
         );
         _;
@@ -122,7 +122,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
 
     modifier onlyAuctionNotStarted(uint256 _auctionId) {
         require(
-            auctions[_auctionId].startBlockNumber > block.number,
+            auctions[_auctionId].startTime > block.timestamp,
             "Auction has started"
         );
         _;
@@ -183,26 +183,26 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
     }
 
     function createAuction(
-        uint256 _startBlockNumber,
-        uint256 _endBlockNumber,
+        uint256 _startTime,
+        uint256 _endTime,
         uint256 _resetTimer,
         uint256 _numberOfSlots,
         bool _supportsWhitelist,
         address _bidToken
     ) external override returns (uint256) {
-        uint256 blockNumber = block.number;
+        uint256 currentTime = block.timestamp;
 
         require(
-            blockNumber < _startBlockNumber,
-            "Auction cannot begin before current block"
+            currentTime < _startTime,
+            "Auction cannot begin before current block timestamp"
         );
 
         require(
-            _startBlockNumber < _endBlockNumber,
+            _startTime < _endTime,
             "Auction cannot end before it has launched"
         );
 
-        require(_resetTimer > 0, "Reset timer must be higher than 0 blocks");
+        require(_resetTimer > 0, "Reset timer must be higher than 0 seconds");
 
         require(
             _numberOfSlots > 0 && _numberOfSlots <= maxNumberOfSlotsPerAuction,
@@ -212,8 +212,8 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         uint256 _auctionId = totalAuctions.add(1);
 
         auctions[_auctionId].auctionOwner = msg.sender;
-        auctions[_auctionId].startBlockNumber = _startBlockNumber;
-        auctions[_auctionId].endBlockNumber = _endBlockNumber;
+        auctions[_auctionId].startTime = _startTime;
+        auctions[_auctionId].endTime = _endTime;
         auctions[_auctionId].resetTimer = _resetTimer;
         auctions[_auctionId].numberOfSlots = _numberOfSlots;
         auctions[_auctionId].supportsWhitelist = _supportsWhitelist;
@@ -225,8 +225,8 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
             _auctionId,
             msg.sender,
             _numberOfSlots,
-            _startBlockNumber,
-            _endBlockNumber,
+            _startTime,
+            _endTime,
             _resetTimer,
             _supportsWhitelist,
             block.timestamp
@@ -426,12 +426,12 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         address _bidder = msg.sender;
         Auction storage auction = auctions[_auctionId];
 
-        require(block.number < auction.endBlockNumber, "Auction has ended");
+        require(block.timestamp < auction.endTime, "Auction has ended");
 
         if (
             auction.numberOfBids >= auction.numberOfSlots &&
             _bid > auction.lowestTotalBid &&
-            auction.endBlockNumber.sub(block.number) < auction.resetTimer
+            auction.endTime.sub(block.timestamp) < auction.resetTimer
         ) {
             extendAuction(_auctionId);
         }
@@ -479,7 +479,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         address _bidder = msg.sender;
         Auction storage auction = auctions[_auctionId];
 
-        require(block.number < auction.endBlockNumber, "Auction has ended");
+        require(block.timestamp < auction.endTime, "Auction has ended");
 
         IERC20 bidToken = IERC20(auction.bidToken);
         uint256 allowance = bidToken.allowance(msg.sender, address(this));
@@ -496,7 +496,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         if (
             auction.numberOfBids >= auction.numberOfSlots &&
             _bid > auction.lowestTotalBid &&
-            auction.endBlockNumber.sub(block.number) < auction.resetTimer
+            auction.endTime.sub(block.timestamp) < auction.resetTimer
         ) {
             extendAuction(_auctionId);
         }
@@ -540,7 +540,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
             "Incorrect number of bidders"
         );
         require(
-            block.number > auction.endBlockNumber &&
+            block.timestamp > auction.endTime &&
                 auction.isFinalized == false,
             "Auction has not finished"
         );
@@ -850,16 +850,16 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         Auction storage auction = auctions[auctionId];
 
         require(
-            block.number < auction.endBlockNumber,
+            block.timestamp < auction.endTime,
             "Cannot extend the auction if it has already ended"
         );
 
         uint256 resetTimer = auction.resetTimer;
-        auction.endBlockNumber = auction.endBlockNumber.add(resetTimer);
+        auction.endTime = auction.endTime.add(resetTimer);
 
         emit LogAuctionExtended(
             auctionId,
-            auction.endBlockNumber,
+            auction.endTime,
             block.timestamp
         );
 

@@ -10,8 +10,8 @@ import "hardhat/console.sol";
 interface IAuctionFactory {
     struct Auction {
         address auctionOwner;
-        uint256 startBlockNumber;
-        uint256 endBlockNumber;
+        uint256 startTime;
+        uint256 endTime;
         uint256 resetTimer;
         uint256 numberOfSlots;
         uint256 numberOfBids;
@@ -43,15 +43,15 @@ interface IAuctionFactory {
     }
 
     /// @notice Create an auction with initial parameters
-    /// @param _startBlockNumber The start of the auction
-    /// @param _endBlockNumber End of the auction
-    /// @param _resetTimer Reset timer in blocks
+    /// @param _startTime The start of the auction
+    /// @param _endTime End of the auction
+    /// @param _resetTimer Reset timer in seconds
     /// @param _numberOfSlots The number of slots which the auction will have
     /// @param _supportsWhitelist Array of addresses allowed to deposit
     /// @param _bidToken Address of the token used for bidding - can be address(0)
     function createAuction(
-        uint256 _startBlockNumber,
-        uint256 _endBlockNumber,
+        uint256 _startTime,
+        uint256 _endTime,
         uint256 _resetTimer,
         uint256 _numberOfSlots,
         bool _supportsWhitelist,

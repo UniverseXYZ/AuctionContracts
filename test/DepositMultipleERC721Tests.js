@@ -30,10 +30,8 @@ describe('Deposit multiple ERC721 Tests', () => {
     expect(res.length).to.equal(1);
   });
 
-  it('should be reverted if auction is started', async () => {
+  it('should not be reverted if auction has not started', async () => {
     const { auctionFactory, mockNFT } = await loadFixture(deployedContracts);
-
-    await createAuction(auctionFactory);
 
     await createAuction(auctionFactory);
 
@@ -42,7 +40,7 @@ describe('Deposit multiple ERC721 Tests', () => {
     await mockNFT.mint(signer.address, 1);
     await mockNFT.approve(auctionFactory.address, 1);
 
-    await expect(auctionFactory.depositMultipleERC721(1, 1, [1], mockNFT.address)).to.be.reverted;
+    await expect(auctionFactory.depositMultipleERC721(1, 1, [1], mockNFT.address));
   });
 
   it('should revert if token address is 0', async () => {
@@ -62,18 +60,18 @@ describe('Deposit multiple ERC721 Tests', () => {
   it('should revert if whitelist is supported', async () => {
     const { auctionFactory, mockNFT } = await loadFixture(deployedContracts);
 
-    const blockNumber = await ethers.provider.getBlockNumber();
+    const currentTime = Math.round((new Date()).getTime() / 1000);
 
-    const startBlockNumber = blockNumber + 5;
-    const endBlockNumber = blockNumber + 6;
+    const startTime = currentTime + 1500;
+    const endTime = startTime + 500;
     const resetTimer = 3;
     const numberOfSlots = 1;
     const supportsWhitelist = true;
     const ethAddress = '0x0000000000000000000000000000000000000000';
 
     await auctionFactory.createAuction(
-      startBlockNumber,
-      endBlockNumber,
+      startTime,
+      endTime,
       resetTimer,
       numberOfSlots,
       supportsWhitelist,
@@ -91,18 +89,18 @@ describe('Deposit multiple ERC721 Tests', () => {
   it('should deposit if user is part of the whitelist', async () => {
     const { auctionFactory, mockNFT } = await loadFixture(deployedContracts);
 
-    const blockNumber = await ethers.provider.getBlockNumber();
+    const currentTime = Math.round((new Date()).getTime() / 1000);
 
-    const startBlockNumber = blockNumber + 5;
-    const endBlockNumber = blockNumber + 6;
+    const startTime = currentTime + 1500;
+    const endTime = startTime + 500;
     const resetTimer = 3;
     const numberOfSlots = 1;
     const supportsWhitelist = true;
     const ethAddress = '0x0000000000000000000000000000000000000000';
 
     await auctionFactory.createAuction(
-      startBlockNumber,
-      endBlockNumber,
+      startTime,
+      endTime,
       resetTimer,
       numberOfSlots,
       supportsWhitelist,
@@ -134,18 +132,18 @@ describe('Deposit multiple ERC721 Tests', () => {
 });
 
 const createAuction = async (auctionFactory) => {
-  const blockNumber = await ethers.provider.getBlockNumber();
+  const currentTime = Math.round((new Date()).getTime() / 1000);
 
-  const startBlockNumber = blockNumber + 5;
-  const endBlockNumber = blockNumber + 6;
+  const startTime = currentTime + 1500;
+  const endTime = startTime + 500;
   const resetTimer = 3;
   const numberOfSlots = 1;
   const supportsWhitelist = false;
   const ethAddress = '0x0000000000000000000000000000000000000000';
 
   await auctionFactory.createAuction(
-    startBlockNumber,
-    endBlockNumber,
+    startTime,
+    endTime,
     resetTimer,
     numberOfSlots,
     supportsWhitelist,

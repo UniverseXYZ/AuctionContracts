@@ -41,18 +41,18 @@ describe('Test royalty fee functionality', () => {
 
   it('should withdraw royaltee with eth successfully', async () => {
     const { auctionFactory, mockNFT } = await loadFixture(deployContracts);
-    const blockNumber = await ethers.provider.getBlockNumber();
+    const currentTime = Math.round((new Date()).getTime() / 1000);
 
-    const startBlockNumber = blockNumber + 5;
-    const endBlockNumber = blockNumber + 7;
+    const startTime = currentTime + 10000;
+    const endTime = startTime + 1500;
     const resetTimer = 3;
     const numberOfSlots = 1;
     const supportsWhitelist = false;
     const ethAddress = '0x0000000000000000000000000000000000000000';
 
     await auctionFactory.createAuction(
-      startBlockNumber,
-      endBlockNumber,
+      startTime,
+      endTime,
       resetTimer,
       numberOfSlots,
       supportsWhitelist,
@@ -71,11 +71,15 @@ describe('Test royalty fee functionality', () => {
 
     expect(await auctionFactory.royaltyFeeMantissa()).to.equal('50000000000000000');
 
+    await ethers.provider.send('evm_setNextBlockTimestamp', [startTime + 700]); 
+    await ethers.provider.send('evm_mine');
+
     await auctionFactory.functions['ethBid(uint256)'](1, {
       value: '1000000000000000000'
     });
 
-    await network.provider.send('evm_mine');
+    await ethers.provider.send('evm_setNextBlockTimestamp', [endTime + 1000]); 
+    await ethers.provider.send('evm_mine');
 
     await auctionFactory.finalizeAuction(1, [signer.address]);
 
@@ -91,7 +95,7 @@ describe('Test royalty fee functionality', () => {
 
   it('should withdraw royaltee with ERC20 successfully', async () => {
     const { auctionFactory, mockNFT, mockToken } = await loadFixture(deployContracts);
-    const blockNumber = await ethers.provider.getBlockNumber();
+    const currentTime = Math.round((new Date()).getTime() / 1000);
 
     const [signer] = await ethers.getSigners();
 
@@ -99,16 +103,16 @@ describe('Test royalty fee functionality', () => {
 
     await mockToken.approve(auctionFactory.address, balance.toString());
 
-    const startBlockNumber = blockNumber + 6;
-    const endBlockNumber = blockNumber + 8;
+    const startTime = currentTime + 10000;
+    const endTime = startTime + 1500;
     const resetTimer = 1;
     const numberOfSlots = 1;
     const supportsWhitelist = false;
     const tokenAddress = mockToken.address;
 
     await auctionFactory.createAuction(
-      startBlockNumber,
-      endBlockNumber,
+      startTime,
+      endTime,
       resetTimer,
       numberOfSlots,
       supportsWhitelist,
@@ -125,9 +129,13 @@ describe('Test royalty fee functionality', () => {
 
     expect(await auctionFactory.royaltyFeeMantissa()).to.equal('50000000000000000');
 
+    await ethers.provider.send('evm_setNextBlockTimestamp', [startTime + 700]); 
+    await ethers.provider.send('evm_mine');
+
     await auctionFactory.functions['erc20Bid(uint256,uint256)'](1, '1000000000000000000');
 
-    await network.provider.send('evm_mine');
+    await ethers.provider.send('evm_setNextBlockTimestamp', [endTime + 1500]); 
+    await ethers.provider.send('evm_mine');
 
     await auctionFactory.finalizeAuction(1, [signer.address]);
 

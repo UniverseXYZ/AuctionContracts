@@ -29,27 +29,23 @@ describe('Test cancel functionality', () => {
     expect(auction.isCanceled).to.be.true;
   });
 
-  it('should be reverted if auction is started', async () => {
+  it('should not be reverted if auction has not started', async () => {
     const { auctionFactory } = await loadFixture(deployContracts);
 
     await createAuction(auctionFactory);
 
-    await createAuction(auctionFactory);
-
-    await createAuction(auctionFactory);
-
-    await expect(auctionFactory.cancelAuction(1)).to.be.reverted;
+    await expect(auctionFactory.cancelAuction(1));
   });
 
   it('should be reverted if other than auction owner try to cancel it', async () => {
     const { auctionFactory } = await loadFixture(deployContracts);
 
-    const blockNumber = await ethers.provider.getBlockNumber();
+    const currentTime = Math.round((new Date()).getTime() / 1000);
 
     const [signer1, signer2] = await ethers.getSigners();
 
-    const startBlockNumber = blockNumber + 3;
-    const endBlockNumber = blockNumber + 4;
+    const startTime = currentTime + 1500;
+    const endTime = startTime + 500;
     const resetTimer = 3;
     const numberOfSlots = 1;
     const supportsWhitelist = false;
@@ -57,25 +53,25 @@ describe('Test cancel functionality', () => {
 
     await auctionFactory
       .connect(signer1)
-      .createAuction(startBlockNumber, endBlockNumber, resetTimer, numberOfSlots, supportsWhitelist, ethAddress);
+      .createAuction(startTime, endTime, resetTimer, numberOfSlots, supportsWhitelist, ethAddress);
 
     await expect(auctionFactory.connect(signer2).cancelAuction(1)).to.be.reverted;
   });
 });
 
 const createAuction = async (auctionFactory) => {
-  const blockNumber = await ethers.provider.getBlockNumber();
+  const currentTime = Math.round((new Date()).getTime() / 1000);
 
-  const startBlockNumber = blockNumber + 3;
-  const endBlockNumber = blockNumber + 4;
+  const startTime = currentTime + 1500;
+  const endTime = startTime + 500;
   const resetTimer = 3;
   const numberOfSlots = 1;
   const supportsWhitelist = false;
   const ethAddress = '0x0000000000000000000000000000000000000000';
 
   await auctionFactory.createAuction(
-    startBlockNumber,
-    endBlockNumber,
+    startTime,
+    endTime,
     resetTimer,
     numberOfSlots,
     supportsWhitelist,

@@ -19,18 +19,19 @@ describe('AuctionFactory', () => {
 
   async function launchAuction() {
     const { auctionFactory, mockNFT, mockToken } = await loadFixture(deployContract);
-    const blockNumber = await ethers.provider.getBlockNumber();
 
-    const startBlockNumber = blockNumber + 5;
-    const endBlockNumber = blockNumber + 15;
+    const currentTime = Math.round((new Date()).getTime() / 1000);
+
+    const startTime = currentTime + 10;
+    const endTime = currentTime + 25;
     const resetTimer = 3;
     const numberOfSlots = 1;
     const supportsWhitelist = false;
     const bidToken = mockToken.address;
 
     auction = await auctionFactory.createAuction(
-      startBlockNumber,
-      endBlockNumber,
+      startTime,
+      endTime,
       resetTimer,
       numberOfSlots,
       supportsWhitelist,
@@ -51,6 +52,10 @@ describe('AuctionFactory', () => {
   async function bid() {
     const { auctionFactory, mockNFT, mockToken } = await loadFixture(depositERC721);
     const [owner, addr1] = await ethers.getSigners();
+
+    const currentTime = Math.round((new Date()).getTime() / 1000);
+    await ethers.provider.send('evm_setNextBlockTimestamp', [currentTime + 20]); 
+    await ethers.provider.send('evm_mine');
 
     const balanceOwner = await mockToken.balanceOf(owner.address);
     await mockToken.approve(auctionFactory.address, balanceOwner.toString());
@@ -96,18 +101,18 @@ describe('AuctionFactory', () => {
   it('should revert if allowance is too small', async () => {
     const { auctionFactory, mockNFT, mockToken } = await loadFixture(deployContract);
 
-    const blockNumber = await ethers.provider.getBlockNumber();
+    const currentTime = Math.round((new Date()).getTime() / 1000);
 
-    const startBlockNumber = blockNumber + 5;
-    const endBlockNumber = blockNumber + 10;
+    const startTime = currentTime + 10;
+    const endTime = currentTime + 15;
     const resetTimer = 3;
     const numberOfSlots = 1;
     const supportsWhitelist = false;
     const tokenAddress = mockToken.address;
 
     await auctionFactory.createAuction(
-      startBlockNumber,
-      endBlockNumber,
+      startTime,
+      endTime,
       resetTimer,
       numberOfSlots,
       supportsWhitelist,
@@ -133,18 +138,18 @@ describe('AuctionFactory', () => {
   it('should revert if some one try to bid with ETH', async () => {
     const { auctionFactory, mockNFT, mockToken } = await loadFixture(deployContract);
 
-    const blockNumber = await ethers.provider.getBlockNumber();
+    const currentTime = Math.round((new Date()).getTime() / 1000);
 
-    const startBlockNumber = blockNumber + 5;
-    const endBlockNumber = blockNumber + 10;
+    const startTime = currentTime + 10;
+    const endTime = currentTime + 15;
     const resetTimer = 3;
     const numberOfSlots = 1;
     const supportsWhitelist = false;
     const tokenAddress = '0x0000000000000000000000000000000000000000';
 
     await auctionFactory.createAuction(
-      startBlockNumber,
-      endBlockNumber,
+      startTime,
+      endTime,
       resetTimer,
       numberOfSlots,
       supportsWhitelist,
@@ -170,18 +175,18 @@ describe('AuctionFactory', () => {
   it('should skip setting new high balance if the bid is lower', async () => {
     const { auctionFactory, mockNFT, mockToken } = await loadFixture(deployContract);
 
-    const blockNumber = await ethers.provider.getBlockNumber();
+    const currentTime = Math.round((new Date()).getTime() / 1000);
 
-    const startBlockNumber = blockNumber + 5;
-    const endBlockNumber = blockNumber + 10;
+    const startTime = currentTime + 10;
+    const endTime = currentTime + 20;
     const resetTimer = 3;
     const numberOfSlots = 2;
     const supportsWhitelist = false;
     const tokenAddress = mockToken.address;
 
     await auctionFactory.createAuction(
-      startBlockNumber,
-      endBlockNumber,
+      startTime,
+      endTime,
       resetTimer,
       numberOfSlots,
       supportsWhitelist,
@@ -202,6 +207,9 @@ describe('AuctionFactory', () => {
     mockToken.connect(signer).approve(auctionFactory.address, 100);
 
     mockToken.connect(signer2).approve(auctionFactory.address, 100);
+
+    await ethers.provider.send('evm_setNextBlockTimestamp', [startTime + 4]); 
+    await ethers.provider.send('evm_mine');
 
     await auctionFactory.connect(signer).functions['erc20Bid(uint256,uint256)'](1, 10);
 

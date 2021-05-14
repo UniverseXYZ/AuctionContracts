@@ -22,17 +22,17 @@ describe('Create Auction Tests', () => {
 
   it('should Deploy the AuctionFactory and MockNFT', async function () {
     const { auctionFactory } = await loadFixture(deployContract);
-    const blockNumber = await ethers.provider.getBlockNumber();
+    const currentTime = Math.round((new Date()).getTime() / 1000);
 
-    const startBlockNumber = blockNumber + 5;
-    const endBlockNumber = blockNumber + 15;
+    const startTime = currentTime + 1500;
+    const endTime = startTime + 500;
     const resetTimer = 3;
     const numberOfSlots = 1;
     const supportsWhitelist = false;
     const bidToken = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
     auction = await auctionFactory.createAuction(
-      startBlockNumber,
-      endBlockNumber,
+      startTime,
+      endTime,
       resetTimer,
       numberOfSlots,
       supportsWhitelist,
@@ -40,20 +40,20 @@ describe('Create Auction Tests', () => {
     );
   });
 
-  it('should fail on startBlockNumber < blockNumber', async function () {
+  it('should fail on startTime < currenTime', async function () {
     const { auctionFactory } = await loadFixture(deployContract);
-    const blockNumber = await ethers.provider.getBlockNumber();
+    const currentTime = Math.round((new Date()).getTime() / 1000);
 
-    const startBlockNumber = blockNumber - 1;
-    const endBlockNumber = blockNumber + 11;
+    const startTime = currentTime - 1500;
+    const endTime = startTime + 100;
     const resetTimer = 3;
     const numberOfSlots = 1;
     const supportsWhitelist = false;
     const bidToken = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
     await expect(
       auctionFactory.createAuction(
-        startBlockNumber,
-        endBlockNumber,
+        startTime,
+        endTime,
         resetTimer,
         numberOfSlots,
         supportsWhitelist,
@@ -62,20 +62,20 @@ describe('Create Auction Tests', () => {
     ).to.be.reverted;
   });
 
-  it('should fail on endBlockNumber < startBlockNumber', async function () {
+  it('should fail on endTime < startTime', async function () {
     const { auctionFactory } = await loadFixture(deployContract);
-    const blockNumber = await ethers.provider.getBlockNumber();
+    const currentTime = Math.round((new Date()).getTime() / 1000);
 
-    const startBlockNumber = blockNumber + 15;
-    const endBlockNumber = blockNumber + 5;
+    const startTime = currentTime + 1000;
+    const endTime = currentTime - 1000;
     const resetTimer = 3;
     const numberOfSlots = 1;
     const supportsWhitelist = false;
     const bidToken = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
     await expect(
       auctionFactory.createAuction(
-        startBlockNumber,
-        endBlockNumber,
+        startTime,
+        endTime,
         resetTimer,
         numberOfSlots,
         supportsWhitelist,
@@ -86,18 +86,18 @@ describe('Create Auction Tests', () => {
 
   it('should fail if resetTimer === 0', async function () {
     const { auctionFactory } = await loadFixture(deployContract);
-    const blockNumber = await ethers.provider.getBlockNumber();
+    const currentTime = Math.round((new Date()).getTime() / 1000);
 
-    const startBlockNumber = blockNumber + 5;
-    const endBlockNumber = blockNumber + 15;
+    const startTime = currentTime + 100;
+    const endTime = startTime + 100;
     const resetTimer = 0;
     const numberOfSlots = 1;
     const supportsWhitelist = false;
     const bidToken = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
     await expect(
       auctionFactory.createAuction(
-        startBlockNumber,
-        endBlockNumber,
+        startTime,
+        endTime,
         resetTimer,
         numberOfSlots,
         supportsWhitelist,
@@ -108,18 +108,18 @@ describe('Create Auction Tests', () => {
 
   it('should fail if numberOfSlots === 0', async function () {
     const { auctionFactory } = await loadFixture(deployContract);
-    const blockNumber = await ethers.provider.getBlockNumber();
+    const currentTime = Math.round((new Date()).getTime() / 1000);
 
-    const startBlockNumber = blockNumber + 5;
-    const endBlockNumber = blockNumber + 15;
+    const startTime = currentTime + 100;
+    const endTime = startTime + 100;
     const resetTimer = 3;
     const numberOfSlots = 0;
     const supportsWhitelist = false;
     const bidToken = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
     await expect(
       auctionFactory.createAuction(
-        startBlockNumber,
-        endBlockNumber,
+        startTime,
+        endTime,
         resetTimer,
         numberOfSlots,
         supportsWhitelist,
@@ -130,18 +130,18 @@ describe('Create Auction Tests', () => {
 
   it('should fail if numberOfSlots > 2000', async function () {
     const { auctionFactory } = await loadFixture(deployContract);
-    const blockNumber = await ethers.provider.getBlockNumber();
+    const currentTime = Math.round((new Date()).getTime() / 1000);
 
-    const startBlockNumber = blockNumber + 5;
-    const endBlockNumber = blockNumber + 15;
+    const startTime = currentTime + 100;
+    const endTime = startTime + 100;
     const resetTimer = 3;
     const numberOfSlots = 2001;
     const supportsWhitelist = false;
     const bidToken = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
     await expect(
       auctionFactory.createAuction(
-        startBlockNumber,
-        endBlockNumber,
+        startTime,
+        endTime,
         resetTimer,
         numberOfSlots,
         supportsWhitelist,
@@ -152,18 +152,18 @@ describe('Create Auction Tests', () => {
 
   it('should create auction successfully and set totalAuctions to 1', async () => {
     const { auctionFactory } = await loadFixture(deployContract);
-    const blockNumber = await ethers.provider.getBlockNumber();
+    const currentTime = Math.round((new Date()).getTime() / 1000);
 
-    const startBlockNumber = blockNumber + 5;
-    const endBlockNumber = blockNumber + 15;
+    const startTime = currentTime + 1500;
+    const endTime = startTime + 500;
     const resetTimer = 3;
     const numberOfSlots = 10;
     const supportsWhitelist = false;
     const bidToken = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
 
     await auctionFactory.createAuction(
-      startBlockNumber,
-      endBlockNumber,
+      startTime,
+      endTime,
       resetTimer,
       numberOfSlots,
       supportsWhitelist,
