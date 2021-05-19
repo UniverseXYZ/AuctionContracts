@@ -225,8 +225,7 @@ describe('Withdraw functionalities', () => {
     await mockNFT.mint(signer.address, 'NFT_URI');
 
     await mockNFT.approve(auctionFactory.address, tokenId);
-
-    await auctionFactory.depositERC721(auctionId, slotIdx, tokenId, mockNFT.address);
+    await auctionFactory.depositERC721(1, 1, 1, mockNFT.address);
 
     await auctionFactory.setMinimumReserveForAuctionSlots(1, [
       '1000000000000000000',

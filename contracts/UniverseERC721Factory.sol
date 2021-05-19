@@ -11,6 +11,13 @@ contract UniverseERC721Factory is Ownable {
     address public lastDeployedContractAddress;
     IAuctionFactory public universeAuction;
 
+    event LogUniverseERC721ContractDeployed(
+        string tokenName,
+        string tokenSymbol,
+        address contractAddress,
+        uint256 time
+    );
+
     constructor(address _universeAuction) {
         universeAuction = IAuctionFactory(_universeAuction);
     }
@@ -34,6 +41,13 @@ contract UniverseERC721Factory is Ownable {
         address deployedContractAddress = address(deployedContract);
         deployedContracts.push(deployedContractAddress);
         lastDeployedContractAddress = deployedContractAddress;
+
+        emit LogUniverseERC721ContractDeployed(
+            tokenName,
+            tokenSymbol,
+            deployedContractAddress,
+            block.timestamp
+        );
 
         return deployedContractAddress;
     }

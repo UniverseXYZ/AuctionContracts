@@ -42,6 +42,11 @@ interface IAuctionFactory {
         address depositor;
     }
 
+    struct Fee {
+        uint remainingValue;
+        uint feeValue;
+    }
+
     /// @notice Create an auction with initial parameters
     /// @param _startTime The start of the auction
     /// @param _endTime End of the auction
@@ -158,6 +163,14 @@ interface IAuctionFactory {
         external
         view
         returns (DepositedERC721[] memory);
+
+    /// @notice Gets the amount of deposited erc721s in slot
+    /// @param auctionId The auction id
+    /// @param slotIndex The slot index
+    function getTotalDepositedNftsInSlot(uint256 auctionId, uint256 slotIndex)
+        external
+        view
+        returns (uint256);
 
     /// @notice Gets slot winner for particular auction
     /// @param auctionId The auction id
