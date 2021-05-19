@@ -47,6 +47,8 @@ describe('Finalize auction ERC721 Tests', () => {
 
     await mockNFT.approve(auctionFactory.address, 1);
 
+    await auctionFactory.depositERC721(1, 1, 1, mockNFT.address);
+
     await ethers.provider.send('evm_setNextBlockTimestamp', [startTime + 100]); 
     await ethers.provider.send('evm_mine');
 
@@ -228,6 +230,7 @@ describe('Finalize auction ERC721 Tests', () => {
     await mockNFT.approve(auctionFactory.address, 1);
 
     await mockToken.approve(auctionFactory.address, 100);
+    await auctionFactory.depositERC721(1, 1, 1, mockNFT.address);
 
     await ethers.provider.send('evm_setNextBlockTimestamp', [startTime + 100]); 
     await ethers.provider.send('evm_mine');
@@ -276,6 +279,7 @@ describe('Finalize auction ERC721 Tests', () => {
     await mockNFT.connect(signer).mint(signer.address, 1);
 
     await mockNFT.connect(signer).approve(auctionFactory.address, 1);
+    await auctionFactory.depositERC721(1, 1, 1, mockNFT.address);
 
     await ethers.provider.send('evm_setNextBlockTimestamp', [startTime + 100]); 
     await ethers.provider.send('evm_mine');
@@ -368,10 +372,13 @@ describe('Finalize auction ERC721 Tests', () => {
     const [signer] = await ethers.getSigners();
 
     await mockNFT.connect(signer).mint(signer.address, 1);
+    await mockNFT.connect(signer).mint(signer.address, 2);
 
     await mockNFT.connect(signer).approve(auctionFactory.address, 1);
+    await mockNFT.connect(signer).approve(auctionFactory.address, 2);
 
     await auctionFactory.depositERC721(1, 1, 1, mockNFT.address);
+    await auctionFactory.depositERC721(1, 1, 2, mockNFT.address);
 
     await auctionFactory.withdrawDepositedERC721(1, 1, 1);
 

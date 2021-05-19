@@ -73,6 +73,12 @@ contract UniverseERC721 is ERC721, Ownable, HasSecondarySaleFees {
         string[] calldata tokenURIs,
         Fee[] memory fees
     ) public onlyOwner returns (uint256[] memory) {
+        uint256 totalDepositedAmount =
+            universeAuction.getTotalDepositedNftsInSlot(auctionId, slotIndex);
+        require(
+            (totalDepositedAmount + tokenURIs.length) <= 40,
+            "Cannot have more than 40 NFTs in slot"
+        );
         uint256[] memory mintedTokenIds =
             batchMint(address(universeAuction), tokenURIs, fees);
 
@@ -121,6 +127,7 @@ contract UniverseERC721 is ERC721, Ownable, HasSecondarySaleFees {
                 "Recipient should be present"
             );
             require(_fees[i].value != 0, "Fee value should be positive");
+            require(_fees[i].value < 10000, "Fee should be less than 100%");
             fees[_tokenId].push(_fees[i]);
             recipients[i] = _fees[i].recipient;
             bps[i] = _fees[i].value;
