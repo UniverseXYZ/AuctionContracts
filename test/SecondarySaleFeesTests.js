@@ -9,7 +9,7 @@ describe('Secondary Sale Fees Tests', () => {
     const UniverseERC721 = await ethers.getContractFactory('UniverseERC721');
 
     const auctionFactory = await AuctionFactory.deploy(10);
-    const universeERC721 = await UniverseERC721.deploy(auctionFactory.address, "Non Fungible Universe", "NFU");
+    const universeERC721 = await UniverseERC721.deploy("Non Fungible Universe", "NFU");
 
     const [signer] = await ethers.getSigners();
 

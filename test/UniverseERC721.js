@@ -8,7 +8,7 @@ describe('UniverseERC721', () => {
     const auctionFactory = await AuctionFactory.deploy(2000);
 
     const UniverseERC721 = await ethers.getContractFactory('UniverseERC721');
-    const universeERC721 = await UniverseERC721.deploy(auctionFactory.address, "Non Fungible Universe", "NFU");
+    const universeERC721 = await UniverseERC721.deploy("Non Fungible Universe", "NFU");
 
     return { auctionFactory, universeERC721 };
   };
@@ -60,33 +60,6 @@ describe('UniverseERC721', () => {
 
     await expect(universeERC721.batchMint(signer.address, uris, [["0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", 1000]])).revertedWith(
       'Cannot mint more than 40 ERC721 tokens in a single call'
-    );
-  });
-
-  it('should batchMint successfully', async () => {
-    const { universeERC721, auctionFactory } = await loadFixture(deployContracts);
-
-    const currentTime = Math.round((new Date()).getTime() / 1000);
-
-    const startTime = currentTime + 10000;
-    const endTime = startTime + 500;
-    const resetTimer = 3;
-    const numberOfSlots = 10;
-    const supportsWhitelist = false;
-    const bidToken = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
-
-    await auctionFactory.createAuction(
-      startTime,
-      endTime,
-      resetTimer,
-      numberOfSlots,
-      supportsWhitelist,
-      bidToken
-    );
-
-    await expect(universeERC721.batchMintToAuction(1, 1, ['TestURI', 'TestURI2'],[["0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", 1000]])).emit(
-      auctionFactory,
-      'LogERC721Deposit'
     );
   });
 });

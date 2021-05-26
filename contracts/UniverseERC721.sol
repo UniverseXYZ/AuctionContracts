@@ -12,15 +12,10 @@ contract UniverseERC721 is ERC721, Ownable, HasSecondarySaleFees {
     using Counters for Counters.Counter;
 
     Counters.Counter private _tokenIds;
-    IAuctionFactory public universeAuction;
 
-    constructor(
-        address _universeAuction,
-        string memory _tokenName,
-        string memory _tokenSymbol
-    ) ERC721(_tokenName, _tokenSymbol) {
-        universeAuction = IAuctionFactory(_universeAuction);
-    }
+    constructor(string memory _tokenName, string memory _tokenSymbol)
+        ERC721(_tokenName, _tokenSymbol)
+    {}
 
     function mint(
         address receiver,
@@ -65,38 +60,6 @@ contract UniverseERC721 is ERC721, Ownable, HasSecondarySaleFees {
         }
 
         return mintedTokenIds;
-    }
-
-    function batchMintToAuction(
-        uint256 auctionId,
-        uint256 slotIndex,
-        string[] calldata tokenURIs,
-        Fee[] memory fees
-    ) public onlyOwner returns (uint256[] memory) {
-        uint256 totalDepositedAmount =
-            universeAuction.getTotalDepositedNftsInSlot(auctionId, slotIndex);
-        require(
-            (totalDepositedAmount + tokenURIs.length) <= 40,
-            "Cannot have more than 40 NFTs in slot"
-        );
-        uint256[] memory mintedTokenIds =
-            batchMint(address(universeAuction), tokenURIs, fees);
-
-        uint256[] memory nftSlotIndices = new uint256[](mintedTokenIds.length);
-
-        for (uint256 i = 0; i < mintedTokenIds.length; i++) {
-            uint256 nftSlotIndex =
-                universeAuction.registerDepositERC721WithoutTransfer(
-                    auctionId,
-                    slotIndex,
-                    mintedTokenIds[i],
-                    address(this),
-                    msg.sender
-                );
-            nftSlotIndices[i] = nftSlotIndex;
-        }
-
-        return nftSlotIndices;
     }
 
     function ownedTokens(address ownerAddress)

@@ -305,83 +305,12 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         return _nftSlotIndex;
     }
 
-    function registerDepositERC721WithoutTransfer(
-        uint256 _auctionId,
-        uint256 _slotIndex,
-        uint256 _tokenId,
-        address _tokenAddress,
-        address _depositor
-    )
-        public
-        override
-        onlyExistingAuction(_auctionId)
-        onlyAuctionNotStarted(_auctionId)
-        onlyAuctionNotCanceled(_auctionId)
-        returns (uint256)
-    {
-        require(
-            msg.sender == _tokenAddress,
-            "Only the ERC721 contract can deposit on behalf of user"
-        );
-
-        require(
-            auctions[_auctionId].supportsWhitelist == false ||
-                auctions[_auctionId].whitelistAddresses[_depositor] == true,
-            "You are not allowed to deposit"
-        );
-
-        require(
-            auctions[_auctionId].numberOfSlots >= _slotIndex && _slotIndex > 0,
-            "You are trying to deposit into a non-existing slot"
-        );
-
-        require(
-            IERC721(_tokenAddress).ownerOf(_tokenId) == address(this),
-            "Token should be existing inside the auction"
-        );
-
-        require(
-            auctions[_auctionId].slots[_slotIndex].totalDepositedNfts < 40,
-            "Cannot have more than 40 NFTs in slot"
-        );
-
-        DepositedERC721 memory item =
-            DepositedERC721({
-                tokenId: _tokenId,
-                tokenAddress: _tokenAddress,
-                depositor: _depositor
-            });
-
-        uint256 _nftSlotIndex =
-            auctions[_auctionId].slots[_slotIndex].totalDepositedNfts.add(1);
-
-        auctions[_auctionId].slots[_slotIndex].depositedNfts[
-            _nftSlotIndex
-        ] = item;
-
-        auctions[_auctionId].slots[_slotIndex]
-            .totalDepositedNfts = _nftSlotIndex;
-
-        emit LogERC721Deposit(
-            _depositor,
-            _tokenAddress,
-            _tokenId,
-            _auctionId,
-            _slotIndex,
-            _nftSlotIndex,
-            block.timestamp
-        );
-
-        return _nftSlotIndex;
-    }
-
     function depositMultipleERC721(
         uint256 _auctionId,
         uint256 _slotIndex,
-        uint256[] calldata _tokenIds,
-        address _tokenAddress
+        ERC721[] calldata _tokens
     )
-        external
+        public
         override
         onlyExistingAuction(_auctionId)
         onlyAuctionNotStarted(_auctionId)
@@ -389,12 +318,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         returns (uint256[] memory)
     {
         address _depositor = msg.sender;
-        uint256[] memory _nftSlotIndexes = new uint256[](_tokenIds.length);
-
-        require(
-            _tokenAddress != address(0),
-            "Zero address was provided for token"
-        );
+        uint256[] memory _nftSlotIndexes = new uint256[](_tokens.length);
 
         require(
             auctions[_auctionId].supportsWhitelist == false ||
@@ -409,20 +333,52 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
 
         require(
             ((auctions[_auctionId].slots[_slotIndex].totalDepositedNfts +
-                _tokenIds.length) <= 40),
+                _tokens.length) <= 40),
             "Cannot have more than 40 NFTs in slot"
         );
 
-        for (uint256 i = 0; i < _tokenIds.length; i++) {
+        for (uint256 i = 0; i < _tokens.length; i++) {
             _nftSlotIndexes[i] = depositERC721(
                 _auctionId,
                 _slotIndex,
-                _tokenIds[i],
-                _tokenAddress
+                _tokens[i].tokenId,
+                _tokens[i].tokenAddress
             );
         }
 
         return _nftSlotIndexes;
+    }
+
+    function batchDepositToAuction(
+        uint256 _auctionId,
+        uint256[] calldata _slotIndices,
+        ERC721[][] calldata _tokens
+    )
+        external
+        override
+        onlyExistingAuction(_auctionId)
+        onlyAuctionNotStarted(_auctionId)
+        onlyAuctionNotCanceled(_auctionId)
+        returns (bool)
+    {
+        Auction storage auction = auctions[_auctionId];
+
+        require(_slotIndices.length <= auction.numberOfSlots, "Exceeding auction slots");
+        require(_slotIndices.length <= 10, "Slots should be no more than 10");
+        require(
+            _slotIndices.length == _tokens.length,
+            "Slots number should be equal to the ERC721 batches"
+        );
+
+        for (uint256 i = 0; i < _slotIndices.length; i++) {
+            require(
+                _tokens[i].length <= 5,
+                "Max 5 ERC721s could be transferred"
+            );
+            depositMultipleERC721(_auctionId, _slotIndices[i], _tokens[i]);
+        }
+
+        return true;
     }
 
     function ethBid(uint256 _auctionId)

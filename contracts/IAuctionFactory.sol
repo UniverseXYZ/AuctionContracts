@@ -36,6 +36,11 @@ interface IAuctionFactory {
         mapping(uint256 => DepositedERC721) depositedNfts;
     }
 
+    struct ERC721 {
+        uint256 tokenId;
+        address tokenAddress;
+    }
+
     struct DepositedERC721 {
         address tokenAddress;
         uint256 tokenId;
@@ -75,31 +80,25 @@ interface IAuctionFactory {
         address tokenAddress
     ) external returns (uint256);
 
-    /// @notice Register directly minted to the auction contract ERC721 tokens (only called from the ERC721 contract)
-    /// @param auctionId The auction id
-    /// @param slotIndex Index of the slot
-    /// @param tokenId Id of the ERC721 token
-    /// @param tokenAddress Address of the ERC721 contract
-    /// @param depositor Address of the depositor on whose behalf the deposit is registered
-    function registerDepositERC721WithoutTransfer(
-        uint256 auctionId,
-        uint256 slotIndex,
-        uint256 tokenId,
-        address tokenAddress,
-        address depositor
-    ) external returns (uint256);
-
     /// @notice Deposit ERC721 assets to the specified Auction
     /// @param auctionId The auction id
     /// @param slotIndex Index of the slot
-    /// @param tokenIds Array of ERC721 token ids
-    /// @param tokenAddress Address of the ERC721 contract
+    /// @param tokens Array of ERC721 objects
     function depositMultipleERC721(
         uint256 auctionId,
         uint256 slotIndex,
-        uint256[] calldata tokenIds,
-        address tokenAddress
+        ERC721[] calldata tokens
     ) external returns (uint256[] memory);
+
+    /// @notice Deposit ERC721 assets to the specified Auction
+    /// @param auctionId The auction id
+    /// @param slotIndices Array of slot indexes
+    /// @param tokens Array of ERC721 arrays
+    function batchDepositToAuction(
+        uint256 auctionId,
+        uint256[] calldata slotIndices,
+        ERC721[][] calldata tokens
+    )external returns (bool);
 
     /// @notice Sends a bid (ETH) to the specified auciton
     /// @param auctionId The auction id

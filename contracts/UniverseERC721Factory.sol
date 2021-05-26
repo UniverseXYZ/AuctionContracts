@@ -9,7 +9,6 @@ import "./IAuctionFactory.sol";
 contract UniverseERC721Factory is Ownable {
     address[] public deployedContracts;
     address public lastDeployedContractAddress;
-    IAuctionFactory public universeAuction;
 
     event LogUniverseERC721ContractDeployed(
         string tokenName,
@@ -18,9 +17,7 @@ contract UniverseERC721Factory is Ownable {
         uint256 time
     );
 
-    constructor(address _universeAuction) {
-        universeAuction = IAuctionFactory(_universeAuction);
-    }
+    constructor() {}
 
     function getDeployedContractsCount() public view returns (uint256 count) {
         return deployedContracts.length;
@@ -31,11 +28,7 @@ contract UniverseERC721Factory is Ownable {
         string memory tokenSymbol
     ) public returns (address universeERC721Contract) {
         UniverseERC721 deployedContract =
-            new UniverseERC721(
-                address(universeAuction),
-                tokenName,
-                tokenSymbol
-            );
+            new UniverseERC721(tokenName, tokenSymbol);
 
         deployedContract.transferOwnership(msg.sender);
         address deployedContractAddress = address(deployedContract);
@@ -50,14 +43,5 @@ contract UniverseERC721Factory is Ownable {
         );
 
         return deployedContractAddress;
-    }
-
-    function setAuctionFactory(address _universeAuction)
-        external
-        onlyOwner
-        returns (address _universeAuctionAddress)
-    {
-        universeAuction = IAuctionFactory(_universeAuction);
-        return address(universeAuction);
     }
 }
