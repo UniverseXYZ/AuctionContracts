@@ -13,6 +13,12 @@ contract UniverseERC721 is ERC721, Ownable, HasSecondarySaleFees {
 
     Counters.Counter private _tokenIds;
 
+    event UniverseERC721TokenMinted(
+        uint256 tokenId,
+        string tokenURI,
+        uint256 time
+    );
+
     constructor(string memory _tokenName, string memory _tokenSymbol)
         ERC721(_tokenName, _tokenSymbol)
     {}
@@ -28,6 +34,8 @@ contract UniverseERC721 is ERC721, Ownable, HasSecondarySaleFees {
         _mint(receiver, newItemId);
         _setTokenURI(newItemId, tokenURI);
         _registerFees(newItemId, fees);
+
+        emit UniverseERC721TokenMinted(newItemId, tokenURI, block.timestamp);
 
         return newItemId;
     }
