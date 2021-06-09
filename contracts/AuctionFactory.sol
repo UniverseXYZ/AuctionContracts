@@ -994,7 +994,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
                         auction.bidToken == address(0) &&
                         interimFee.feeValue > 0
                     ) {
-                        recipients[i].transfer(interimFee.feeValue);
+                        recipients[j].transfer(interimFee.feeValue);
                     }
 
                     if (
