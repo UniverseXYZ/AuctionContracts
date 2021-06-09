@@ -108,7 +108,7 @@ interface IAuctionFactory {
 
     /// @notice Distributes all slot assets to the bidders and winning bids to the collector
     /// @param auctionId The auction id
-    /// @param winners Array of winners addresses to be vrified onchain
+    /// @param winners Array of winners addresses to be vеrified onchain
     function finalizeAuction(uint256 auctionId, address[] calldata winners)
         external
         returns (bool);

@@ -505,7 +505,11 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         bool isValid = true;
 
         require(
-            (bidders.length == auction.numberOfBids),
+            (msg.sender == auction.auctionOwner),
+            "Only the auction owner can finalize the auction"
+        );
+        require(
+            (bidders.length <= auction.numberOfSlots),
             "Incorrect number of bidders"
         );
         require(
@@ -515,11 +519,6 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         require(
             auction.balanceOf[bidders[0]] == auction.highestTotalBid,
             "First address should have the highest bid"
-        );
-        require(
-            auction.balanceOf[bidders[bidders.length - 1]] ==
-                auction.lowestTotalBid,
-            "Last address should have the lowest bid"
         );
 
         for (uint256 i = 1; i < bidders.length; i++) {

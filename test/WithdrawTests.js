@@ -317,7 +317,7 @@ describe('Withdraw functionalities', () => {
     await ethers.provider.send('evm_setNextBlockTimestamp', [endTime + 1200]); 
     await ethers.provider.send('evm_mine');
 
-    await auctionFactory.finalizeAuction(1, [signer4.address, signer3.address, signer2.address, signer.address]);
+    await auctionFactory.finalizeAuction(1, [signer4.address, signer3.address, signer2.address]);
 
     await expect(auctionFactory.connect(signer5).withdrawEthBid(1)).revertedWith('You have 0 deposited');
   });
