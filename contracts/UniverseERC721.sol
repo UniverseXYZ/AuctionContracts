@@ -36,8 +36,6 @@ contract UniverseERC721 is ERC721, Ownable, HasSecondarySaleFees {
         _registerFees(newItemId, fees);
 
         emit UniverseERC721TokenMinted(newItemId, tokenURI, block.timestamp);
-
-        return newItemId;
     }
 
     function updateTokenURI(uint256 _tokenId, string memory _tokenURI)

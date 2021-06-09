@@ -932,7 +932,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         returns (uint256)
     {
         require(
-            _royaltyFeeMantissa < 100000000000000000,
+            _royaltyFeeMantissa < 1e17,
             "Should be less than 10%"
         );
         royaltyFeeMantissa = _royaltyFeeMantissa;
@@ -982,11 +982,11 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
                     "Splits number should be equal"
                 );
                 uint256 value = averageERC721SalePrice;
-                for (uint256 i = 0; i < fees.length; i++) {
+                for (uint256 j = 0; j < fees.length; j++) {
                     Fee memory interimFee =
                         subFee(
                             value,
-                            averageERC721SalePrice.mul(fees[i]).div(10000)
+                            averageERC721SalePrice.mul(fees[j]).div(10000)
                         );
                     value = interimFee.remainingValue;
 
@@ -1003,7 +1003,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
                     ) {
                         IERC20 token = IERC20(auction.bidToken);
                         token.transfer(
-                            address(recipients[i]),
+                            address(recipients[j]),
                             interimFee.feeValue
                         );
                     }
