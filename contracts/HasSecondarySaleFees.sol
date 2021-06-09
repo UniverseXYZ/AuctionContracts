@@ -25,7 +25,7 @@ contract HasSecondarySaleFees is ERC165 {
         _registerInterface(_INTERFACE_ID_FEES);
     }
 
-    function getFeeRecipients(uint256 id) public view returns (address payable[] memory) {
+    function getFeeRecipients(uint256 id) external view returns (address payable[] memory) {
         Fee[] memory _fees = fees[id];
         address payable[] memory result = new address payable[](_fees.length);
         for (uint i = 0; i < _fees.length; i++) {
@@ -34,7 +34,7 @@ contract HasSecondarySaleFees is ERC165 {
         return result;
     }
 
-    function getFeeBps(uint256 id) public view returns (uint[] memory) {
+    function getFeeBps(uint256 id) external view returns (uint[] memory) {
         Fee[] memory _fees = fees[id];
         uint[] memory result = new uint[](_fees.length);
         for (uint i = 0; i < _fees.length; i++) {

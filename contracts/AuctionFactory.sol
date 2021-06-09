@@ -2,7 +2,6 @@
 pragma solidity ^0.7.0;
 pragma experimental ABIEncoderV2;
 
-import "hardhat/console.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721Holder.sol";
@@ -128,7 +127,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
 
     modifier onlyAuctionNotCanceled(uint256 _auctionId) {
         require(
-            auctions[_auctionId].isCanceled == false,
+            !auctions[_auctionId].isCanceled,
             "Auction is canceled"
         );
         _;
@@ -254,8 +253,8 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         );
 
         require(
-            auctions[_auctionId].supportsWhitelist == false ||
-                auctions[_auctionId].whitelistAddresses[_depositor] == true,
+            !auctions[_auctionId].supportsWhitelist ||
+            auctions[_auctionId].whitelistAddresses[_depositor],
             "You are not allowed to deposit"
         );
 
@@ -321,8 +320,8 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         uint256[] memory _nftSlotIndexes = new uint256[](_tokens.length);
 
         require(
-            auctions[_auctionId].supportsWhitelist == false ||
-                auctions[_auctionId].whitelistAddresses[_depositor] == true,
+            !auctions[_auctionId].supportsWhitelist ||
+            auctions[_auctionId].whitelistAddresses[_depositor],
             "You are not allowed to deposit"
         );
 
@@ -510,7 +509,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
             "Incorrect number of bidders"
         );
         require(
-            block.timestamp > auction.endTime && auction.isFinalized == false,
+            block.timestamp > auction.endTime && !auction.isFinalized,
             "Auction has not finished"
         );
         require(
@@ -711,7 +710,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         );
 
         require(
-            auctions[auctionId].slots[slotIndex].reservePriceReached == false,
+            !auctions[auctionId].slots[slotIndex].reservePriceReached,
             "Can withdraw only if reserve price is not met"
         );
 
