@@ -551,7 +551,6 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
                     auction.slots[lastAwardedIndex + 1]
                         .winningBidAmount = auction.balanceOf[bidders[i]];
                     auction.slots[lastAwardedIndex + 1].winner = bidders[i];
-                    lastAwardedIndex++;
 
                     emit LogBidMatched(
                         auctionId,
@@ -561,6 +560,8 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
                         auction.slots[lastAwardedIndex + 1].winner,
                         block.timestamp
                     );
+
+                    lastAwardedIndex++;
 
                     break;
                 }
