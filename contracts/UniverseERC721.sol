@@ -36,12 +36,10 @@ contract UniverseERC721 is ERC721, Ownable, HasSecondarySaleFees {
         _registerFees(newItemId, fees);
 
         emit UniverseERC721TokenMinted(newItemId, tokenURI, block.timestamp);
-
-        return newItemId;
     }
 
     function updateTokenURI(uint256 _tokenId, string memory _tokenURI)
-        public
+        external
         onlyOwner
         returns (string memory)
     {
@@ -54,7 +52,7 @@ contract UniverseERC721 is ERC721, Ownable, HasSecondarySaleFees {
         address receiver,
         string[] calldata tokenURIs,
         Fee[] memory fees
-    ) public onlyOwner returns (uint256[] memory) {
+    ) external onlyOwner returns (uint256[] memory) {
         require(
             tokenURIs.length <= 40,
             "Cannot mint more than 40 ERC721 tokens in a single call"
@@ -71,7 +69,7 @@ contract UniverseERC721 is ERC721, Ownable, HasSecondarySaleFees {
     }
 
     function ownedTokens(address ownerAddress)
-        public
+        external
         view
         returns (uint256[] memory)
     {

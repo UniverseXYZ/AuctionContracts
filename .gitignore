@@ -10,3 +10,4 @@ deployments/rinkeby
 #Hardhat files
 cache
 artifacts
+.vscode
