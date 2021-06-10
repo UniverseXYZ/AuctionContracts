@@ -133,6 +133,14 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         _;
     }
 
+    modifier onlyAuctionCanceled(uint256 _auctionId) {
+        require(
+            auctions[_auctionId].isCanceled,
+            "Auction is not canceled"
+        );
+        _;
+    }
+
     modifier onlyValidBidAmount(uint256 _bid) {
         require(_bid > 0, "Bid amount must be higher than 0");
         _;
@@ -649,10 +657,10 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         uint256 slotIndex,
         uint256 nftSlotIndex
     )
-        external
+        public
         override
         onlyExistingAuction(auctionId)
-        onlyAuctionNotStarted(auctionId)
+        onlyAuctionCanceled(auctionId)
         returns (bool)
     {
         DepositedERC721 memory nftForWithdrawal =
@@ -684,12 +692,40 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         return true;
     }
 
+    function withdrawMultipleERC721FromNonWinningSlot(
+        uint256 auctionId,
+        uint256 slotIndex
+    )
+        external
+        override
+        onlyExistingAuction(auctionId)
+        onlyAuctionStarted(auctionId)
+        onlyAuctionNotCanceled(auctionId)
+        returns (bool)
+    {
+        Auction storage auction = auctions[auctionId];
+        Slot storage nonWinningSlot = auction.slots[slotIndex];
+
+        require(
+            !auction.slots[slotIndex].reservePriceReached,
+            "Can withdraw only if reserve price is not met"
+        );
+
+        require(auction.isFinalized, "Auction should be finalized");
+
+        for (uint256 i = 0; i < nonWinningSlot.totalDepositedNfts; i++) {
+            withdrawERC721FromNonWinningSlot(auctionId, slotIndex, (i+1));
+        }
+
+        return true;
+    }
+
     function withdrawERC721FromNonWinningSlot(
         uint256 auctionId,
         uint256 slotIndex,
         uint256 nftSlotIndex
     )
-        external
+        public
         override
         onlyExistingAuction(auctionId)
         onlyAuctionStarted(auctionId)

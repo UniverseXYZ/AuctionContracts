@@ -395,8 +395,6 @@ describe('Finalize auction ERC721 Tests', () => {
     await auctionFactory.depositERC721(1, 1, 1, mockNFT.address);
     await auctionFactory.depositERC721(1, 1, 2, mockNFT.address);
 
-    await auctionFactory.withdrawDepositedERC721(1, 1, 1);
-
     await ethers.provider.send('evm_setNextBlockTimestamp', [startTime + 100]); 
     await ethers.provider.send('evm_mine');
 

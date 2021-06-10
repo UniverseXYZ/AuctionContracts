@@ -68,6 +68,7 @@ describe('DEPOSIT ERC721 Functionality', () => {
     await mockNFT.approve(auctionFactory.address, tokenId);
 
     await auctionFactory.depositERC721(auctionId, slotIdx, tokenId, mockNFT.address);
+    await auctionFactory.cancelAuction(auctionId);
 
     await expect(auctionFactory.withdrawDepositedERC721(1, 1, 1)).to.be.emit(auctionFactory, 'LogERC721Withdrawal');
   });

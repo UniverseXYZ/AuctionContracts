@@ -132,6 +132,14 @@ interface IAuctionFactory {
         uint256 nftSlotIndex
     ) external returns (bool);
 
+    /// @notice Withdraws the deposited ERC721s if the reserve price is not reached
+    /// @param auctionId The auction id
+    /// @param slotIndex The slot index
+    function withdrawMultipleERC721FromNonWinningSlot(
+        uint256 auctionId,
+        uint256 slotIndex
+    ) external returns (bool);
+
     /// @notice Withdraws the deposited ERC721 if the reserve price is not reached
     /// @param auctionId The auction id
     /// @param slotIndex The slot index
