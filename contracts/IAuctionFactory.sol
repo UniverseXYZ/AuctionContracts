@@ -19,6 +19,7 @@ interface IAuctionFactory {
         bool isCanceled;
         address bidToken;
         bool isFinalized;
+        uint256 totalDepositedERC721s;
         mapping(uint256 => Slot) slots;
         mapping(address => bool) whitelistAddresses;
         mapping(address => uint256) balanceOf;

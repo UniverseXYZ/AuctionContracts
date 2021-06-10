@@ -291,6 +291,9 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
             _tokenId
         );
 
+        auctions[_auctionId].totalDepositedERC721s = 
+            auctions[_auctionId].totalDepositedERC721s.add(1);
+
         emit LogERC721Deposit(
             _depositor,
             _tokenAddress,
@@ -396,6 +399,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         Auction storage auction = auctions[_auctionId];
 
         require(block.timestamp < auction.endTime, "Auction has ended");
+        require(auction.totalDepositedERC721s > 0, "No deposited NFTs in auction");
 
         if (
             auction.numberOfBids >= auction.numberOfSlots &&
@@ -449,6 +453,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         Auction storage auction = auctions[_auctionId];
 
         require(block.timestamp < auction.endTime, "Auction has ended");
+        require(auction.totalDepositedERC721s > 0, "No deposited NFTs in auction");
 
         IERC20 bidToken = IERC20(auction.bidToken);
         uint256 allowance = bidToken.allowance(msg.sender, address(this));
@@ -575,16 +580,6 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
                     auction.balanceOf[auction.slots[i + 1].winner]
                 );
                 auction.balanceOf[auction.slots[i + 1].winner] = 0;
-                if (auction.slots[i + 1].totalDepositedNfts > 0) {
-                    uint256 _secondarySaleFees =
-                        calculateAndDistributeSecondarySaleFees(
-                            auctionId,
-                            (i + 1)
-                        );
-                    auctionsRevenue[auctionId] = auctionsRevenue[auctionId].sub(
-                        _secondarySaleFees
-                    );
-                }
             }
         }
 
