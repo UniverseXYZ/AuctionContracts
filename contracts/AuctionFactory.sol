@@ -133,6 +133,14 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         _;
     }
 
+    modifier onlyAuctionCanceled(uint256 _auctionId) {
+        require(
+            auctions[_auctionId].isCanceled,
+            "Auction is not canceled"
+        );
+        _;
+    }
+
     modifier onlyValidBidAmount(uint256 _bid) {
         require(_bid > 0, "Bid amount must be higher than 0");
         _;
@@ -291,6 +299,9 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
             _tokenId
         );
 
+        auctions[_auctionId].totalDepositedERC721s = 
+            auctions[_auctionId].totalDepositedERC721s.add(1);
+
         emit LogERC721Deposit(
             _depositor,
             _tokenAddress,
@@ -396,6 +407,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         Auction storage auction = auctions[_auctionId];
 
         require(block.timestamp < auction.endTime, "Auction has ended");
+        require(auction.totalDepositedERC721s > 0, "No deposited NFTs in auction");
 
         if (
             auction.numberOfBids >= auction.numberOfSlots &&
@@ -449,6 +461,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         Auction storage auction = auctions[_auctionId];
 
         require(block.timestamp < auction.endTime, "Auction has ended");
+        require(auction.totalDepositedERC721s > 0, "No deposited NFTs in auction");
 
         IERC20 bidToken = IERC20(auction.bidToken);
         uint256 allowance = bidToken.allowance(msg.sender, address(this));
@@ -575,16 +588,6 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
                     auction.balanceOf[auction.slots[i + 1].winner]
                 );
                 auction.balanceOf[auction.slots[i + 1].winner] = 0;
-                if (auction.slots[i + 1].totalDepositedNfts > 0) {
-                    uint256 _secondarySaleFees =
-                        calculateAndDistributeSecondarySaleFees(
-                            auctionId,
-                            (i + 1)
-                        );
-                    auctionsRevenue[auctionId] = auctionsRevenue[auctionId].sub(
-                        _secondarySaleFees
-                    );
-                }
             }
         }
 
@@ -654,10 +657,10 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         uint256 slotIndex,
         uint256 nftSlotIndex
     )
-        external
+        public
         override
         onlyExistingAuction(auctionId)
-        onlyAuctionNotStarted(auctionId)
+        onlyAuctionCanceled(auctionId)
         returns (bool)
     {
         DepositedERC721 memory nftForWithdrawal =
@@ -689,12 +692,40 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         return true;
     }
 
+    function withdrawMultipleERC721FromNonWinningSlot(
+        uint256 auctionId,
+        uint256 slotIndex
+    )
+        external
+        override
+        onlyExistingAuction(auctionId)
+        onlyAuctionStarted(auctionId)
+        onlyAuctionNotCanceled(auctionId)
+        returns (bool)
+    {
+        Auction storage auction = auctions[auctionId];
+        Slot storage nonWinningSlot = auction.slots[slotIndex];
+
+        require(
+            !auction.slots[slotIndex].reservePriceReached,
+            "Can withdraw only if reserve price is not met"
+        );
+
+        require(auction.isFinalized, "Auction should be finalized");
+
+        for (uint256 i = 0; i < nonWinningSlot.totalDepositedNfts; i++) {
+            withdrawERC721FromNonWinningSlot(auctionId, slotIndex, (i+1));
+        }
+
+        return true;
+    }
+
     function withdrawERC721FromNonWinningSlot(
         uint256 auctionId,
         uint256 slotIndex,
         uint256 nftSlotIndex
     )
-        external
+        public
         override
         onlyExistingAuction(auctionId)
         onlyAuctionStarted(auctionId)

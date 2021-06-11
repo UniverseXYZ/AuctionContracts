@@ -19,6 +19,7 @@ interface IAuctionFactory {
         bool isCanceled;
         address bidToken;
         bool isFinalized;
+        uint256 totalDepositedERC721s;
         mapping(uint256 => Slot) slots;
         mapping(address => bool) whitelistAddresses;
         mapping(address => uint256) balanceOf;
@@ -129,6 +130,14 @@ interface IAuctionFactory {
         uint256 auctionId,
         uint256 slotIndex,
         uint256 nftSlotIndex
+    ) external returns (bool);
+
+    /// @notice Withdraws the deposited ERC721s if the reserve price is not reached
+    /// @param auctionId The auction id
+    /// @param slotIndex The slot index
+    function withdrawMultipleERC721FromNonWinningSlot(
+        uint256 auctionId,
+        uint256 slotIndex
     ) external returns (bool);
 
     /// @notice Withdraws the deposited ERC721 if the reserve price is not reached

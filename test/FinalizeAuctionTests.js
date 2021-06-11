@@ -77,6 +77,9 @@ describe('Finalize auction ERC721 Tests', () => {
 
     expect(slotWinner).to.equal(signer.address);
 
+    await ethers.provider.send('evm_setNextBlockTimestamp', [endTime + 1000]); 
+    await ethers.provider.send('evm_mine');
+
     await expect(auctionFactory.withdrawAuctionRevenue(1)).to.be.emit(auctionFactory, 'LogAuctionRevenueWithdrawal');
 
     await expect(auctionFactory.claimERC721Rewards(1, 1)).to.be.emit(auctionFactory, 'LogERC721RewardsClaim');
@@ -88,9 +91,9 @@ describe('Finalize auction ERC721 Tests', () => {
     const currentTime = Math.round((new Date()).getTime() / 1000);
 
     const startTime = currentTime + 2500;
-    const endTime = startTime + 1500;
+    const endTime = startTime + 500;
     const resetTimer = 1;
-    const numberOfSlots = 4;
+    const numberOfSlots = 1;
     const supportsWhitelist = false;
     const tokenAddress = '0x0000000000000000000000000000000000000000';
 
@@ -108,6 +111,7 @@ describe('Finalize auction ERC721 Tests', () => {
     await mockNFT.mint(signer.address, 1);
 
     await mockNFT.approve(auctionFactory.address, 1);
+    await auctionFactory.depositERC721(1, 1, 1, mockNFT.address);
 
     await ethers.provider.send('evm_setNextBlockTimestamp', [startTime + 100]); 
     await ethers.provider.send('evm_mine')
@@ -117,6 +121,9 @@ describe('Finalize auction ERC721 Tests', () => {
         value: '200000000000000000000'
       })
     ).to.be.emit(auctionFactory, 'LogBidSubmitted');
+
+    await ethers.provider.send('evm_setNextBlockTimestamp', [endTime + 500]); 
+    await ethers.provider.send('evm_mine');
 
     await expect(auctionFactory.finalizeAuction(1, [signer.address, signer2.address])).to.be.reverted;
   });
@@ -148,10 +155,12 @@ describe('Finalize auction ERC721 Tests', () => {
 
     await mockNFT.approve(auctionFactory.address, 1);
 
+    await auctionFactory.depositERC721(1, 1, 1, mockNFT.address);
+
     await ethers.provider.send('evm_setNextBlockTimestamp', [startTime + 200]); 
     await ethers.provider.send('evm_mine');
 
-    auctionFactory.functions['ethBid(uint256)'](1, {
+    await auctionFactory.functions['ethBid(uint256)'](1, {
       value: '200000000000000000000'
     });
 
@@ -184,14 +193,19 @@ describe('Finalize auction ERC721 Tests', () => {
 
     await mockNFT.approve(auctionFactory.address, 1);
 
+    await auctionFactory.depositERC721(1, 1, 1, mockNFT.address);
+
     await ethers.provider.send('evm_setNextBlockTimestamp', [startTime + 200]); 
     await ethers.provider.send('evm_mine');
 
-    auctionFactory.functions['ethBid(uint256)'](1, {
+    await auctionFactory.functions['ethBid(uint256)'](1, {
       value: '200000000000000000000'
     });
 
-    await expect(auctionFactory.finalizeAuction(1, [signer2.address])).to.be.reverted;
+    await ethers.provider.send('evm_setNextBlockTimestamp', [endTime + 500]); 
+    await ethers.provider.send('evm_mine');
+
+    await expect(auctionFactory.finalizeAuction(1, [signer2.address, signer.address])).to.be.reverted;
   });
 
   it('should revert if auction is not ended', async () => {
@@ -322,6 +336,7 @@ describe('Finalize auction ERC721 Tests', () => {
     await mockNFT.connect(signer).mint(signer.address, 1);
 
     await mockNFT.connect(signer).approve(auctionFactory.address, 1);
+    await auctionFactory.connect(signer).depositERC721(1, 1, 1, mockNFT.address);
 
     await ethers.provider.send('evm_setNextBlockTimestamp', [startTime + 100]); 
     await ethers.provider.send('evm_mine');
@@ -354,7 +369,7 @@ describe('Finalize auction ERC721 Tests', () => {
     const currentTime = Math.round((new Date()).getTime() / 1000);
 
     const startTime = currentTime + 2500;
-    const endTime = startTime + 1500;
+    const endTime = startTime + 500;
     const resetTimer = 1;
     const numberOfSlots = 1;
     const supportsWhitelist = false;
@@ -380,16 +395,14 @@ describe('Finalize auction ERC721 Tests', () => {
     await auctionFactory.depositERC721(1, 1, 1, mockNFT.address);
     await auctionFactory.depositERC721(1, 1, 2, mockNFT.address);
 
-    await auctionFactory.withdrawDepositedERC721(1, 1, 1);
-
-    await ethers.provider.send('evm_setNextBlockTimestamp', [startTime + 500]); 
+    await ethers.provider.send('evm_setNextBlockTimestamp', [startTime + 100]); 
     await ethers.provider.send('evm_mine');
 
     await auctionFactory.connect(signer).functions['ethBid(uint256)'](1, {
       value: '500000000000000000000'
     });
 
-    await ethers.provider.send('evm_setNextBlockTimestamp', [startTime + 1500]); 
+    await ethers.provider.send('evm_setNextBlockTimestamp', [endTime + 200]); 
     await ethers.provider.send('evm_mine');
 
     await auctionFactory.finalizeAuction(1, [signer.address]);
@@ -403,7 +416,7 @@ describe('Finalize auction ERC721 Tests', () => {
     const currentTime = Math.round((new Date()).getTime() / 1000);
 
     const startTime = currentTime + 2500;
-    const endTime = startTime + 5500;
+    const endTime = startTime + 500;
     const resetTimer = 6;
     const numberOfSlots = 2;
     const supportsWhitelist = false;
@@ -426,7 +439,7 @@ describe('Finalize auction ERC721 Tests', () => {
 
     await auctionFactory.depositERC721(1, 1, 1, mockNFT.address);
 
-    await ethers.provider.send('evm_setNextBlockTimestamp', [endTime - 500]); 
+    await ethers.provider.send('evm_setNextBlockTimestamp', [startTime + 100]); 
     await ethers.provider.send('evm_mine');
 
     await auctionFactory.connect(signer).functions['ethBid(uint256)'](1, {
@@ -440,6 +453,9 @@ describe('Finalize auction ERC721 Tests', () => {
     await auctionFactory.connect(signer2).functions['ethBid(uint256)'](1, {
       value: '300000000000000000000'
     });
+
+    await ethers.provider.send('evm_setNextBlockTimestamp', [endTime + 500]); 
+    await ethers.provider.send('evm_mine');
 
     await expect(auctionFactory.finalizeAuction(1, [signer.address, signer2.address])).to.be.reverted;
   });
