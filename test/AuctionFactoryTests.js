@@ -141,7 +141,7 @@ describe('AuctionFactory', () => {
     const currentTime = Math.round((new Date()).getTime() / 1000);
 
     const startTime = currentTime + 10;
-    const endTime = currentTime + 15;
+    const endTime = startTime + 500;
     const resetTimer = 3;
     const numberOfSlots = 1;
     const supportsWhitelist = false;
@@ -170,53 +170,5 @@ describe('AuctionFactory', () => {
     mockToken.connect(signer).approve(auctionFactory.address, 100);
 
     await expect(auctionFactory.connect(signer).functions['erc20Bid(uint256,uint256)'](1, 10)).to.be.reverted;
-  });
-
-  it('should skip setting new high balance if the bid is lower', async () => {
-    const { auctionFactory, mockNFT, mockToken } = await loadFixture(deployContract);
-
-    const currentTime = Math.round((new Date()).getTime() / 1000);
-
-    const startTime = currentTime + 10;
-    const endTime = currentTime + 20;
-    const resetTimer = 3;
-    const numberOfSlots = 2;
-    const supportsWhitelist = false;
-    const tokenAddress = mockToken.address;
-
-    await auctionFactory.createAuction(
-      startTime,
-      endTime,
-      resetTimer,
-      numberOfSlots,
-      supportsWhitelist,
-      tokenAddress
-    );
-
-    const [signer, signer2] = await ethers.getSigners();
-
-    const auctionId = 1;
-    const slotIdx = 1;
-    const tokenId = 1;
-
-    await mockNFT.mint(signer.address, 'nftURI');
-    await mockNFT.approve(auctionFactory.address, tokenId);
-
-    await auctionFactory.depositERC721(auctionId, slotIdx, tokenId, mockNFT.address);
-
-    mockToken.connect(signer).approve(auctionFactory.address, 100);
-
-    mockToken.connect(signer2).approve(auctionFactory.address, 100);
-
-    await ethers.provider.send('evm_setNextBlockTimestamp', [startTime + 4]); 
-    await ethers.provider.send('evm_mine');
-
-    await auctionFactory.connect(signer).functions['erc20Bid(uint256,uint256)'](1, 10);
-
-    await auctionFactory.connect(signer2).functions['erc20Bid(uint256,uint256)'](1, 9);
-
-    const auction = await auctionFactory.auctions(1);
-
-    expect(Number(auction.highestTotalBid.toString())).to.equal(10);
   });
 });

@@ -66,7 +66,7 @@ describe('Extend auction ERC721 Tests', () => {
 
     await expect(
       auctionFactory.connect(signer2).functions['ethBid(uint256)'](1, {
-        value: '400000000000000000000'
+        value: '500000000000000000000'
       })
     ).to.be.emit(auctionFactory, 'LogBidSubmitted');
   });
@@ -77,8 +77,8 @@ describe('Extend auction ERC721 Tests', () => {
     const currentTime = Math.round((new Date()).getTime() / 1000);
 
     const startTime = currentTime + 1500;
-    const endTime = startTime + 500;
-    const resetTimer = 500;
+    const endTime = startTime + 600;
+    const resetTimer = 600;
     const numberOfSlots = 2;
     const supportsWhitelist = false;
     const tokenAddress = mockToken.address;
@@ -122,7 +122,6 @@ describe('Extend auction ERC721 Tests', () => {
       'LogAuctionExtended'
     );
 
-    await expect(auctionFactory.functions['erc20Bid(uint256,uint256)'](1, 4)).to.be.emit(auctionFactory, 'LogBidSubmitted');
   });
 
   it('should revert if auction is ended', async () => {

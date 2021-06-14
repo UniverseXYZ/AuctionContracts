@@ -13,8 +13,6 @@ interface IAuctionFactory {
         uint256 resetTimer;
         uint256 numberOfSlots;
         uint256 numberOfBids;
-        uint256 highestTotalBid;
-        uint256 lowestTotalBid;
         bool supportsWhitelist;
         bool isCanceled;
         address bidToken;
@@ -22,7 +20,8 @@ interface IAuctionFactory {
         uint256 totalDepositedERC721s;
         mapping(uint256 => Slot) slots;
         mapping(address => bool) whitelistAddresses;
-        mapping(address => uint256) balanceOf;
+        mapping(address => uint256) bidBalance;
+        mapping(address => address) nextBidders;
         mapping(uint256 => address) winners;
     }
 
@@ -101,16 +100,15 @@ interface IAuctionFactory {
 
     /// @notice Sends a bid (ETH) to the specified auciton
     /// @param auctionId The auction id
-    function ethBid(uint256 auctionId) external payable returns (bool);
+    function ethBid(uint256 auctionId) external payable;
 
     /// @notice Sends a bid (ERC20) to the specified auciton
     /// @param auctionId The auction id
-    function erc20Bid(uint256 auctionId, uint256 amount) external returns (bool);
+    function erc20Bid(uint256 auctionId, uint256 amount) external;
 
     /// @notice Distributes all slot assets to the bidders and winning bids to the collector
     /// @param auctionId The auction id
-    /// @param winners Array of winners addresses to be vеrified onchain
-    function finalizeAuction(uint256 auctionId, address[] calldata winners)
+    function finalizeAuction(uint256 auctionId)
         external
         returns (bool);
 
