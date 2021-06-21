@@ -13,6 +13,8 @@ import "./HasSecondarySaleFees.sol";
 contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
     using SafeMath for uint256;
 
+    uint slotLimit = 100;
+
     uint256 public totalAuctions;
     uint256 public maxNumberOfSlotsPerAuction;
     uint256 public royaltyFeeMantissa;
@@ -272,8 +274,8 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         );
 
         require(
-            auctions[_auctionId].slots[_slotIndex].totalDepositedNfts < 40,
-            "Cannot have more than 40 NFTs in slot"
+            auctions[_auctionId].slots[_slotIndex].totalDepositedNfts < slotLimit,
+            "Cannot have more than 100 NFTs in slot"
         );
 
         DepositedERC721 memory item =
@@ -343,8 +345,8 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
 
         require(
             ((auctions[_auctionId].slots[_slotIndex].totalDepositedNfts +
-                _tokens.length) <= 40),
-            "Cannot have more than 40 NFTs in slot"
+                _tokens.length) <= slotLimit),
+            "Cannot have more than 100 NFTs in slot"
         );
 
         for (uint256 i = 0; i < _tokens.length; i++) {

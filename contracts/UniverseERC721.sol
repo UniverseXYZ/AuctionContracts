@@ -11,6 +11,8 @@ import "./HasSecondarySaleFees.sol";
 contract UniverseERC721 is ERC721, Ownable, HasSecondarySaleFees {
     using Counters for Counters.Counter;
 
+    uint slotLimit = 100;
+
     Counters.Counter private _tokenIds;
 
     event UniverseERC721TokenMinted(
@@ -54,8 +56,8 @@ contract UniverseERC721 is ERC721, Ownable, HasSecondarySaleFees {
         Fee[] memory fees
     ) external onlyOwner returns (uint256[] memory) {
         require(
-            tokenURIs.length <= 40,
-            "Cannot mint more than 40 ERC721 tokens in a single call"
+            tokenURIs.length <= slotLimit,
+            "Cannot mint more than 100 ERC721 tokens in a single call"
         );
 
         uint256[] memory mintedTokenIds = new uint256[](tokenURIs.length);
