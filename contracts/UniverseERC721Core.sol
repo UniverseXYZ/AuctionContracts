@@ -34,6 +34,7 @@ contract UniverseERC721Core is UniverseERC721 {
         override
         returns (string memory)
     {
+        require(ownerOf(_tokenId) == msg.sender, "Owner: Caller is not the owner of the Token");
         _setTokenURI(_tokenId, _tokenURI);
 
         return _tokenURI;
