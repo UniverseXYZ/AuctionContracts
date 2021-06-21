@@ -12,7 +12,7 @@ module.exports = async function () {
     const UniverseERC721Core = await deployments.getOrNull('UniverseERC721Core');
 
     if (!Factory) {
-      const MAX_SLOT = 40;
+      const MAX_SLOT = process.env.MAX_SLOT;
       // We get the contract to deploy
       const auctionFactoryDeployment = await deployments.deploy("AuctionFactory", {
         from: namedAccounts.deployer,
