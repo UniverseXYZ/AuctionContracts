@@ -13,11 +13,10 @@ import "./HasSecondarySaleFees.sol";
 contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
     using SafeMath for uint256;
 
-    uint slotLimit = 100;
-
     uint256 public totalAuctions;
     uint256 public maxNumberOfSlotsPerAuction;
     uint256 public royaltyFeeMantissa;
+    uint256 public slotLimit;
     mapping(uint256 => Auction) public auctions;
     mapping(uint256 => uint256) public auctionsRevenue;
     mapping(address => uint256) public royaltiesReserve;
@@ -103,6 +102,8 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         uint256 time
     );
 
+    event slotLimitChanged(uint256 slotLimit);
+
     modifier onlyExistingAuction(uint256 _auctionId) {
         require(
             _auctionId > 0 && _auctionId <= totalAuctions,
@@ -180,13 +181,14 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         _;
     }
 
-    constructor(uint256 _maxNumberOfSlotsPerAuction) {
+    constructor(uint256 _maxNumberOfSlotsPerAuction, uint256 _slotLimit) {
         require(
             _maxNumberOfSlotsPerAuction > 0 &&
                 _maxNumberOfSlotsPerAuction <= 2000,
             "Number of slots cannot be more than 2000"
         );
         maxNumberOfSlotsPerAuction = _maxNumberOfSlotsPerAuction;
+        slotLimit = _slotLimit;
     }
 
     function createAuction(
@@ -275,7 +277,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
 
         require(
             auctions[_auctionId].slots[_slotIndex].totalDepositedNfts < slotLimit,
-            "Cannot have more than 100 NFTs in slot"
+            "Slot limit exceeded"
         );
 
         DepositedERC721 memory item =
@@ -346,7 +348,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         require(
             ((auctions[_auctionId].slots[_slotIndex].totalDepositedNfts +
                 _tokens.length) <= slotLimit),
-            "Cannot have more than 100 NFTs in slot"
+            "Slot limit exceeded"
         );
 
         for (uint256 i = 0; i < _tokens.length; i++) {
@@ -1093,6 +1095,17 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         );
 
         return amountToWithdraw;
+    }
+
+    function setSlotLimit(
+        uint256 _slotLimit
+    )
+        external
+        onlyOwner
+    {
+        slotLimit = _slotLimit;
+
+        emit slotLimitChanged(_slotLimit);
     }
 
     function setMinimumReserveForAuctionSlots(
