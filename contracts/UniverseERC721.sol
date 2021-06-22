@@ -11,7 +11,7 @@ import "./HasSecondarySaleFees.sol";
 contract UniverseERC721 is ERC721, Ownable, HasSecondarySaleFees {
     using Counters for Counters.Counter;
 
-    uint slotLimit = 100;
+    uint256 public slotLimit;
 
     Counters.Counter private _tokenIds;
 
@@ -21,9 +21,13 @@ contract UniverseERC721 is ERC721, Ownable, HasSecondarySaleFees {
         uint256 time
     );
 
-    constructor(string memory _tokenName, string memory _tokenSymbol)
+    event slotLimitChanged(uint256 slotLimit);
+
+    constructor(string memory _tokenName, string memory _tokenSymbol, uint256 _slotLimit)
         ERC721(_tokenName, _tokenSymbol)
-    {}
+    {
+        slotLimit = _slotLimit;
+    }
 
     function mint(
         address receiver,
@@ -57,7 +61,7 @@ contract UniverseERC721 is ERC721, Ownable, HasSecondarySaleFees {
     ) external onlyOwner returns (uint256[] memory) {
         require(
             tokenURIs.length <= slotLimit,
-            "Cannot mint more than 100 ERC721 tokens in a single call"
+            "Cannot mint more ERC721 tokens than the slots llimit in a single call"
         );
 
         uint256[] memory mintedTokenIds = new uint256[](tokenURIs.length);
@@ -106,5 +110,16 @@ contract UniverseERC721 is ERC721, Ownable, HasSecondarySaleFees {
         if (_fees.length > 0) {
             emit SecondarySaleFees(_tokenId, recipients, bps);
         }
+    }
+
+    function setSlotLimit(
+        uint256 _slotLimit
+    )
+        external
+        onlyOwner
+    {
+        slotLimit = _slotLimit;
+
+        emit slotLimitChanged(_slotLimit);
     }
 }
