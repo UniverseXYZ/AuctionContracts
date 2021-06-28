@@ -16,6 +16,7 @@ contract UniverseERC721 is ERC721, Ownable, HasSecondarySaleFees {
     event UniverseERC721TokenMinted(
         uint256 tokenId,
         string tokenURI,
+        address receiver,
         uint256 time
     );
 
@@ -35,7 +36,7 @@ contract UniverseERC721 is ERC721, Ownable, HasSecondarySaleFees {
         _setTokenURI(newItemId, tokenURI);
         _registerFees(newItemId, fees);
 
-        emit UniverseERC721TokenMinted(newItemId, tokenURI, block.timestamp);
+        emit UniverseERC721TokenMinted(newItemId, tokenURI, receiver, block.timestamp);
     }
 
     function updateTokenURI(uint256 _tokenId, string memory _tokenURI)

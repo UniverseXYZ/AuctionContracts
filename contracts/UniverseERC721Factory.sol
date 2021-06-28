@@ -14,6 +14,7 @@ contract UniverseERC721Factory is Ownable {
         string tokenName,
         string tokenSymbol,
         address contractAddress,
+        address owner,
         uint256 time
     );
 
@@ -39,6 +40,7 @@ contract UniverseERC721Factory is Ownable {
             tokenName,
             tokenSymbol,
             deployedContractAddress,
+            msg.sender,
             block.timestamp
         );
 

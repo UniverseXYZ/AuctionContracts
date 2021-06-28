@@ -26,7 +26,7 @@ contract UniverseERC721Core is UniverseERC721 {
         _setTokenURI(newItemId, tokenURI);
         _registerFees(newItemId, fees);
 
-        emit UniverseERC721TokenMinted(newItemId, tokenURI, block.timestamp);
+        emit UniverseERC721TokenMinted(newItemId, tokenURI, receiver, block.timestamp);
     }
 
     function updateTokenURI(uint256 _tokenId, string memory _tokenURI)
