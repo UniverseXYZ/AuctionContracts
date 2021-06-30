@@ -326,6 +326,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
     {
         address _depositor = msg.sender;
         uint256[] memory _nftSlotIndexes = new uint256[](_tokens.length);
+        uint256 _totalDepositedNfts = auctions[_auctionId].slots[_slotIndex].totalDepositedNfts;
 
         require(
             !auctions[_auctionId].supportsWhitelist ||
@@ -339,12 +340,16 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         );
 
         require(
-            ((auctions[_auctionId].slots[_slotIndex].totalDepositedNfts +
-                _tokens.length) <= 40),
-            "Cannot have more than 40 NFTs in slot"
+            (_tokens.length <= 40),
+            "Cannot deposit more than 40 nfts at once"
         );
 
-        for (uint256 i = 0; i < _tokens.length; i++) {
+        require(
+            (_totalDepositedNfts + _tokens.length <= 100),
+            "Cannot have more than 100 NFTs in a slot"
+        );
+
+        for (uint256 i = _totalDepositedNfts; i < _tokens.length; i++) {
             _nftSlotIndexes[i] = depositERC721(
                 _auctionId,
                 _slotIndex,
