@@ -58,7 +58,6 @@ describe('Deposit multiple ERC721 Tests', () => {
 
     // iterate chunks and deposit each one
     for (let chunk = 0; chunk < chunksOfNfts.length; chunk++) {
-      console.log('chunk = ' + chunksOfNfts[chunk]);
       await auctionFactory.depositMultipleERC721(1, 1, chunksOfNfts[chunk]);
     }
 
