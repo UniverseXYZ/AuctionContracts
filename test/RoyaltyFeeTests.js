@@ -81,7 +81,7 @@ describe('Test royalty fee functionality', () => {
     await ethers.provider.send('evm_setNextBlockTimestamp', [endTime + 1000]); 
     await ethers.provider.send('evm_mine');
 
-    await auctionFactory.finalizeAuction(1, [signer.address]);
+    await auctionFactory.finalizeAuction(1);
 
     expect(await auctionFactory.royaltiesReserve(ethAddress)).to.equal('50000000000000000');
 
@@ -137,7 +137,7 @@ describe('Test royalty fee functionality', () => {
     await ethers.provider.send('evm_setNextBlockTimestamp', [endTime + 1500]); 
     await ethers.provider.send('evm_mine');
 
-    await auctionFactory.finalizeAuction(1, [signer.address]);
+    await auctionFactory.finalizeAuction(1);
 
     expect(await auctionFactory.royaltiesReserve(tokenAddress)).to.equal('50000000000000000');
 

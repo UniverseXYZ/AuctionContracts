@@ -5,7 +5,6 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "./IAuctionFactory.sol";
 import "./HasSecondarySaleFees.sol";
 
 contract UniverseERC721 is ERC721, Ownable, HasSecondarySaleFees {

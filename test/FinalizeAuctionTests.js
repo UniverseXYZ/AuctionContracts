@@ -67,7 +67,7 @@ describe('Finalize auction ERC721 Tests', () => {
     await ethers.provider.send('evm_setNextBlockTimestamp', [endTime + 500]); 
     await ethers.provider.send('evm_mine');
 
-    await auctionFactory.finalizeAuction(1, [signer.address]);
+    await auctionFactory.finalizeAuction(1);
 
     const auction = await auctionFactory.auctions(1);
 
@@ -254,7 +254,7 @@ describe('Finalize auction ERC721 Tests', () => {
     await ethers.provider.send('evm_setNextBlockTimestamp', [endTime + 500]); 
     await ethers.provider.send('evm_mine');
 
-    await auctionFactory.finalizeAuction(1, [signer.address]);
+    await auctionFactory.finalizeAuction(1);
 
     await auctionFactory.withdrawAuctionRevenue(1);
   });
@@ -305,7 +305,7 @@ describe('Finalize auction ERC721 Tests', () => {
     await ethers.provider.send('evm_setNextBlockTimestamp', [endTime + 500]); 
     await ethers.provider.send('evm_mine');
 
-    await auctionFactory.finalizeAuction(1, [signer.address]);
+    await auctionFactory.finalizeAuction(1);
 
     await expect(auctionFactory.connect(signer2).claimERC721Rewards(1, 1)).to.be.reverted;
   });
@@ -360,7 +360,7 @@ describe('Finalize auction ERC721 Tests', () => {
     await ethers.provider.send('evm_setNextBlockTimestamp', [endTime + 500]); 
     await ethers.provider.send('evm_mine');
 
-    await auctionFactory.finalizeAuction(1, [signer4.address, signer2.address, signer3.address, signer.address]);
+    await auctionFactory.finalizeAuction(1);
   });
 
   it('should have 0 id for nft', async () => {
@@ -405,7 +405,7 @@ describe('Finalize auction ERC721 Tests', () => {
     await ethers.provider.send('evm_setNextBlockTimestamp', [endTime + 200]); 
     await ethers.provider.send('evm_mine');
 
-    await auctionFactory.finalizeAuction(1, [signer.address]);
+    await auctionFactory.finalizeAuction(1);
 
     await auctionFactory.connect(signer).claimERC721Rewards(1, 1);
   });
@@ -457,7 +457,7 @@ describe('Finalize auction ERC721 Tests', () => {
     await ethers.provider.send('evm_setNextBlockTimestamp', [endTime + 500]); 
     await ethers.provider.send('evm_mine');
 
-    await expect(auctionFactory.finalizeAuction(1, [signer.address, signer2.address])).to.be.reverted;
+    await expect(auctionFactory.finalizeAuction(1)).to.be.not.reverted;
   });
 });
 

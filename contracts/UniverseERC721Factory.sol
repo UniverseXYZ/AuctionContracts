@@ -4,7 +4,6 @@ pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./UniverseERC721.sol";
-import "./IAuctionFactory.sol";
 
 contract UniverseERC721Factory is Ownable {
     address[] public deployedContracts;

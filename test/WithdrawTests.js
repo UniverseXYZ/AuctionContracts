@@ -75,7 +75,7 @@ describe('Withdraw functionalities', () => {
     await ethers.provider.send('evm_setNextBlockTimestamp', [endTime + 1200]); 
     await ethers.provider.send('evm_mine');
 
-    await auctionFactory.finalizeAuction(1, [signer.address, signer2.address, signer3.address]);
+    await auctionFactory.finalizeAuction(1);
 
     await expect(auctionFactory.withdrawERC721FromNonWinningSlot(1, 1, 1)).emit(auctionFactory, 'LogERC721Withdrawal');
   });
@@ -135,7 +135,7 @@ describe('Withdraw functionalities', () => {
     await ethers.provider.send('evm_setNextBlockTimestamp', [startTime + 1200]); 
     await ethers.provider.send('evm_mine');
 
-    await auctionFactory.finalizeAuction(1, [signer.address, signer2.address, signer3.address]);
+    await auctionFactory.finalizeAuction(1);
 
     await expect(auctionFactory.connect(signer2).withdrawERC721FromNonWinningSlot(1, 1, 1)).revertedWith(
       'Only depositor can withdraw'
@@ -251,7 +251,7 @@ describe('Withdraw functionalities', () => {
     await ethers.provider.send('evm_setNextBlockTimestamp', [endTime + 1200]); 
     await ethers.provider.send('evm_mine');
 
-    await auctionFactory.finalizeAuction(1, [signer.address, signer2.address, signer3.address]);
+    await auctionFactory.finalizeAuction(1);
 
     await expect(auctionFactory.withdrawERC721FromNonWinningSlot(1, 1, 1)).revertedWith(
       'Can withdraw only if reserve price is not met'
@@ -317,7 +317,7 @@ describe('Withdraw functionalities', () => {
     await ethers.provider.send('evm_setNextBlockTimestamp', [endTime + 1200]); 
     await ethers.provider.send('evm_mine');
 
-    await auctionFactory.finalizeAuction(1, [signer4.address, signer3.address, signer2.address]);
+    await auctionFactory.finalizeAuction(1);
 
     await expect(auctionFactory.connect(signer5).withdrawEthBid(1)).revertedWith('You have 0 deposited');
   });
@@ -328,8 +328,8 @@ describe('Withdraw functionalities', () => {
   
     const startTime = currentTime + 10000;
     const endTime = startTime + 500;
-    const resetTimer = 2;
-    const numberOfSlots = 3;
+    const resetTimer = 5;
+    const numberOfSlots = 4;
     const supportsWhitelist = false;
     const ethAddress = '0x0000000000000000000000000000000000000000';
   
@@ -356,7 +356,8 @@ describe('Withdraw functionalities', () => {
     await auctionFactory.setMinimumReserveForAuctionSlots(1, [
       '10000000000000000000',
       '10000000000000000000',
-      '10000000000000000000'
+      '10000000000000000000',
+      '10000000000000000000',
     ]);
 
     await ethers.provider.send('evm_setNextBlockTimestamp', [startTime + 400]); 
@@ -367,18 +368,18 @@ describe('Withdraw functionalities', () => {
     });
 
     await auctionFactory.connect(signer2).functions['ethBid(uint256)'](1, {
-      value: '100000000000000000001'
+      value: '200000000000000000000'
     });
 
     await auctionFactory.connect(signer3).functions['ethBid(uint256)'](1, {
-      value: '100000000000000000002'
+      value: '300000000000000000000'
     });
 
     await auctionFactory.connect(signer4).functions['ethBid(uint256)'](1, {
-      value: '100000000000000000003'
+      value: '500000000000000000000'
     });
 
-    await expect(auctionFactory.withdrawEthBid(1)).revertedWith('Auction should be finalized');
+    await expect(auctionFactory.withdrawEthBid(1)).revertedWith('Cannot withdraw winning bid!');
   });
 
   it('should withdraw erc20', async () => {
@@ -388,7 +389,7 @@ describe('Withdraw functionalities', () => {
     const startTime = currentTime + 10000;
     const endTime = startTime + 500;
     const resetTimer = 1;
-    const numberOfSlots = 3;
+    const numberOfSlots = 2;
     const supportsWhitelist = false;
   
     await auctionFactory.createAuction(
@@ -424,7 +425,7 @@ describe('Withdraw functionalities', () => {
 
     await auctionFactory.depositERC721(auctionId, slotIdx, tokenId, mockNFT.address);
 
-    await auctionFactory.setMinimumReserveForAuctionSlots(1, ['200', '200', '200']);
+    await auctionFactory.setMinimumReserveForAuctionSlots(1, ['200', '200']);
 
     await ethers.provider.send('evm_setNextBlockTimestamp', [startTime + 400]); 
     await ethers.provider.send('evm_mine')
@@ -438,7 +439,7 @@ describe('Withdraw functionalities', () => {
     await ethers.provider.send('evm_setNextBlockTimestamp', [endTime + 1200]); 
     await ethers.provider.send('evm_mine')
 
-    await auctionFactory.finalizeAuction(1, [signer3.address, signer2.address, signer.address]);
+    await auctionFactory.finalizeAuction(1);
 
     await expect(auctionFactory.withdrawERC20Bid(1)).emit(auctionFactory, 'LogBidWithdrawal');
 
@@ -504,7 +505,7 @@ describe('Withdraw functionalities', () => {
     await ethers.provider.send('evm_setNextBlockTimestamp', [endTime + 1200]); 
     await ethers.provider.send('evm_mine')
 
-    await auctionFactory.finalizeAuction(1, [signer3.address, signer2.address, signer.address]);
+    await auctionFactory.finalizeAuction(1);
 
     await expect(auctionFactory.connect(signer4).withdrawERC20Bid(1)).revertedWith('You have 0 deposited');
   });
@@ -563,7 +564,7 @@ describe('Withdraw functionalities', () => {
 
     await auctionFactory.connect(signer3).functions['erc20Bid(uint256,uint256)'](1, 120);
 
-    await expect(auctionFactory.withdrawERC20Bid(1)).revertedWith('Auction should be finalized');
+    await expect(auctionFactory.withdrawERC20Bid(1)).revertedWith('Cannot withdraw winning bid!');
   });
 });
 
