@@ -10,6 +10,8 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "./IAuctionFactory.sol";
 import "./HasSecondarySaleFees.sol";
 
+import "hardhat/console.sol";
+
 contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
     using SafeMath for uint256;
 
@@ -268,8 +270,8 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         );
 
         require(
-            auctions[_auctionId].slots[_slotIndex].totalDepositedNfts < 40,
-            "Cannot have more than 40 NFTs in slot"
+            auctions[_auctionId].slots[_slotIndex].totalDepositedNfts < 100,
+            "Cannot have more than 100 NFTs in slot"
         );
 
         DepositedERC721 memory item =
@@ -326,7 +328,6 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
     {
         address _depositor = msg.sender;
         uint256[] memory _nftSlotIndexes = new uint256[](_tokens.length);
-        uint256 _totalDepositedNfts = auctions[_auctionId].slots[_slotIndex].totalDepositedNfts;
 
         require(
             !auctions[_auctionId].supportsWhitelist ||
@@ -340,16 +341,17 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         );
 
         require(
-            (_tokens.length <= 40),
-            "Cannot deposit more than 40 nfts at once"
+            (_tokens.length <= 20),
+            "Cannot deposit more than 20 nfts at once"
         );
 
         require(
-            (_totalDepositedNfts + _tokens.length <= 100),
+            (auctions[_auctionId].slots[_slotIndex].totalDepositedNfts + _tokens.length <= 100),
             "Cannot have more than 100 NFTs in a slot"
         );
 
-        for (uint256 i = _totalDepositedNfts; i < _tokens.length; i++) {
+        for (uint256 i = 0; i < _tokens.length; i++) {
+            console.log(auctions[_auctionId].slots[_slotIndex].totalDepositedNfts);
             _nftSlotIndexes[i] = depositERC721(
                 _auctionId,
                 _slotIndex,
