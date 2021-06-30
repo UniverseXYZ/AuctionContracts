@@ -45,6 +45,7 @@ describe('Deposit multiple ERC721 Tests', () => {
 
     const multipleMockNFTs = new Array(NFT_TOKEN_COUNT);
 
+    // mint required nfts
     for (let i = 1; i <= NFT_TOKEN_COUNT; i++) {
       await mockNFT.mint(signer.address, i);
       await mockNFT.approve(auctionFactory.address, i);
@@ -52,8 +53,10 @@ describe('Deposit multiple ERC721 Tests', () => {
       multipleMockNFTs[i - 1] = [i, mockNFT.address];
     }
 
+    // get matrix of nft chunks [ [nft, nft], [nft, nft] ]
     const chunksOfNfts = chunkifyArray(multipleMockNFTs, NFT_CHUNK_SIZE)
 
+    // iterate chunks and deposit each one
     for (let chunk = 0; chunk < chunksOfNfts.length; chunk++) {
       console.log('chunk = ' + chunksOfNfts[chunk]);
       await auctionFactory.depositMultipleERC721(1, 1, chunksOfNfts[chunk]);

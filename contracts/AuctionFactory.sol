@@ -10,8 +10,6 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "./IAuctionFactory.sol";
 import "./HasSecondarySaleFees.sol";
 
-import "hardhat/console.sol";
-
 contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
     using SafeMath for uint256;
 
@@ -351,7 +349,6 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         );
 
         for (uint256 i = 0; i < _tokens.length; i++) {
-            console.log(auctions[_auctionId].slots[_slotIndex].totalDepositedNfts);
             _nftSlotIndexes[i] = depositERC721(
                 _auctionId,
                 _slotIndex,
