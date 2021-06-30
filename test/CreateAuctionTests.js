@@ -5,19 +5,32 @@ const { loadFixture } = waffle;
 describe('Create Auction Tests', () => {
   async function deployContract() {
     const AuctionFactory = await ethers.getContractFactory('AuctionFactory');
-    const auctionFactory = await AuctionFactory.deploy(2000);
+    const auctionFactory = await AuctionFactory.deploy(2000, 100);
 
     return { auctionFactory };
   }
 
   it('should revert if numberOfSlots higher than 2000', async () => {
     const AuctionFactory = await ethers.getContractFactory('AuctionFactory');
-    await expect(AuctionFactory.deploy(2001)).to.be.reverted;
+    await expect(AuctionFactory.deploy(2001, 100)).to.be.reverted;
+  });
+
+  it('should deploy contract with the correct number of nfts per slot limit', async () => {
+    const { auctionFactory } = await loadFixture(deployContract);
+
+    expect(await auctionFactory.nftsPerSlotLimit()).to.equal(100);
+  });
+
+  it('set the nfts per slot limit', async () => {
+    const { auctionFactory } = await loadFixture(deployContract);
+
+    await auctionFactory.setNFtsPerSlotLimit(50);
+    expect(await auctionFactory.nftsPerSlotLimit()).to.equal(50);
   });
 
   it('should revert if numberOfSlots is 0', async () => {
     const AuctionFactory = await ethers.getContractFactory('AuctionFactory');
-    await expect(AuctionFactory.deploy(2001)).to.be.reverted;
+    await expect(AuctionFactory.deploy(2001, 100)).to.be.reverted;
   });
 
   it('should Deploy the AuctionFactory and MockNFT', async function () {

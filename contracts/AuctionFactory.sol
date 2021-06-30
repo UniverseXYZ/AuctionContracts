@@ -16,6 +16,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
     uint256 public totalAuctions;
     uint256 public maxNumberOfSlotsPerAuction;
     uint256 public royaltyFeeMantissa;
+    uint256 public nftsPerSlotLimit;
     mapping(uint256 => Auction) public auctions;
     mapping(uint256 => uint256) public auctionsRevenue;
     mapping(address => uint256) public royaltiesReserve;
@@ -102,6 +103,8 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         uint256 time
     );
 
+    event nftsPerSlotLimitChanged(uint256 nftsPerSlotLimit);
+
     modifier onlyExistingAuction(uint256 _auctionId) {
         require(
             _auctionId > 0 && _auctionId <= totalAuctions,
@@ -173,13 +176,14 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         _;
     }
 
-    constructor(uint256 _maxNumberOfSlotsPerAuction) {
+    constructor(uint256 _maxNumberOfSlotsPerAuction, uint256 _nftsPerSlotLimit) {
         require(
             _maxNumberOfSlotsPerAuction > 0 &&
                 _maxNumberOfSlotsPerAuction <= 2000,
             "Number of slots cannot be more than 2000"
         );
         maxNumberOfSlotsPerAuction = _maxNumberOfSlotsPerAuction;
+        nftsPerSlotLimit = _nftsPerSlotLimit;
     }
 
     function createAuction(
@@ -268,8 +272,8 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         );
 
         require(
-            auctions[_auctionId].slots[_slotIndex].totalDepositedNfts < 100,
-            "Cannot have more than 100 NFTs in slot"
+            auctions[_auctionId].slots[_slotIndex].totalDepositedNfts <= nftsPerSlotLimit,
+            "Nfts per slot limit exceeded"
         );
 
         DepositedERC721 memory item =
@@ -344,8 +348,8 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         );
 
         require(
-            (auctions[_auctionId].slots[_slotIndex].totalDepositedNfts + _tokens.length <= 100),
-            "Cannot have more than 100 NFTs in a slot"
+            (auctions[_auctionId].slots[_slotIndex].totalDepositedNfts + _tokens.length <= nftsPerSlotLimit),
+            "Nfts per slot limit exceeded"
         );
 
         for (uint256 i = 0; i < _tokens.length; i++) {
@@ -1165,6 +1169,17 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         }
 
         return true;
+    }
+
+    function setNFtsPerSlotLimit(
+        uint256 _nftsPerSlotLimit
+    )
+        external
+        onlyOwner
+    {
+        nftsPerSlotLimit = _nftsPerSlotLimit;
+
+        emit nftsPerSlotLimitChanged(_nftsPerSlotLimit);
     }
 
     function getMinimumReservePriceForSlot(uint256 auctionId, uint256 slotIndex)

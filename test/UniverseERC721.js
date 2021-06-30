@@ -2,10 +2,11 @@ const { expect } = require('chai');
 const { waffle } = require('hardhat');
 const { loadFixture } = waffle;
 
+
 describe('UniverseERC721', () => {
   const deployContracts = async () => {
     const AuctionFactory = await ethers.getContractFactory('AuctionFactory');
-    const auctionFactory = await AuctionFactory.deploy(2000);
+    const auctionFactory = await AuctionFactory.deploy(2000, 100);
 
     const UniverseERC721 = await ethers.getContractFactory('UniverseERC721');
     const universeERC721 = await UniverseERC721.deploy("Non Fungible Universe", "NFU");

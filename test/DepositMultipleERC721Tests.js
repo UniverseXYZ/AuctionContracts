@@ -27,14 +27,14 @@ describe('Deposit multiple ERC721 Tests', () => {
     const AuctionFactory = await ethers.getContractFactory('AuctionFactory');
     const MockNFT = await ethers.getContractFactory('MockNFT');
 
-    const auctionFactory = await AuctionFactory.deploy(2000);
+    const auctionFactory = await AuctionFactory.deploy(2000, 100);
     const mockNFT = await MockNFT.deploy();
 
     return { auctionFactory, mockNFT };
   };
 
   it('should deposit multiple nft', async () => {
-    const NFT_TOKEN_COUNT = 85;
+    const NFT_TOKEN_COUNT = 100;
     const NFT_CHUNK_SIZE = 20;
 
     const { auctionFactory, mockNFT } = await loadFixture(deployedContracts);

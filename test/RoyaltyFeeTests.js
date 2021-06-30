@@ -8,7 +8,7 @@ describe('Test royalty fee functionality', () => {
     const MockNFT = await ethers.getContractFactory('MockNFT');
     const MockToken = await ethers.getContractFactory('MockToken');
 
-    const auctionFactory = await AuctionFactory.deploy(5);
+    const auctionFactory = await AuctionFactory.deploy(5, 100);
     const mockNFT = await MockNFT.deploy();
     const mockToken = await MockToken.deploy('1000000000000000000');
 

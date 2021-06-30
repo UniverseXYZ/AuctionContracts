@@ -9,7 +9,7 @@ describe('Test cancel functionality', () => {
       ethers.getContractFactory('MockNFT')
     ]);
 
-    const [auctionFactory, mockNft] = await Promise.all([AuctionFactory.deploy(2000), MockNFT.deploy()]);
+    const [auctionFactory, mockNft] = await Promise.all([AuctionFactory.deploy(2000, 100), MockNFT.deploy()]);
 
     return {
       auctionFactory,
