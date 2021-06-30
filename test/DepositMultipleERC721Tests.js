@@ -14,20 +14,35 @@ describe('Deposit multiple ERC721 Tests', () => {
   };
 
   it('should deposit multiple nft', async () => {
+    const NFT_TOKEN_COUNT = 85;
+    const overrideOptions = {
+      gasLimit: 59500000,
+      gasPrice: 1000000000,
+    };
+
     const { auctionFactory, mockNFT } = await loadFixture(deployedContracts);
 
     await createAuction(auctionFactory);
 
     const [signer] = await ethers.getSigners();
 
-    await mockNFT.mint(signer.address, 1);
-    await mockNFT.approve(auctionFactory.address, 1);
+    const multipleMockNFTs = new Array(NFT_TOKEN_COUNT);
 
-    await auctionFactory.depositMultipleERC721(1, 1, [[1, mockNFT.address]]);
+    for (let i = 1; i <= NFT_TOKEN_COUNT; i++) {
+      await mockNFT.mint(signer.address, i);
+      await mockNFT.approve(auctionFactory.address, i);
+
+      multipleMockNFTs[i - 1] = [i, mockNFT.address];
+    }
+
+    await mockNFT.mint(signer.address, 2);
+    await mockNFT.approve(auctionFactory.address, 2);
+
+    await auctionFactory.depositMultipleERC721(1, 1, multipleMockNFTs, overrideOptions);
 
     const res = await auctionFactory.getDepositedNftsInSlot(1, 1);
 
-    expect(res.length).to.equal(1);
+    expect(res.length).to.equal(NFT_TOKEN_COUNT);
   });
 
   it('should not be reverted if auction has not started', async () => {

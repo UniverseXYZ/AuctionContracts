@@ -275,8 +275,8 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         );
 
         require(
-            auctions[_auctionId].slots[_slotIndex].totalDepositedNfts < 40,
-            "Cannot have more than 40 NFTs in slot"
+            auctions[_auctionId].slots[_slotIndex].totalDepositedNfts < 100,
+            "Cannot have more than 100 NFTs in slot"
         );
 
         DepositedERC721 memory item =
@@ -346,15 +346,13 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
 
         require(
             ((auctions[_auctionId].slots[_slotIndex].totalDepositedNfts +
-                _tokens.length) <= 40),
-            "Cannot have more than 40 NFTs in slot"
+                _tokens.length) <= 100),
+            "Cannot have more than 100 NFTs in slot"
         );
 
         // round the token index to be devisible by 20
         uint256 chunkIndex = 0;
-        uint256 chunkLength = _tokens.length > 20
-            ? 20 % _tokens.length
-            : _tokens.length;
+        uint256 chunkLength = _tokens.length % 20;
 
         // initialy depoly either the module of _tokens.length, or all the tokens if less than 20
         do {
@@ -364,7 +362,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
                 _nftSlotIndexes,
                 _tokens[chunkIndex:chunkLength]
             );
-            chunkIndex = chunkLength + 1;
+            chunkIndex = chunkLength;
             chunkLength += 20;
         } while(chunkLength <= _tokens.length);
 
@@ -747,13 +745,11 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         require(auction.isFinalized, "Auction should be finalized");
 
         uint256 chunkIndex = 1;
-        uint256 chunkLength = nonWinningSlot.totalDepositedNfts > 20
-            ? 20 % nonWinningSlot.totalDepositedNfts
-            : nonWinningSlot.totalDepositedNfts;
+        uint256 chunkLength = nonWinningSlot.totalDepositedNfts % 20;
 
         do {
             withdrawERC721ChunkFromNonWinningSlot(auctionId, slotIndex, chunkIndex, chunkLength);
-            chunkIndex = chunkLength + 1;
+            chunkIndex = chunkLength;
             chunkLength += 20;
         } while(chunkLength <= nonWinningSlot.totalDepositedNfts);
 
@@ -987,13 +983,11 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         );
 
         uint256 chunkIndex = 1;
-        uint256 chunkLength = winningSlot.totalDepositedNfts > 20
-            ? 20 % winningSlot.totalDepositedNfts
-            : winningSlot.totalDepositedNfts;
+        uint256 chunkLength = winningSlot.totalDepositedNfts % 20;
 
         do {
             claimERC721ChunkRewards(chunkIndex, chunkLength, winningSlot, claimer);
-            chunkIndex = chunkLength + 1;
+            chunkIndex = chunkLength;
             chunkLength += 20;
         } while(chunkLength <= winningSlot.totalDepositedNfts);
 
