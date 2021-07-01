@@ -18,6 +18,7 @@ interface IAuctionFactory {
         address bidToken;
         bool isFinalized;
         uint256 totalDepositedERC721s;
+        uint256 totalWithdrawnERC721s;
         mapping(uint256 => Slot) slots;
         mapping(address => bool) whitelistAddresses;
         mapping(address => uint256) bidBalance;
@@ -27,6 +28,7 @@ interface IAuctionFactory {
 
     struct Slot {
         uint256 totalDepositedNfts;
+        uint256 totalWithdrawnNfts;
         uint256 reservePrice;
         uint256 winningBidAmount;
         bool reservePriceReached;
@@ -133,9 +135,11 @@ interface IAuctionFactory {
     /// @notice Withdraws the deposited ERC721s if the reserve price is not reached
     /// @param auctionId The auction id
     /// @param slotIndex The slot index
+    /// @param amount The amount which should be withdrawn
     function withdrawMultipleERC721FromNonWinningSlot(
         uint256 auctionId,
-        uint256 slotIndex
+        uint256 slotIndex,
+        uint256 amount
     ) external returns (bool);
 
     /// @notice Withdraws the deposited ERC721 if the reserve price is not reached
@@ -207,7 +211,8 @@ interface IAuctionFactory {
     /// @notice Claims and distributes the NFTs from a winning slot
     /// @param auctionId The auction id
     /// @param slotIndex The slot index
-    function claimERC721Rewards(uint256 auctionId, uint256 slotIndex)
+    /// @param amount The amount which should be withdrawn
+    function claimERC721Rewards(uint256 auctionId, uint256 slotIndex, uint256 amount)
         external
         returns (bool);
 

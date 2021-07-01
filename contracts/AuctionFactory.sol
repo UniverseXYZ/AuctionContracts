@@ -16,7 +16,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
     uint256 public totalAuctions;
     uint256 public maxNumberOfSlotsPerAuction;
     uint256 public royaltyFeeMantissa;
-    uint256 public nftsPerSlotLimit;
+    uint256 public nftSlotLimit;
     mapping(uint256 => Auction) public auctions;
     mapping(uint256 => uint256) public auctionsRevenue;
     mapping(address => uint256) public royaltiesReserve;
@@ -103,7 +103,6 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         uint256 time
     );
 
-    event nftsPerSlotLimitChanged(uint256 nftsPerSlotLimit);
 
     modifier onlyExistingAuction(uint256 _auctionId) {
         require(
@@ -176,14 +175,14 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         _;
     }
 
-    constructor(uint256 _maxNumberOfSlotsPerAuction, uint256 _nftsPerSlotLimit) {
+    constructor(uint256 _maxNumberOfSlotsPerAuction, uint256 _nftSlotLimit) {
         require(
             _maxNumberOfSlotsPerAuction > 0 &&
                 _maxNumberOfSlotsPerAuction <= 2000,
             "Number of slots cannot be more than 2000"
         );
         maxNumberOfSlotsPerAuction = _maxNumberOfSlotsPerAuction;
-        nftsPerSlotLimit = _nftsPerSlotLimit;
+        nftSlotLimit = _nftSlotLimit;
     }
 
     function createAuction(
@@ -272,7 +271,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         );
 
         require(
-            auctions[_auctionId].slots[_slotIndex].totalDepositedNfts <= nftsPerSlotLimit,
+            auctions[_auctionId].slots[_slotIndex].totalDepositedNfts < nftSlotLimit,
             "Nfts per slot limit exceeded"
         );
 
@@ -293,15 +292,15 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         auctions[_auctionId].slots[_slotIndex]
             .totalDepositedNfts = _nftSlotIndex;
 
+        auctions[_auctionId].totalDepositedERC721s = auctions[_auctionId]
+            .totalDepositedERC721s
+            .add(1);
+
         IERC721(_tokenAddress).safeTransferFrom(
             _depositor,
             address(this),
             _tokenId
         );
-
-        auctions[_auctionId].totalDepositedERC721s = auctions[_auctionId]
-            .totalDepositedERC721s
-            .add(1);
 
         emit LogERC721Deposit(
             _depositor,
@@ -343,13 +342,13 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         );
 
         require(
-            (_tokens.length <= 20),
-            "Cannot deposit more than 20 nfts at once"
+            (_tokens.length <= 40),
+            "Cannot deposit more than 40 nfts at once"
         );
 
         require(
-            (auctions[_auctionId].slots[_slotIndex].totalDepositedNfts + _tokens.length <= nftsPerSlotLimit),
-            "Nfts per slot limit exceeded"
+            (auctions[_auctionId].slots[_slotIndex].totalDepositedNfts + _tokens.length <= nftSlotLimit),
+            "Nfts slot limit exceeded"
         );
 
         for (uint256 i = 0; i < _tokens.length; i++) {
@@ -714,15 +713,19 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         onlyAuctionCanceled(auctionId)
         returns (bool)
     {
+        Auction storage auction = auctions[auctionId];
         DepositedERC721 memory nftForWithdrawal =
-            auctions[auctionId].slots[slotIndex].depositedNfts[nftSlotIndex];
+            auction.slots[slotIndex].depositedNfts[nftSlotIndex];
 
         require(
             msg.sender == nftForWithdrawal.depositor,
             "Only depositor can withdraw"
         );
 
-        delete auctions[auctionId].slots[slotIndex].depositedNfts[nftSlotIndex];
+        delete auction.slots[slotIndex].depositedNfts[nftSlotIndex];
+
+        auction.totalWithdrawnERC721s = auction.totalWithdrawnERC721s.add(1);
+        auction.slots[slotIndex].totalWithdrawnNfts = auction.slots[slotIndex].totalWithdrawnNfts.add(1);
 
         IERC721(nftForWithdrawal.tokenAddress).safeTransferFrom(
             address(this),
@@ -745,7 +748,8 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
 
     function withdrawMultipleERC721FromNonWinningSlot(
         uint256 auctionId,
-        uint256 slotIndex
+        uint256 slotIndex,
+        uint256 amount
     )
         external
         override
@@ -757,14 +761,19 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         Auction storage auction = auctions[auctionId];
         Slot storage nonWinningSlot = auction.slots[slotIndex];
 
+        uint256 totalDeposited = nonWinningSlot.totalDepositedNfts;
+        uint256 totalWithdrawn = nonWinningSlot.totalWithdrawnNfts;
+
         require(
             !auction.slots[slotIndex].reservePriceReached,
             "Can withdraw only if reserve price is not met"
         );
 
         require(auction.isFinalized, "Auction should be finalized");
+        require(amount <= 40, "Cannot withdraw more than 40 NFTs in one transaction");
+        require(amount <= totalDeposited.sub(totalWithdrawn), "Cannot withdraw more than the existing available");
 
-        for (uint256 i = 0; i < nonWinningSlot.totalDepositedNfts; i++) {
+        for (uint256 i = totalWithdrawn; i < amount.add(totalWithdrawn); i++) {
             withdrawERC721FromNonWinningSlot(auctionId, slotIndex, (i + 1));
         }
 
@@ -783,8 +792,9 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         onlyAuctionNotCanceled(auctionId)
         returns (bool)
     {
+        Auction storage auction = auctions[auctionId];
         DepositedERC721 memory nftForWithdrawal =
-            auctions[auctionId].slots[slotIndex].depositedNfts[nftSlotIndex];
+            auction.slots[slotIndex].depositedNfts[nftSlotIndex];
 
         require(
             msg.sender == nftForWithdrawal.depositor,
@@ -792,11 +802,14 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         );
 
         require(
-            !auctions[auctionId].slots[slotIndex].reservePriceReached,
+            !auction.slots[slotIndex].reservePriceReached,
             "Can withdraw only if reserve price is not met"
         );
 
-        require(auctions[auctionId].isFinalized, "Auction should be finalized");
+        require(auction.isFinalized, "Auction should be finalized");
+
+        auction.totalWithdrawnERC721s = auction.totalWithdrawnERC721s.add(1);
+        auction.slots[slotIndex].totalWithdrawnNfts = auction.slots[slotIndex].totalWithdrawnNfts.add(1);
 
         IERC721(nftForWithdrawal.tokenAddress).safeTransferFrom(
             address(this),
@@ -966,7 +979,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         return true;
     }
 
-    function claimERC721Rewards(uint256 auctionId, uint256 slotIndex)
+    function claimERC721Rewards(uint256 auctionId, uint256 slotIndex, uint256 amount)
         external
         override
         returns (bool)
@@ -975,6 +988,9 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
 
         Auction storage auction = auctions[auctionId];
         Slot storage winningSlot = auction.slots[slotIndex];
+
+        uint256 totalDeposited = winningSlot.totalDepositedNfts;
+        uint256 totalWithdrawn = winningSlot.totalWithdrawnNfts;
 
         require(auction.isFinalized, "Auction should have ended");
         require(
@@ -986,9 +1002,15 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
             "The reserve price hasn't been met"
         );
 
-        for (uint256 i = 0; i < winningSlot.totalDepositedNfts; i++) {
+        require(amount <= 40, "Cannot withdraw more than 40 NFTs in one transaction");
+        require(amount <= totalDeposited.sub(totalWithdrawn), "Cannot withdraw more than the existing available");
+
+        for (uint256 i = totalWithdrawn; i < amount.add(totalWithdrawn); i++) {
             DepositedERC721 memory nftForWithdrawal =
                 winningSlot.depositedNfts[i + 1];
+
+            auction.totalWithdrawnERC721s = auction.totalWithdrawnERC721s.add(1);
+            auction.slots[slotIndex].totalWithdrawnNfts = auction.slots[slotIndex].totalWithdrawnNfts.add(1);
 
             if (nftForWithdrawal.tokenId != 0) {
                 IERC721(nftForWithdrawal.tokenAddress).safeTransferFrom(
@@ -1171,15 +1193,13 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         return true;
     }
 
-    function setNFtsPerSlotLimit(
-        uint256 _nftsPerSlotLimit
+    function setNftSlotLimit(
+        uint256 _nftSlotLimit
     )
         external
         onlyOwner
     {
-        nftsPerSlotLimit = _nftsPerSlotLimit;
-
-        emit nftsPerSlotLimitChanged(_nftsPerSlotLimit);
+        nftSlotLimit = _nftSlotLimit;
     }
 
     function getMinimumReservePriceForSlot(uint256 auctionId, uint256 slotIndex)

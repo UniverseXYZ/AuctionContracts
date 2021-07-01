@@ -18,14 +18,14 @@ describe('Create Auction Tests', () => {
   it('should deploy contract with the correct number of nfts per slot limit', async () => {
     const { auctionFactory } = await loadFixture(deployContract);
 
-    expect(await auctionFactory.nftsPerSlotLimit()).to.equal(100);
+    expect(await auctionFactory.nftSlotLimit()).to.equal(100);
   });
 
   it('set the nfts per slot limit', async () => {
     const { auctionFactory } = await loadFixture(deployContract);
 
-    await auctionFactory.setNFtsPerSlotLimit(50);
-    expect(await auctionFactory.nftsPerSlotLimit()).to.equal(50);
+    await auctionFactory.setNftSlotLimit(50);
+    expect(await auctionFactory.nftSlotLimit()).to.equal(50);
   });
 
   it('should revert if numberOfSlots is 0', async () => {

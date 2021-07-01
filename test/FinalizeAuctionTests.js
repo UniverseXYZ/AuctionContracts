@@ -82,7 +82,7 @@ describe('Finalize auction ERC721 Tests', () => {
 
     await expect(auctionFactory.withdrawAuctionRevenue(1)).to.be.emit(auctionFactory, 'LogAuctionRevenueWithdrawal');
 
-    await expect(auctionFactory.claimERC721Rewards(1, 1)).to.be.emit(auctionFactory, 'LogERC721RewardsClaim');
+    await expect(auctionFactory.claimERC721Rewards(1, 1, 1)).to.be.emit(auctionFactory, 'LogERC721RewardsClaim');
   });
 
   it('should revert invalid number of winners', async () => {
@@ -407,7 +407,7 @@ describe('Finalize auction ERC721 Tests', () => {
 
     await auctionFactory.finalizeAuction(1);
 
-    await auctionFactory.connect(signer).claimERC721Rewards(1, 1);
+    await auctionFactory.connect(signer).claimERC721Rewards(1, 1, 1);
   });
 
   it('should revert if last address do not have lowest bid', async () => {
