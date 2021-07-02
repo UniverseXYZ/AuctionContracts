@@ -2,13 +2,33 @@ const { waffle, network } = require('hardhat');
 const { loadFixture } = waffle;
 const { expect } = require('chai');
 
+function chunkifyArray(
+  nftsArr,
+  chunkSize,
+) {
+  let chunkifiedArray = [];
+  let tokenStartIndex = 0;
+  let tokenEndIndex = nftsArr.length % chunkSize;
+
+  do {
+    if(tokenEndIndex != 0) chunkifiedArray.push(
+      nftsArr.slice(tokenStartIndex, (tokenEndIndex))
+    )
+
+    tokenStartIndex = tokenEndIndex
+    tokenEndIndex = tokenStartIndex + chunkSize
+  } while (tokenStartIndex < nftsArr.length);
+
+  return chunkifiedArray;
+}
+
 describe('Withdraw functionalities', () => {
   async function deployContract() {
     const AuctionFactory = await ethers.getContractFactory('AuctionFactory');
     const MockNFT = await ethers.getContractFactory('MockNFT');
     const MockToken = await ethers.getContractFactory('MockToken');
 
-    const auctionFactory = await AuctionFactory.deploy(2000);
+    const auctionFactory = await AuctionFactory.deploy(2000, 100);
     const mockNFT = await MockNFT.deploy();
     const mockToken = await MockToken.deploy(1000);
 
@@ -17,6 +37,9 @@ describe('Withdraw functionalities', () => {
 
   it('should withdraw ERC721 from non winning slot', async () => {
     const { auctionFactory, mockNFT } = await loadFixture(deployContract);
+
+    const NFT_TOKEN_COUNT = 100;
+    const NFT_CHUNK_SIZE = 40;
 
     const currentTime = Math.round((new Date()).getTime() / 1000);
 
@@ -37,15 +60,26 @@ describe('Withdraw functionalities', () => {
     );
 
     const [signer, signer2, signer3] = await ethers.getSigners();
-    const auctionId = 1;
-    const slotIdx = 1;
-    const tokenId = 1;
 
-    await mockNFT.mint(signer.address, 'NFT_URI');
+    const multipleMockNFTs = new Array(NFT_TOKEN_COUNT);
 
-    await mockNFT.approve(auctionFactory.address, tokenId);
+    // mint required nfts
+    for (let i = 1; i <= NFT_TOKEN_COUNT; i++) {
+      await mockNFT.mint(signer.address, i);
+      await mockNFT.approve(auctionFactory.address, i);
 
-    await auctionFactory.depositERC721(auctionId, slotIdx, tokenId, mockNFT.address);
+      multipleMockNFTs[i - 1] = [i, mockNFT.address];
+    }
+
+    // get matrix of nft chunks [ [nft, nft], [nft, nft] ]
+    const chunksOfNfts = chunkifyArray(multipleMockNFTs, NFT_CHUNK_SIZE)
+
+    // iterate chunks and deposit each one
+    for (let chunk = 0; chunk < chunksOfNfts.length; chunk++) {
+      await auctionFactory.depositMultipleERC721(1, 1, chunksOfNfts[chunk]);
+    }
+
+    // const res = await auctionFactory.getDepositedNftsInSlot(1, 1);
 
     await auctionFactory.setMinimumReserveForAuctionSlots(1, [
       '100000000000000000000',
@@ -77,7 +111,24 @@ describe('Withdraw functionalities', () => {
 
     await auctionFactory.finalizeAuction(1);
 
-    await expect(auctionFactory.withdrawERC721FromNonWinningSlot(1, 1, 1)).emit(auctionFactory, 'LogERC721Withdrawal');
+    await expect(auctionFactory.withdrawMultipleERC721FromNonWinningSlot(1, 1, 40)).emit(
+      auctionFactory,
+      "LogERC721Withdrawal"
+    );
+    await expect(auctionFactory.withdrawMultipleERC721FromNonWinningSlot(1, 1, 40)).emit(
+      auctionFactory,
+      "LogERC721Withdrawal"
+    );
+    await expect(auctionFactory.withdrawMultipleERC721FromNonWinningSlot(1, 1, 30)).revertedWith(
+      "Cannot withdraw more than the existing available"
+    );
+    await expect(auctionFactory.withdrawMultipleERC721FromNonWinningSlot(1, 1, 41)).revertedWith(
+      "Cannot withdraw more than 40 NFTs in one transaction"
+    );
+    await expect(auctionFactory.withdrawMultipleERC721FromNonWinningSlot(1, 1, 20)).emit(
+      auctionFactory,
+      "LogERC721Withdrawal"
+    );
   });
 
   it('should revert with Only depositor can withdraw', async () => {

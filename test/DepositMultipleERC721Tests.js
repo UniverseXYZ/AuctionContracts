@@ -2,32 +2,68 @@ const { expect } = require('chai');
 const { waffle, ethers } = require('hardhat');
 const { loadFixture } = waffle;
 
+function chunkifyArray(
+  nftsArr,
+  chunkSize,
+) {
+  let chunkifiedArray = [];
+  let tokenStartIndex = 0;
+  let tokenEndIndex = nftsArr.length % chunkSize;
+
+  do {
+    if(tokenEndIndex != 0) chunkifiedArray.push(
+      nftsArr.slice(tokenStartIndex, (tokenEndIndex))
+    )
+
+    tokenStartIndex = tokenEndIndex
+    tokenEndIndex = tokenStartIndex + chunkSize
+  } while (tokenStartIndex < nftsArr.length);
+
+  return chunkifiedArray;
+}
+
 describe('Deposit multiple ERC721 Tests', () => {
   const deployedContracts = async () => {
     const AuctionFactory = await ethers.getContractFactory('AuctionFactory');
     const MockNFT = await ethers.getContractFactory('MockNFT');
 
-    const auctionFactory = await AuctionFactory.deploy(2000);
+    const auctionFactory = await AuctionFactory.deploy(2000, 100);
     const mockNFT = await MockNFT.deploy();
 
     return { auctionFactory, mockNFT };
   };
 
   it('should deposit multiple nft', async () => {
+    const NFT_TOKEN_COUNT = 100;
+    const NFT_CHUNK_SIZE = 20;
+
     const { auctionFactory, mockNFT } = await loadFixture(deployedContracts);
 
     await createAuction(auctionFactory);
 
     const [signer] = await ethers.getSigners();
 
-    await mockNFT.mint(signer.address, 1);
-    await mockNFT.approve(auctionFactory.address, 1);
+    const multipleMockNFTs = new Array(NFT_TOKEN_COUNT);
 
-    await auctionFactory.depositMultipleERC721(1, 1, [[1, mockNFT.address]]);
+    // mint required nfts
+    for (let i = 1; i <= NFT_TOKEN_COUNT; i++) {
+      await mockNFT.mint(signer.address, i);
+      await mockNFT.approve(auctionFactory.address, i);
+
+      multipleMockNFTs[i - 1] = [i, mockNFT.address];
+    }
+
+    // get matrix of nft chunks [ [nft, nft], [nft, nft] ]
+    const chunksOfNfts = chunkifyArray(multipleMockNFTs, NFT_CHUNK_SIZE)
+
+    // iterate chunks and deposit each one
+    for (let chunk = 0; chunk < chunksOfNfts.length; chunk++) {
+      await auctionFactory.depositMultipleERC721(1, 1, chunksOfNfts[chunk]);
+    }
 
     const res = await auctionFactory.getDepositedNftsInSlot(1, 1);
 
-    expect(res.length).to.equal(1);
+    expect(res.length).to.equal(NFT_TOKEN_COUNT);
   });
 
   it('should not be reverted if auction has not started', async () => {

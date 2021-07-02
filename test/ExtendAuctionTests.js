@@ -8,7 +8,7 @@ describe('Extend auction ERC721 Tests', () => {
     const MockNFT = await ethers.getContractFactory('MockNFT');
     const MockToken = await ethers.getContractFactory('MockToken');
 
-    const auctionFactory = await AuctionFactory.deploy(2000);
+    const auctionFactory = await AuctionFactory.deploy(2000, 100);
     const mockNFT = await MockNFT.deploy();
     const mockToken = await MockToken.deploy(1000);
 

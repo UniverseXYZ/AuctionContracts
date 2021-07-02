@@ -10,6 +10,9 @@ export ETHERSCAN_API_KEY=''
 # Max number of slots
 export MAX_SLOT='10'
 
+# Max number of NFTs in slot
+export MAX_NFTS_PER_SLOT='100'
+
 # On test reports gas if exist
 export REPORT_GAS='true'
 
