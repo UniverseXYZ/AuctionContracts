@@ -454,7 +454,7 @@ describe('Finalize auction ERC721 Tests', () => {
 
     await auctionFactory.finalizeAuction(1);
 
-    await auctionFactory.connect(signer).claimERC721Rewards(1, 1, 1);
+    await auctionFactory.connect(signer).claimERC721Rewards(1, 1, 2);
   });
 
   it('should revert if last address do not have lowest bid', async () => {
