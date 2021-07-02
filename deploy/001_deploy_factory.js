@@ -13,10 +13,11 @@ module.exports = async function () {
 
     if (!Factory) {
       const MAX_SLOT = process.env.MAX_SLOT;
+      const MAX_NFTS_PER_SLOT = process.env.MAX_NFTS_PER_SLOT;
       // We get the contract to deploy
       const auctionFactoryDeployment = await deployments.deploy("AuctionFactory", {
         from: namedAccounts.deployer,
-        args: [MAX_SLOT],
+        args: [MAX_SLOT, MAX_NFTS_PER_SLOT],
       });
       console.log("AuctionFactory deployed to:", auctionFactoryDeployment.address);
 
