@@ -39,7 +39,7 @@ describe('Withdraw functionalities', () => {
     const { auctionFactory, mockNFT } = await loadFixture(deployContract);
 
     const NFT_TOKEN_COUNT = 100;
-    const NFT_CHUNK_SIZE = 20;
+    const NFT_CHUNK_SIZE = 40;
 
     const currentTime = Math.round((new Date()).getTime() / 1000);
 
@@ -111,7 +111,21 @@ describe('Withdraw functionalities', () => {
 
     await auctionFactory.finalizeAuction(1);
 
-    await expect(auctionFactory.withdrawERC721FromNonWinningSlot(1, 1, 1)).emit(auctionFactory, 'LogERC721Withdrawal');
+    await expect(auctionFactory.withdrawMultipleERC721FromNonWinningSlot(1, 1, 40)).emit(
+      auctionFactory,
+      "LogERC721Withdrawal"
+    );
+    await expect(auctionFactory.withdrawMultipleERC721FromNonWinningSlot(1, 1, 40)).emit(
+      auctionFactory,
+      "LogERC721Withdrawal"
+    );
+    await expect(auctionFactory.withdrawMultipleERC721FromNonWinningSlot(1, 1, 30)).revertedWith(
+      "Cannot withdraw more than the existing available"
+    );
+    await expect(auctionFactory.withdrawMultipleERC721FromNonWinningSlot(1, 1, 20)).emit(
+      auctionFactory,
+      "LogERC721Withdrawal"
+    );
   });
 
   it('should revert with Only depositor can withdraw', async () => {
