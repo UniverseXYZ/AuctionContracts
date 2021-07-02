@@ -122,6 +122,9 @@ describe('Withdraw functionalities', () => {
     await expect(auctionFactory.withdrawMultipleERC721FromNonWinningSlot(1, 1, 30)).revertedWith(
       "Cannot withdraw more than the existing available"
     );
+    await expect(auctionFactory.withdrawMultipleERC721FromNonWinningSlot(1, 1, 41)).revertedWith(
+      "Cannot withdraw more than 40 NFTs in one transaction"
+    );
     await expect(auctionFactory.withdrawMultipleERC721FromNonWinningSlot(1, 1, 20)).emit(
       auctionFactory,
       "LogERC721Withdrawal"

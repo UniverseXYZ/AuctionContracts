@@ -3,6 +3,26 @@ const { expect } = require('chai');
 const { waffle, ethers, network } = require('hardhat');
 const { loadFixture } = waffle;
 
+function chunkifyArray(
+  nftsArr,
+  chunkSize,
+) {
+  let chunkifiedArray = [];
+  let tokenStartIndex = 0;
+  let tokenEndIndex = nftsArr.length % chunkSize;
+
+  do {
+    if(tokenEndIndex != 0) chunkifiedArray.push(
+      nftsArr.slice(tokenStartIndex, (tokenEndIndex))
+    )
+
+    tokenStartIndex = tokenEndIndex
+    tokenEndIndex = tokenStartIndex + chunkSize
+  } while (tokenStartIndex < nftsArr.length);
+
+  return chunkifiedArray;
+}
+
 describe('Finalize auction ERC721 Tests', () => {
   const deployedContracts = async () => {
     const AuctionFactory = await ethers.getContractFactory('AuctionFactory');
@@ -22,6 +42,9 @@ describe('Finalize auction ERC721 Tests', () => {
 
   it('should finalize successfully', async () => {
     const { auctionFactory, mockNFT } = await loadFixture(deployedContracts);
+
+    const NFT_TOKEN_COUNT = 100;
+    const NFT_CHUNK_SIZE = 40;
 
     const currentTime = Math.round((new Date()).getTime() / 1000);
 
@@ -43,11 +66,23 @@ describe('Finalize auction ERC721 Tests', () => {
 
     const [signer] = await ethers.getSigners();
 
-    await mockNFT.mint(signer.address, 1);
+    const multipleMockNFTs = new Array(NFT_TOKEN_COUNT);
 
-    await mockNFT.approve(auctionFactory.address, 1);
+    // mint required nfts
+    for (let i = 1; i <= NFT_TOKEN_COUNT; i++) {
+      await mockNFT.mint(signer.address, i);
+      await mockNFT.approve(auctionFactory.address, i);
 
-    await auctionFactory.depositERC721(1, 1, 1, mockNFT.address);
+      multipleMockNFTs[i - 1] = [i, mockNFT.address];
+    }
+
+    // get matrix of nft chunks [ [nft, nft], [nft, nft] ]
+    const chunksOfNfts = chunkifyArray(multipleMockNFTs, NFT_CHUNK_SIZE)
+
+    // iterate chunks and deposit each one
+    for (let chunk = 0; chunk < chunksOfNfts.length; chunk++) {
+      await auctionFactory.depositMultipleERC721(1, 1, chunksOfNfts[chunk]);
+    }
 
     await ethers.provider.send('evm_setNextBlockTimestamp', [startTime + 100]); 
     await ethers.provider.send('evm_mine');
@@ -80,9 +115,21 @@ describe('Finalize auction ERC721 Tests', () => {
     await ethers.provider.send('evm_setNextBlockTimestamp', [endTime + 1000]); 
     await ethers.provider.send('evm_mine');
 
-    await expect(auctionFactory.withdrawAuctionRevenue(1)).to.be.emit(auctionFactory, 'LogAuctionRevenueWithdrawal');
+    await expect(auctionFactory.withdrawAuctionRevenue(1)).to.be.emit(auctionFactory, "LogAuctionRevenueWithdrawal");
 
-    await expect(auctionFactory.claimERC721Rewards(1, 1, 1)).to.be.emit(auctionFactory, 'LogERC721RewardsClaim');
+    await expect(auctionFactory.claimERC721Rewards(1, 1, 40)).to.be.emit(auctionFactory, "LogERC721RewardsClaim");
+
+    await expect(auctionFactory.claimERC721Rewards(1, 1, 40)).to.be.emit(auctionFactory, "LogERC721RewardsClaim");
+
+    await expect(auctionFactory.claimERC721Rewards(1, 1, 30)).revertedWith(
+      "Cannot claim more than the existing available"
+    );
+
+    await expect(auctionFactory.claimERC721Rewards(1, 1, 41)).revertedWith(
+      "Cannot claim more than 40 NFTs in one transaction"
+    );
+
+    await expect(auctionFactory.claimERC721Rewards(1, 1, 20)).to.be.emit(auctionFactory, "LogERC721RewardsClaim");
   });
 
   it('should revert invalid number of winners', async () => {

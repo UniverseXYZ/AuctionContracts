@@ -1002,8 +1002,8 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
             "The reserve price hasn't been met"
         );
 
-        require(amount <= 40, "Cannot withdraw more than 40 NFTs in one transaction");
-        require(amount <= totalDeposited.sub(totalWithdrawn), "Cannot withdraw more than the existing available");
+        require(amount <= 40, "Cannot claim more than 40 NFTs in one transaction");
+        require(amount <= totalDeposited.sub(totalWithdrawn), "Cannot claim more than the existing available");
 
         for (uint256 i = totalWithdrawn; i < amount.add(totalWithdrawn); i++) {
             DepositedERC721 memory nftForWithdrawal =
