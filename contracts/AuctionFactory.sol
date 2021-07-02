@@ -1193,9 +1193,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         return true;
     }
 
-    function setNftSlotLimit(
-        uint256 _nftSlotLimit
-    )
+    function setNftSlotLimit(uint256 _nftSlotLimit)
         external
         onlyOwner
     {
