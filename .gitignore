@@ -11,3 +11,4 @@ deployments/rinkeby
 cache
 artifacts
 .vscode
+.solhint.json
