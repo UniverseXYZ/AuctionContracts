@@ -44,16 +44,16 @@ describe('DEPOSIT ERC721 Functionality', () => {
     const endTime = startTime + 500;
     const resetTimer = 3;
     const numberOfSlots = 10;
-    const supportsWhitelist = false;
     const bidToken = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
+    const whitelistAddresses = [];
 
     await auctionFactory.createAuction(
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
-      supportsWhitelist,
-      bidToken
+      bidToken,
+      whitelistAddresses
     );
 
     expect(await auctionFactory.totalAuctions()).to.equal(1);
@@ -172,14 +172,15 @@ describe('DEPOSIT ERC721 Functionality', () => {
     const numberOfSlots = 10;
     const supportsWhitelist = true;
     const bidToken = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
+    const whitelistAddresses = [];
 
     await auctionFactory.createAuction(
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
-      supportsWhitelist,
-      bidToken
+      bidToken,
+      whitelistAddresses
     );
 
     const [owner] = await ethers.getSigners();
@@ -222,16 +223,16 @@ describe('DEPOSIT ERC721 Functionality', () => {
     const endTime = startTime + 500;
     const resetTimer = 3;
     const numberOfSlots = 10;
-    const supportsWhitelist = false;
     const bidToken = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
+    const whitelistAddresses = [];
 
     await auctionFactory.createAuction(
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
-      supportsWhitelist,
-      bidToken
+      bidToken,
+      whitelistAddresses
     );
     const [signer1, signer2] = await ethers.getSigners();
 
@@ -256,15 +257,15 @@ const createAuction = async (deployedContracts) => {
   const endTime = startTime + 500;
   const resetTimer = 3;
   const numberOfSlots = 10;
-  const supportsWhitelist = false;
   const bidToken = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
+  const whitelistAddresses = [];
 
   await auctionFactory.createAuction(
     startTime,
     endTime,
     resetTimer,
     numberOfSlots,
-    supportsWhitelist,
-    bidToken
+    bidToken,
+    whitelistAddresses
   );
 };

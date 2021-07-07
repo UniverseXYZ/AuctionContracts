@@ -24,16 +24,16 @@ describe('Extend auction ERC721 Tests', () => {
     const endTime = startTime + 500;
     const resetTimer = 500;
     const numberOfSlots = 2;
-    const supportsWhitelist = false;
     const ethAddress = '0x0000000000000000000000000000000000000000';
+    const whitelistAddresses = []
   
     await auctionFactory.createAuction(
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
-      supportsWhitelist,
-      ethAddress
+      ethAddress,
+      whitelistAddresses
     );
 
     const [singer, signer2] = await ethers.getSigners();
@@ -80,16 +80,16 @@ describe('Extend auction ERC721 Tests', () => {
     const endTime = startTime + 600;
     const resetTimer = 600;
     const numberOfSlots = 2;
-    const supportsWhitelist = false;
     const tokenAddress = mockToken.address;
+    const whitelistAddresses = []
 
     await auctionFactory.createAuction(
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
-      supportsWhitelist,
-      tokenAddress
+      tokenAddress,
+      whitelistAddresses
     );
 
     const [singer, signer2] = await ethers.getSigners();
@@ -133,16 +133,16 @@ describe('Extend auction ERC721 Tests', () => {
     const endTime = startTime + 500;
     const resetTimer = 30;
     const numberOfSlots = 3;
-    const supportsWhitelist = false;
     const ethAddress = '0x0000000000000000000000000000000000000000';
+    const whitelistAddresses = []
 
     await auctionFactory.createAuction(
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
-      supportsWhitelist,
-      ethAddress
+      ethAddress,
+      whitelistAddresses
     );
 
     const [singer] = await ethers.getSigners();
@@ -179,15 +179,15 @@ const createAuction = async (auctionFactory) => {
   const endTime = startTime + 500;
   const resetTimer = 30;
   const numberOfSlots = 2;
-  const supportsWhitelist = false;
   const ethAddress = '0x0000000000000000000000000000000000000000';
+  const whitelistAddresses = []
 
   await auctionFactory.createAuction(
     startTime,
     endTime,
     resetTimer,
     numberOfSlots,
-    supportsWhitelist,
-    ethAddress
+    ethAddress,
+    whitelistAddresses
   );
 };

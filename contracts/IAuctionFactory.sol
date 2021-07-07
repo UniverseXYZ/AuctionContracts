@@ -45,6 +45,8 @@ interface IAuctionFactory {
         address tokenAddress;
         uint256 tokenId;
         address depositor;
+        bool hasSecondarySaleFees;
+        bool feesPaid;
     }
 
     struct Fee {
@@ -57,15 +59,15 @@ interface IAuctionFactory {
     /// @param _endTime End of the auction
     /// @param _resetTimer Reset timer in seconds
     /// @param _numberOfSlots The number of slots which the auction will have
-    /// @param _supportsWhitelist Array of addresses allowed to deposit
     /// @param _bidToken Address of the token used for bidding - can be address(0)
+    /// @param addressesToWhitelist Address which should be whitelisted to participate in the auction
     function createAuction(
         uint256 _startTime,
         uint256 _endTime,
         uint256 _resetTimer,
         uint256 _numberOfSlots,
-        bool _supportsWhitelist,
-        address _bidToken
+        address _bidToken,
+        address[] calldata addressesToWhitelist
     ) external returns (uint256);
 
     /// @notice Deposit ERC721 assets to the specified Auction
@@ -156,14 +158,6 @@ interface IAuctionFactory {
     /// @param auctionId The auction id
     function cancelAuction(uint256 auctionId) external returns (bool);
 
-    /// @notice Whitelist multiple addresses which will be able to participate in the auction
-    /// @param auctionId The auction id
-    /// @param addressesToWhitelist The array of addresses which will be whitelisted
-    function whitelistMultipleAddresses(
-        uint256 auctionId,
-        address[] calldata addressesToWhitelist
-    ) external returns (bool);
-
     /// @notice Gets deposited erc721s for slot
     /// @param auctionId The auction id
     /// @param slotIndex The slot index
@@ -244,4 +238,12 @@ interface IAuctionFactory {
         external
         view
         returns (uint256);
+
+    /// @notice Gets the minimum reserve price for auciton slot
+    /// @param auctionId The auction id
+    /// @param slotIndex The slot index
+    /// @param nftSlotIndex The nft slot index
+    function distributeSecondarySaleFees(uint256 auctionId, uint256 slotIndex, uint256 nftSlotIndex)
+        external
+        returns (bool);
 }

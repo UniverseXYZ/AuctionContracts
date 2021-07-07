@@ -48,12 +48,12 @@ describe('Test cancel functionality', () => {
     const endTime = startTime + 500;
     const resetTimer = 3;
     const numberOfSlots = 1;
-    const supportsWhitelist = false;
     const ethAddress = '0x0000000000000000000000000000000000000000';
+    const whitelistAddresses = [];
 
     await auctionFactory
       .connect(signer1)
-      .createAuction(startTime, endTime, resetTimer, numberOfSlots, supportsWhitelist, ethAddress);
+      .createAuction(startTime, endTime, resetTimer, numberOfSlots, ethAddress, whitelistAddresses);
 
     await expect(auctionFactory.connect(signer2).cancelAuction(1)).to.be.reverted;
   });
@@ -66,16 +66,16 @@ const createAuction = async (auctionFactory) => {
   const endTime = startTime + 500;
   const resetTimer = 3;
   const numberOfSlots = 1;
-  const supportsWhitelist = false;
   const ethAddress = '0x0000000000000000000000000000000000000000';
+  const whitelistAddresses = [];
 
   await auctionFactory.createAuction(
     startTime,
     endTime,
     resetTimer,
     numberOfSlots,
-    supportsWhitelist,
-    ethAddress
+    ethAddress,
+    whitelistAddresses
   );
 };
 

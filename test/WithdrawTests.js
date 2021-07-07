@@ -47,16 +47,16 @@ describe('Withdraw functionalities', () => {
     const endTime = startTime + 1500;
     const resetTimer = 1;
     const numberOfSlots = 3;
-    const supportsWhitelist = false;
     const ethAddress = '0x0000000000000000000000000000000000000000';
+    const whitelistAddresses = []
 
     await auctionFactory.createAuction(
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
-      supportsWhitelist,
-      ethAddress
+      ethAddress,
+      whitelistAddresses
     );
 
     const [signer, signer2, signer3] = await ethers.getSigners();
@@ -139,16 +139,16 @@ describe('Withdraw functionalities', () => {
     const endTime = startTime + 500;
     const resetTimer = 2;
     const numberOfSlots = 3;
-    const supportsWhitelist = false;
     const ethAddress = '0x0000000000000000000000000000000000000000';
+    const whitelistAddresses = []
   
     await auctionFactory.createAuction(
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
-      supportsWhitelist,
-      ethAddress
+      ethAddress,
+      whitelistAddresses
     );
 
     const [signer, signer2, signer3] = await ethers.getSigners();
@@ -201,16 +201,16 @@ describe('Withdraw functionalities', () => {
     const endTime = startTime + 500;
     const resetTimer = 2;
     const numberOfSlots = 3;
-    const supportsWhitelist = false;
     const ethAddress = '0x0000000000000000000000000000000000000000';
+    const whitelistAddresses = []
   
     await auctionFactory.createAuction(
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
-      supportsWhitelist,
-      ethAddress
+      ethAddress,
+      whitelistAddresses
     );
 
     const [signer, signer2, signer3] = await ethers.getSigners();
@@ -256,16 +256,16 @@ describe('Withdraw functionalities', () => {
     const endTime = startTime + 500;
     const resetTimer = 2;
     const numberOfSlots = 3;
-    const supportsWhitelist = false;
     const ethAddress = '0x0000000000000000000000000000000000000000';
+    const whitelistAddresses = []
   
     await auctionFactory.createAuction(
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
-      supportsWhitelist,
-      ethAddress
+      ethAddress,
+      whitelistAddresses
     );
 
     const [signer, signer2, signer3] = await ethers.getSigners();
@@ -317,16 +317,16 @@ describe('Withdraw functionalities', () => {
     const endTime = startTime + 500;
     const resetTimer = 2;
     const numberOfSlots = 3;
-    const supportsWhitelist = false;
     const ethAddress = '0x0000000000000000000000000000000000000000';
+    const whitelistAddresses = []
   
     await auctionFactory.createAuction(
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
-      supportsWhitelist,
-      ethAddress
+      ethAddress,
+      whitelistAddresses
     );
 
     const [signer, signer2, signer3, signer4, signer5] = await ethers.getSigners();
@@ -381,16 +381,16 @@ describe('Withdraw functionalities', () => {
     const endTime = startTime + 500;
     const resetTimer = 5;
     const numberOfSlots = 4;
-    const supportsWhitelist = false;
     const ethAddress = '0x0000000000000000000000000000000000000000';
+    const whitelistAddresses = []
   
     await auctionFactory.createAuction(
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
-      supportsWhitelist,
-      ethAddress
+      ethAddress,
+      whitelistAddresses
     );
 
     const [signer, signer2, signer3, signer4] = await ethers.getSigners();
@@ -441,15 +441,15 @@ describe('Withdraw functionalities', () => {
     const endTime = startTime + 500;
     const resetTimer = 1;
     const numberOfSlots = 2;
-    const supportsWhitelist = false;
+    const whitelistAddresses = []
   
     await auctionFactory.createAuction(
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
-      supportsWhitelist,
-      mockToken.address
+      mockToken.address,
+      whitelistAddresses
     );
 
     const [signer, signer2, signer3] = await ethers.getSigners();
@@ -507,15 +507,15 @@ describe('Withdraw functionalities', () => {
     const endTime = startTime + 500;
     const resetTimer = 1;
     const numberOfSlots = 3;
-    const supportsWhitelist = false;
+    const whitelistAddresses = []
   
     await auctionFactory.createAuction(
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
-      supportsWhitelist,
-      mockToken.address
+      mockToken.address,
+      whitelistAddresses
     );
 
     const [signer, signer2, signer3, signer4] = await ethers.getSigners();
@@ -569,15 +569,15 @@ describe('Withdraw functionalities', () => {
     const endTime = startTime + 500;
     const resetTimer = 1;
     const numberOfSlots = 3;
-    const supportsWhitelist = false;
+    const whitelistAddresses = []
   
     await auctionFactory.createAuction(
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
-      supportsWhitelist,
-      mockToken.address
+      mockToken.address,
+      whitelistAddresses
     );
 
     const [signer, signer2, signer3, signer4] = await ethers.getSigners();
@@ -626,16 +626,16 @@ const createAuction = async (auctionFactory) => {
   const endTime = startTime + 500;
   const resetTimer = 2;
   const numberOfSlots = 3;
-  const supportsWhitelist = false;
   const ethAddress = '0x0000000000000000000000000000000000000000';
+  const whitelistAddresses = []
 
   await auctionFactory.createAuction(
     startTime,
     endTime,
     resetTimer,
     numberOfSlots,
-    supportsWhitelist,
-    ethAddress
+    ethAddress,
+    whitelistAddresses
   );
 };
 
@@ -646,7 +646,6 @@ const createERC20Auction = async (auctionFactory, tokenAddress) => {
   const endTime = startTime + 500;
   const resetTimer = 1;
   const numberOfSlots = 3;
-  const supportsWhitelist = false;
 
   await auctionFactory.createAuction(
     startTime,

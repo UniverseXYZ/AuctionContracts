@@ -95,6 +95,7 @@ describe('Deposit multiple ERC721 Tests', () => {
 
   it('should revert if whitelist is supported', async () => {
     const { auctionFactory, mockNFT } = await loadFixture(deployedContracts);
+    const [signer, signer2] = await ethers.getSigners();
 
     const currentTime = Math.round((new Date()).getTime() / 1000);
 
@@ -104,17 +105,18 @@ describe('Deposit multiple ERC721 Tests', () => {
     const numberOfSlots = 1;
     const supportsWhitelist = true;
     const ethAddress = '0x0000000000000000000000000000000000000000';
+    const whitelistAddresses = [signer2.address];
 
     await auctionFactory.createAuction(
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
-      supportsWhitelist,
-      ethAddress
+      ethAddress,
+      whitelistAddresses
     );
 
-    const [signer] = await ethers.getSigners();
+
 
     await mockNFT.mint(signer.address, 1);
     await mockNFT.approve(auctionFactory.address, 1);
@@ -123,7 +125,8 @@ describe('Deposit multiple ERC721 Tests', () => {
   });
 
   it('should deposit if user is part of the whitelist', async () => {
-    const { auctionFactory, mockNFT } = await loadFixture(deployedContracts);
+    const { auctionFactory, mockNFT } = await loadFixture(deployedContracts);    
+    const [signer] = await ethers.getSigners();
 
     const currentTime = Math.round((new Date()).getTime() / 1000);
 
@@ -133,22 +136,19 @@ describe('Deposit multiple ERC721 Tests', () => {
     const numberOfSlots = 1;
     const supportsWhitelist = true;
     const ethAddress = '0x0000000000000000000000000000000000000000';
+    const whitelistAddresses = [signer.address]
 
     await auctionFactory.createAuction(
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
-      supportsWhitelist,
-      ethAddress
+      ethAddress,
+      whitelistAddresses
     );
-
-    const [signer] = await ethers.getSigners();
 
     await mockNFT.mint(signer.address, 1);
     await mockNFT.approve(auctionFactory.address, 1);
-
-    await auctionFactory.whitelistMultipleAddresses(1, [signer.address]);
 
     await auctionFactory.depositMultipleERC721(1, 1, [[1, mockNFT.address]]);
   });
@@ -174,15 +174,15 @@ const createAuction = async (auctionFactory) => {
   const endTime = startTime + 500;
   const resetTimer = 3;
   const numberOfSlots = 1;
-  const supportsWhitelist = false;
   const ethAddress = '0x0000000000000000000000000000000000000000';
+  const whitelistAddresses = []
 
   await auctionFactory.createAuction(
     startTime,
     endTime,
     resetTimer,
     numberOfSlots,
-    supportsWhitelist,
-    ethAddress
+    ethAddress,
+    whitelistAddresses
   );
 };

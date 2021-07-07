@@ -50,7 +50,6 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         uint256 startTime,
         uint256 endTime,
         uint256 resetTimer,
-        bool supportsWhitelist,
         uint256 time
     );
 
@@ -190,8 +189,8 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         uint256 _endTime,
         uint256 _resetTimer,
         uint256 _numberOfSlots,
-        bool _supportsWhitelist,
-        address _bidToken
+        address _bidToken,
+        address[] calldata addressesToWhitelist
     ) external override returns (uint256) {
         uint256 currentTime = block.timestamp;
 
@@ -219,9 +218,13 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         auctions[_auctionId].endTime = _endTime;
         auctions[_auctionId].resetTimer = _resetTimer;
         auctions[_auctionId].numberOfSlots = _numberOfSlots;
-        auctions[_auctionId].supportsWhitelist = _supportsWhitelist;
+        auctions[_auctionId].supportsWhitelist = addressesToWhitelist.length > 0 ? true : false;
         auctions[_auctionId].bidToken = _bidToken;
         auctions[_auctionId].nextBidders[GUARD] = GUARD;
+
+        for (uint256 i = 0; i < addressesToWhitelist.length; i++) {
+            auctions[_auctionId].whitelistAddresses[addressesToWhitelist[i]] = true;
+        }
 
         totalAuctions = _auctionId;
 
@@ -232,7 +235,6 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
             _startTime,
             _endTime,
             _resetTimer,
-            _supportsWhitelist,
             block.timestamp
         );
 
@@ -252,7 +254,6 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         onlyAuctionNotCanceled(_auctionId)
         returns (uint256)
     {
-        address _depositor = msg.sender;
 
         require(
             _tokenAddress != address(0),
@@ -261,7 +262,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
 
         require(
             !auctions[_auctionId].supportsWhitelist ||
-                auctions[_auctionId].whitelistAddresses[_depositor],
+                auctions[_auctionId].whitelistAddresses[msg.sender],
             "You are not allowed to deposit"
         );
 
@@ -279,7 +280,9 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
             DepositedERC721({
                 tokenId: _tokenId,
                 tokenAddress: _tokenAddress,
-                depositor: _depositor
+                depositor: msg.sender,
+                hasSecondarySaleFees: IERC721(_tokenAddress).supportsInterface(_INTERFACE_ID_FEES),
+                feesPaid: false
             });
 
         uint256 _nftSlotIndex =
@@ -297,13 +300,13 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
             .add(1);
 
         IERC721(_tokenAddress).safeTransferFrom(
-            _depositor,
+            msg.sender,
             address(this),
             _tokenId
         );
 
         emit LogERC721Deposit(
-            _depositor,
+            msg.sender,
             _tokenAddress,
             _tokenId,
             _auctionId,
@@ -327,12 +330,11 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         onlyAuctionNotCanceled(_auctionId)
         returns (uint256[] memory)
     {
-        address _depositor = msg.sender;
         uint256[] memory _nftSlotIndexes = new uint256[](_tokens.length);
 
         require(
             !auctions[_auctionId].supportsWhitelist ||
-                auctions[_auctionId].whitelistAddresses[_depositor],
+                auctions[_auctionId].whitelistAddresses[msg.sender],
             "You are not allowed to deposit"
         );
 
@@ -622,6 +624,11 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
                     auction.bidBalance[auction.slots[i + 1].winner]
                 );
                 auction.bidBalance[auction.slots[i + 1].winner] = 0;
+                // Calculate the amount accounted for secondary sale fees
+                if (auction.slots[i + 1].totalDepositedNfts > 0) {
+                    uint256 _secondarySaleFeesForSlot = calculateSecondarySaleFees(auctionId, (i + 1));
+                    auctionsRevenue[auctionId] = auctionsRevenue[auctionId].sub(_secondarySaleFeesForSlot);
+                }
             }
         }
 
@@ -846,28 +853,6 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         return true;
     }
 
-    function whitelistMultipleAddresses(
-        uint256 auctionId,
-        address[] calldata addressesToWhitelist
-    )
-        external
-        override
-        onlyExistingAuction(auctionId)
-        onlyIfWhitelistSupported(auctionId)
-        onlyAuctionOwner(auctionId)
-        onlyAuctionNotStarted(auctionId)
-        onlyAuctionNotCanceled(auctionId)
-        returns (bool)
-    {
-        Auction storage auction = auctions[auctionId];
-
-        for (uint256 i = 0; i < addressesToWhitelist.length; i++) {
-            auction.whitelistAddresses[addressesToWhitelist[i]] = true;
-        }
-
-        return true;
-    }
-
     function getDepositedNftsInSlot(uint256 auctionId, uint256 slotIndex)
         external
         view
@@ -1053,74 +1038,73 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         return result;
     }
 
-    function calculateAndDistributeSecondarySaleFees(
+    function calculateSecondarySaleFees(
         uint256 _auctionId,
         uint256 _slotIndex
-    ) internal returns (uint256) {
-        Auction storage auction = auctions[_auctionId];
-        Slot storage slot = auction.slots[_slotIndex];
+    ) internal view returns (uint256) {
+        Slot storage slot = auctions[_auctionId].slots[_slotIndex];
 
-        require(slot.totalDepositedNfts > 0, "No NFTs deposited");
         require(slot.winningBidAmount > 0, "Winning bid should be more than 0");
 
         uint256 averageERC721SalePrice =
             slot.winningBidAmount.div(slot.totalDepositedNfts);
 
-        uint256 totalFeesPaidForSlot = 0;
+        uint256 totalFeesPayableForSlot = 0;
 
         for (uint256 i = 0; i < slot.totalDepositedNfts; i++) {
             DepositedERC721 memory nft = slot.depositedNfts[i + 1];
 
-            if (
-                nft.tokenAddress != address(0) &&
-                IERC721(nft.tokenAddress).supportsInterface(_INTERFACE_ID_FEES)
-            ) {
-                HasSecondarySaleFees withFees =
-                    HasSecondarySaleFees(nft.tokenAddress);
-                address payable[] memory recipients =
-                    withFees.getFeeRecipients(nft.tokenId);
+            if (nft.hasSecondarySaleFees) {
+                HasSecondarySaleFees withFees = HasSecondarySaleFees(nft.tokenAddress);
+                address payable[] memory recipients = withFees.getFeeRecipients(nft.tokenId);
                 uint256[] memory fees = withFees.getFeeBps(nft.tokenId);
-                require(
-                    fees.length == recipients.length,
-                    "Splits number should be equal"
-                );
+                require(fees.length == recipients.length, "Splits number should be equal");
                 uint256 value = averageERC721SalePrice;
-                for (uint256 j = 0; j < fees.length; j++) {
-                    Fee memory interimFee =
-                        subFee(
-                            value,
-                            averageERC721SalePrice.mul(fees[j]).div(10000)
-                        );
+                
+                for (uint256 j = 0; j < fees.length && j < 5; j++) {
+                    Fee memory interimFee = subFee(value, averageERC721SalePrice.mul(fees[j]).div(10000));
                     value = interimFee.remainingValue;
-
-                    if (
-                        auction.bidToken == address(0) &&
-                        interimFee.feeValue > 0
-                    ) {
-                        (bool success, ) =
-                            recipients[j].call{value: interimFee.feeValue}("");
-                        require(success, "Transfer failed.");
-                    }
-
-                    if (
-                        auction.bidToken != address(0) &&
-                        interimFee.feeValue > 0
-                    ) {
-                        IERC20 token = IERC20(auction.bidToken);
-                        token.transfer(
-                            address(recipients[j]),
-                            interimFee.feeValue
-                        );
-                    }
-
-                    totalFeesPaidForSlot = totalFeesPaidForSlot.add(
-                        interimFee.feeValue
-                    );
+                    totalFeesPayableForSlot = totalFeesPayableForSlot.add(interimFee.feeValue);
                 }
             }
         }
 
-        return totalFeesPaidForSlot;
+        return totalFeesPayableForSlot;
+    }
+
+    function distributeSecondarySaleFees(
+        uint256 _auctionId,
+        uint256 _slotIndex,
+        uint256 _nftSlotIndex
+    )  external override returns (bool) {
+        Auction storage auction = auctions[_auctionId];
+        Slot storage slot = auction.slots[_slotIndex];
+        DepositedERC721 memory nft = slot.depositedNfts[_nftSlotIndex];
+
+        require(nft.hasSecondarySaleFees && !nft.feesPaid, "Cannot distribute if interface not supported/fees already paid");
+
+        uint256 averageERC721SalePrice = slot.winningBidAmount.div(slot.totalDepositedNfts);
+
+        HasSecondarySaleFees withFees = HasSecondarySaleFees(nft.tokenAddress);
+        address payable[] memory recipients = withFees.getFeeRecipients(nft.tokenId);
+        uint256[] memory fees = withFees.getFeeBps(nft.tokenId);
+        require(fees.length == recipients.length, "Splits number should be equal");
+        uint256 value = averageERC721SalePrice;
+        for (uint256 i = 0; i < fees.length && i < 5; i++) {
+            Fee memory interimFee = subFee(value, averageERC721SalePrice.mul(fees[i]).div(10000));
+            value = interimFee.remainingValue;
+
+            if (auction.bidToken == address(0) && interimFee.feeValue > 0) {
+                (bool success, ) = recipients[i].call{value: interimFee.feeValue}("");
+                require(success, "Transfer failed.");
+            }
+            
+            if (auction.bidToken != address(0) && interimFee.feeValue > 0) {
+                IERC20 token = IERC20(auction.bidToken);
+                token.transfer(address(recipients[i]), interimFee.feeValue);
+            }
+        }
+        return true;
     }
 
     function subFee(uint256 value, uint256 fee)
@@ -1258,7 +1242,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
     }
 
     function getTopBidders(uint256 auctionId, uint256 n)
-        public
+        internal
         view
         returns (address[] memory)
     {
@@ -1274,7 +1258,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
     }
 
     function isWinningBid(uint256 auctionId, uint256 bid)
-        public
+        internal
         view
         returns (bool)
     {
@@ -1345,8 +1329,4 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         return address(0);
     }
 
-    receive() external payable {
-        uint256 latestAuctionId = totalAuctions;
-        ethBid(latestAuctionId);
-    }
 }

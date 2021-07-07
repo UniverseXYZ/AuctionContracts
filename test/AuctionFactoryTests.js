@@ -23,19 +23,19 @@ describe('AuctionFactory', () => {
     const currentTime = Math.round((new Date()).getTime() / 1000);
 
     const startTime = currentTime + 10;
-    const endTime = currentTime + 25;
+    const endTime = currentTime + 50;
     const resetTimer = 3;
     const numberOfSlots = 1;
-    const supportsWhitelist = false;
     const bidToken = mockToken.address;
+    const whitelistAddresses = [];
 
     auction = await auctionFactory.createAuction(
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
-      supportsWhitelist,
-      bidToken
+      bidToken,
+      whitelistAddresses
     );
     return { auctionFactory, mockNFT, mockToken };
   }
@@ -107,16 +107,16 @@ describe('AuctionFactory', () => {
     const endTime = currentTime + 15;
     const resetTimer = 3;
     const numberOfSlots = 1;
-    const supportsWhitelist = false;
     const tokenAddress = mockToken.address;
+    const whitelistAddresses = [];
 
     await auctionFactory.createAuction(
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
-      supportsWhitelist,
-      tokenAddress
+      tokenAddress,
+      whitelistAddresses
     );
 
     const [signer] = await ethers.getSigners();
@@ -144,16 +144,16 @@ describe('AuctionFactory', () => {
     const endTime = startTime + 500;
     const resetTimer = 3;
     const numberOfSlots = 1;
-    const supportsWhitelist = false;
     const tokenAddress = '0x0000000000000000000000000000000000000000';
+    const whitelistAddresses = [];
 
     await auctionFactory.createAuction(
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
-      supportsWhitelist,
-      tokenAddress
+      tokenAddress,
+      whitelistAddresses
     );
 
     const [signer] = await ethers.getSigners();

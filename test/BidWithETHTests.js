@@ -22,16 +22,16 @@ describe('Test bidding with ETH', () => {
     const endTime = startTime + 500;
     const resetTimer = 10;
     const numberOfSlots = 1;
-    const supportsWhitelist = false;
     const ethAddress = '0x0000000000000000000000000000000000000000';
+    const whitelistAddresses = [];
   
     await auctionFactory.createAuction(
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
-      supportsWhitelist,
-      ethAddress
+      ethAddress,
+      whitelistAddresses
     );
 
     await depositNFT(auctionFactory, mockNFT);
@@ -77,16 +77,16 @@ describe('Test bidding with ETH', () => {
     const endTime = startTime + 500;
     const resetTimer = 3;
     const numberOfSlots = 1;
-    const supportsWhitelist = false;
     const ethAddress = '0x0000000000000000000000000000000000000000';
+    const whitelistAddresses = [];
 
     await auctionFactory.createAuction(
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
-      supportsWhitelist,
-      ethAddress
+      ethAddress,
+      whitelistAddresses
     );
 
     await depositNFT(auctionFactory, mockNFT);
@@ -121,16 +121,16 @@ describe('Test bidding with ETH', () => {
     const endTime = startTime + 500;
     const resetTimer = 3;
     const numberOfSlots = 1;
-    const supportsWhitelist = false;
     const tokenAddress = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
+    const whitelistAddresses = [];
 
     await auctionFactory.createAuction(
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
-      supportsWhitelist,
-      tokenAddress
+      tokenAddress,
+      whitelistAddresses
     );
 
     await depositNFT(auctionFactory, mockNFT);
@@ -151,16 +151,16 @@ describe('Test bidding with ETH', () => {
     const endTime = startTime + 500;
     const resetTimer = 3;
     const numberOfSlots = 1;
-    const supportsWhitelist = false;
     const ethAddress = '0x0000000000000000000000000000000000000000';
+    const whitelistAddresses = [];
 
     await auctionFactory.createAuction(
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
-      supportsWhitelist,
-      ethAddress
+      ethAddress,
+      whitelistAddresses
     );
 
     await depositNFT(auctionFactory, mockNFT);
@@ -183,16 +183,16 @@ describe('Test bidding with ETH', () => {
     const endTime = startTime + 500;
     const resetTimer = 3;
     const numberOfSlots = 1;
-    const supportsWhitelist = false;
     const ethAddress = '0x0000000000000000000000000000000000000000';
+    const whitelistAddresses = [];
 
     await auctionFactory.createAuction(
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
-      supportsWhitelist,
-      ethAddress
+      ethAddress,
+      whitelistAddresses
     );
 
     await depositNFT(auctionFactory, mockNFT);
@@ -216,16 +216,16 @@ describe('Test bidding with ETH', () => {
     const endTime = startTime + 500;
     const resetTimer = 3;
     const numberOfSlots = 1;
-    const supportsWhitelist = false;
     const ethAddress = '0x0000000000000000000000000000000000000000';
+    const whitelistAddresses = [];
 
     await auctionFactory.createAuction(
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
-      supportsWhitelist,
-      ethAddress
+      ethAddress,
+      whitelistAddresses
     );
 
     await depositNFT(auctionFactory, mockNFT);
@@ -253,16 +253,16 @@ describe('Test bidding with ETH', () => {
     const endTime = startTime + 500;
     const resetTimer = 3;
     const numberOfSlots = 1;
-    const supportsWhitelist = false;
     const ethAddress = '0x0000000000000000000000000000000000000000';
+    const whitelistAddresses = [];
 
     await auctionFactory.createAuction(
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
-      supportsWhitelist,
-      ethAddress
+      ethAddress,
+      whitelistAddresses
     );
 
     await depositNFT(auctionFactory, mockNFT);
@@ -291,16 +291,16 @@ const createAuction = async (auctionFactory) => {
   const endTime = startTime + 500;
   const resetTimer = 10;
   const numberOfSlots = 1;
-  const supportsWhitelist = false;
   const ethAddress = '0x0000000000000000000000000000000000000000';
+  const whitelistAddresses = [];
 
   await auctionFactory.createAuction(
     startTime,
     endTime,
     resetTimer,
     numberOfSlots,
-    supportsWhitelist,
-    ethAddress
+    ethAddress,
+    whitelistAddresses
   );
 };
 

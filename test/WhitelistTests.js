@@ -16,12 +16,26 @@ describe('Whitelist functionality', () => {
 
   it('should whitelist multiple addresses', async () => {
     const { auctionFactory, mockNft } = await loadFixture(deployContracts);
-
-    await createAuction(auctionFactory);
-
     const [addr1, addr2] = await ethers.getSigners();
 
-    await auctionFactory.whitelistMultipleAddresses(1, [addr1.address, addr2.address]);
+    const currentTime = Math.round((new Date()).getTime() / 1000);
+
+    const startTime = currentTime + 10000;
+    const endTime = startTime + 500;
+    const resetTimer = 3;
+    const numberOfSlots = 1;
+    const supportsWhitelist = true;
+    const ethAddress = '0x0000000000000000000000000000000000000000';
+    const whitelistAddresses = [addr1.address, addr2.address]
+
+    await auctionFactory.createAuction(
+      startTime,
+      endTime,
+      resetTimer,
+      numberOfSlots,
+      ethAddress,
+      whitelistAddresses
+    );
 
     const auctionId = 1;
     const slotIdx = 1;
@@ -50,12 +64,26 @@ describe('Whitelist functionality', () => {
 
   it('should revert when address is not whitelisted', async () => {
     const { auctionFactory, mockNft } = await loadFixture(deployContracts);
-
-    await createAuction(auctionFactory);
-
     const [addr1, addr2] = await ethers.getSigners();
 
-    await auctionFactory.whitelistMultipleAddresses(1, [addr1.address]);
+    const currentTime = Math.round((new Date()).getTime() / 1000);
+
+    const startTime = currentTime + 10000;
+    const endTime = startTime + 500;
+    const resetTimer = 3;
+    const numberOfSlots = 1;
+    const supportsWhitelist = true;
+    const ethAddress = '0x0000000000000000000000000000000000000000';
+    const whitelistAddresses = [addr1.address]
+
+    await auctionFactory.createAuction(
+      startTime,
+      endTime,
+      resetTimer,
+      numberOfSlots,
+      ethAddress,
+      whitelistAddresses
+    );
 
     const auctionId = 1;
     const slotIdx = 1;
@@ -75,31 +103,6 @@ describe('Whitelist functionality', () => {
     await expect(auctionFactory.connect(addr2).depositERC721(auctionId, slotIdx, 2, mockNft.address)).to.be.reverted;
   });
 
-  it('should revert if whitelist is not support for current auction', async () => {
-    const { auctionFactory, mockNft } = await loadFixture(deployContracts);
-
-    const currentTime = Math.round((new Date()).getTime() / 1000);
-
-    const startTime = currentTime + 10000;
-    const endTime = startTime + 500;
-    const resetTimer = 3;
-    const numberOfSlots = 1;
-    const supportsWhitelist = false;
-    const ethAddress = '0x0000000000000000000000000000000000000000';
-
-    await auctionFactory.createAuction(
-      startTime,
-      endTime,
-      resetTimer,
-      numberOfSlots,
-      supportsWhitelist,
-      ethAddress
-    );
-
-    const [addr1, addr2] = await ethers.getSigners();
-
-    await expect(auctionFactory.whitelistMultipleAddresses(1, [addr1.address])).to.be.reverted;
-  });
 });
 
 const createAuction = async (auctionFactory) => {
