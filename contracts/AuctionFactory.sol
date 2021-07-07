@@ -355,10 +355,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
                 // Check if slots are filled (we have more bids than slots)
             } else if (auction.numberOfBids >= auction.numberOfSlots) {
                 // If slots are filled, check if the bid is within the winning slots
-                require(
-                    isWinningBid(auctionId, msg.value),
-                    "Bid should be winnning"
-                );
+                require(isWinningBid(auctionId, msg.value), "Bid should be winnning");
                 // Add bid only if it is within the winning slots
                 addBid(auctionId, msg.sender, msg.value);
                 if (auction.endTime.sub(block.timestamp) < auction.resetTimer) {
@@ -370,32 +367,15 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         } else if (bidderCurrentBalance > 0) {
             // Find which is the next highest bidder balance and ensure the incremented bid is bigger
             address previousBidder = _findPreviousBidder(auctionId, msg.sender);
-            require(
-                msg.value > auction.bidBalance[previousBidder],
-                "New bid should be higher than next highest slot bid"
-            );
+            require(msg.value > auction.bidBalance[previousBidder], "New bid should be higher than next highest slot bid");
             // Update bid directly without additional checks if total bids are less than total slots
             if (auction.numberOfBids < auction.numberOfSlots) {
-                updateBid(
-                    auctionId,
-                    msg.sender,
-                    bidderCurrentBalance.add(msg.value)
-                );
+                updateBid(auctionId, msg.sender, bidderCurrentBalance.add(msg.value));
                 // If slots are filled, check if the current bidder balance + the new amount will be withing the winning slots
             } else if (auction.numberOfBids >= auction.numberOfSlots) {
-                require(
-                    isWinningBid(
-                        auctionId,
-                        bidderCurrentBalance.add(msg.value)
-                    ),
-                    "Bid should be winnning"
-                );
+                require(isWinningBid(auctionId, bidderCurrentBalance.add(msg.value)), "Bid should be winnning");
                 // Update the bid if the new incremented balance falls within the winning slots
-                updateBid(
-                    auctionId,
-                    msg.sender,
-                    bidderCurrentBalance.add(msg.value)
-                );
+                updateBid(auctionId, msg.sender, bidderCurrentBalance.add(msg.value));
                 if (auction.endTime.sub(block.timestamp) < auction.resetTimer) {
                     // Extend the auction if the remaining time is less than the reset timer
                     extendAuction(auctionId);
@@ -434,10 +414,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
                 // Check if slots are filled (if we have more bids than slots)
             } else if (auction.numberOfBids >= auction.numberOfSlots) {
                 // If slots are filled, check if the bid is within the winning slots
-                require(
-                    isWinningBid(auctionId, amount),
-                    "Bid should be winnning"
-                );
+                require(isWinningBid(auctionId, amount), "Bid should be winnning");
                 // Add bid only if it is within the winning slots
                 addBid(auctionId, msg.sender, amount);
                 bidToken.transferFrom(msg.sender, address(this), amount);
@@ -450,30 +427,16 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         } else if (bidderCurrentBalance > 0) {
             // Find which is the next highest bidder balance and ensure the incremented bid is bigger
             address previousBidder = _findPreviousBidder(auctionId, msg.sender);
-            require(
-                amount > auction.bidBalance[previousBidder],
-                "New bid should be higher than next highest slot bid"
-            );
+            require(amount > auction.bidBalance[previousBidder], "New bid should be higher than next highest slot bid");
             // Update bid directly without additional checks if total bids are less than total slots
             if (auction.numberOfBids < auction.numberOfSlots) {
-                updateBid(
-                    auctionId,
-                    msg.sender,
-                    bidderCurrentBalance.add(amount)
-                );
+                updateBid(auctionId, msg.sender, bidderCurrentBalance.add(amount));
                 bidToken.transferFrom(msg.sender, address(this), amount);
                 // If slots are filled, check if the current bidder balance + the new amount will be withing the winning slots
             } else if (auction.numberOfBids >= auction.numberOfSlots) {
-                require(
-                    isWinningBid(auctionId, bidderCurrentBalance.add(amount)),
-                    "Bid should be winnning"
-                );
+                require(isWinningBid(auctionId, bidderCurrentBalance.add(amount)), "Bid should be winnning");
                 // Update the bid if the new incremented balance falls within the winning slots
-                updateBid(
-                    auctionId,
-                    msg.sender,
-                    bidderCurrentBalance.add(amount)
-                );
+                updateBid(auctionId, msg.sender, bidderCurrentBalance.add(amount));
                 bidToken.transferFrom(msg.sender, address(this), amount);
                 if (auction.endTime.sub(block.timestamp) < auction.resetTimer) {
                     // Extend the auction if the remaining time is less than the reset timer
