@@ -60,14 +60,16 @@ interface IAuctionFactory {
     /// @param _resetTimer Reset timer in seconds
     /// @param _numberOfSlots The number of slots which the auction will have
     /// @param _bidToken Address of the token used for bidding - can be address(0)
-    /// @param addressesToWhitelist Address which should be whitelisted to participate in the auction
+    /// @param _addressesToWhitelist Address which should be whitelisted to participate in the auction
+    /// @param _minimumReserveValues Minimum reserve values for each slot, starting from 1st. Leave empty if no minimum reserve
     function createAuction(
         uint256 _startTime,
         uint256 _endTime,
         uint256 _resetTimer,
         uint256 _numberOfSlots,
         address _bidToken,
-        address[] calldata addressesToWhitelist
+        address[] calldata _addressesToWhitelist,
+        uint256[] calldata _minimumReserveValues
     ) external returns (uint256);
 
     /// @notice Deposit ERC721 assets to the specified Auction
@@ -222,14 +224,6 @@ interface IAuctionFactory {
     function withdrawRoyalties(address token, address to)
         external
         returns (uint256);
-
-    /// @notice Sets the minimum reserve price for auction slots
-    /// @param auctionId The auction id
-    /// @param minimumReserveValues The array of minimum reserve values to be set for each slot, starting from slot 1
-    function setMinimumReserveForAuctionSlots(
-        uint256 auctionId,
-        uint256[] calldata minimumReserveValues
-    ) external returns (bool);
 
     /// @notice Gets the minimum reserve price for auciton slot
     /// @param auctionId The auction id

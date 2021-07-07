@@ -27,6 +27,7 @@ describe('Secondary Sale Fees Tests', () => {
     const numberOfSlots = 1;
     const ethAddress = '0x0000000000000000000000000000000000000000';
     const whitelistAddresses = [];
+    const minimumReserveValues = [];
   
     await auctionFactory.createAuction(
       startTime,
@@ -34,7 +35,8 @@ describe('Secondary Sale Fees Tests', () => {
       resetTimer,
       numberOfSlots,
       ethAddress,
-      whitelistAddresses
+      whitelistAddresses,
+      minimumReserveValues
     );
 
     let randomWallet1 = ethers.Wallet.createRandom();
@@ -100,6 +102,7 @@ describe('Secondary Sale Fees Tests', () => {
     const numberOfSlots = 1;
     const ethAddress = '0x0000000000000000000000000000000000000000';
     const whitelistAddresses = [];
+    const minimumReserveValues = [];
   
     await auctionFactory.createAuction(
       startTime,
@@ -107,7 +110,8 @@ describe('Secondary Sale Fees Tests', () => {
       resetTimer,
       numberOfSlots,
       ethAddress,
-      whitelistAddresses
+      whitelistAddresses,
+      minimumReserveValues
     );
 
     let randomWallet1 = ethers.Wallet.createRandom();

@@ -78,9 +78,16 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         uint256 time
     );
 
-    event LogAuctionExtended(uint256 auctionId, uint256 endTime, uint256 time);
+    event LogAuctionExtended(
+        uint256 auctionId, 
+        uint256 endTime, 
+        uint256 time
+    );
 
-    event LogAuctionCanceled(uint256 auctionId, uint256 time);
+    event LogAuctionCanceled(
+        uint256 auctionId, 
+        uint256 time
+    );
 
     event LogAuctionRevenueWithdrawal(
         address recipient,
@@ -166,7 +173,8 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         uint256 _resetTimer,
         uint256 _numberOfSlots,
         address _bidToken,
-        address[] calldata addressesToWhitelist
+        address[] calldata _addressesToWhitelist,
+        uint256[] calldata _minimumReserveValues
     ) external override returns (uint256) {
         uint256 currentTime = block.timestamp;
 
@@ -174,7 +182,10 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         require(_startTime < _endTime, "Auction cannot end before it has launched");
         require(_resetTimer > 0, "Reset timer must be higher than 0 seconds");
         require(_numberOfSlots > 0 && _numberOfSlots <= maxNumberOfSlotsPerAuction, "Auction can have between 1 and 2000 slots");
-
+        if (_minimumReserveValues.length > 0) {
+            require(_numberOfSlots == _minimumReserveValues.length, "Incorrect number of slots");
+        }
+        
         uint256 _auctionId = totalAuctions.add(1);
 
         auctions[_auctionId].auctionOwner = msg.sender;
@@ -182,12 +193,16 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         auctions[_auctionId].endTime = _endTime;
         auctions[_auctionId].resetTimer = _resetTimer;
         auctions[_auctionId].numberOfSlots = _numberOfSlots;
-        auctions[_auctionId].supportsWhitelist = addressesToWhitelist.length > 0 ? true : false;
+        auctions[_auctionId].supportsWhitelist = _addressesToWhitelist.length > 0 ? true : false;
         auctions[_auctionId].bidToken = _bidToken;
         auctions[_auctionId].nextBidders[GUARD] = GUARD;
 
-        for (uint256 i = 0; i < addressesToWhitelist.length; i++) {
-            auctions[_auctionId].whitelistAddresses[addressesToWhitelist[i]] = true;
+        for (uint256 i = 0; i < _addressesToWhitelist.length; i++) {
+            auctions[_auctionId].whitelistAddresses[_addressesToWhitelist[i]] = true;
+        }
+
+        for (uint256 i = 0; i < _minimumReserveValues.length; i++) {
+            auctions[_auctionId].slots[i + 1].reservePrice = _minimumReserveValues[i];
         }
 
         totalAuctions = _auctionId;
@@ -1003,28 +1018,6 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         );
 
         return amountToWithdraw;
-    }
-
-    function setMinimumReserveForAuctionSlots(
-        uint256 auctionId,
-        uint256[] calldata minimumReserveValues
-    )
-        external
-        override
-        onlyExistingAuction(auctionId)
-        onlyAuctionNotStarted(auctionId)
-        onlyAuctionNotCanceled(auctionId)
-        returns (bool)
-    {
-        Auction storage auction = auctions[auctionId];
-
-        require(auction.numberOfSlots == minimumReserveValues.length, "Incorrect number of slots");
-
-        for (uint256 i = 0; i < minimumReserveValues.length; i++) {
-            auction.slots[i + 1].reservePrice = minimumReserveValues[i];
-        }
-
-        return true;
     }
 
     function setNftSlotLimit(uint256 _nftSlotLimit)

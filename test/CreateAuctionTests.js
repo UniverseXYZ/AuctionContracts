@@ -43,13 +43,15 @@ describe('Create Auction Tests', () => {
     const numberOfSlots = 1;
     const bidToken = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
     const whitelistAddresses = [];
+    const minimumReserveValues = [];
     auction = await auctionFactory.createAuction(
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
       bidToken,
-      whitelistAddresses
+      whitelistAddresses,
+      minimumReserveValues
     );
   });
 
@@ -63,6 +65,7 @@ describe('Create Auction Tests', () => {
     const numberOfSlots = 1;
     const bidToken = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
     const whitelistAddresses = [];
+    const minimumReserveValues = [];
     await expect(
       auctionFactory.createAuction(
         startTime,
@@ -70,7 +73,8 @@ describe('Create Auction Tests', () => {
         resetTimer,
         numberOfSlots,
         bidToken,
-        whitelistAddresses
+        whitelistAddresses,
+        minimumReserveValues
       )
     ).to.be.reverted;
   });
@@ -85,6 +89,7 @@ describe('Create Auction Tests', () => {
     const numberOfSlots = 1;
     const bidToken = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
     const whitelistAddresses = [];
+    const minimumReserveValues = [];
     await expect(
       auctionFactory.createAuction(
         startTime,
@@ -92,7 +97,8 @@ describe('Create Auction Tests', () => {
         resetTimer,
         numberOfSlots,
         bidToken,
-        whitelistAddresses
+        whitelistAddresses,
+        minimumReserveValues
       )
     ).to.be.reverted;
   });
@@ -107,6 +113,7 @@ describe('Create Auction Tests', () => {
     const numberOfSlots = 1;
     const bidToken = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
     const whitelistAddresses = [];
+    const minimumReserveValues = [];
     await expect(
       auctionFactory.createAuction(
         startTime,
@@ -114,7 +121,8 @@ describe('Create Auction Tests', () => {
         resetTimer,
         numberOfSlots,
         bidToken,
-        whitelistAddresses
+        whitelistAddresses,
+        minimumReserveValues
       )
     ).to.be.reverted;
   });
@@ -129,6 +137,7 @@ describe('Create Auction Tests', () => {
     const numberOfSlots = 0;
     const bidToken = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
     const whitelistAddresses = [];
+    const minimumReserveValues = [];
     await expect(
       auctionFactory.createAuction(
         startTime,
@@ -136,7 +145,8 @@ describe('Create Auction Tests', () => {
         resetTimer,
         numberOfSlots,
         bidToken,
-        whitelistAddresses
+        whitelistAddresses,
+        minimumReserveValues
       )
     ).to.be.reverted;
   });
@@ -151,6 +161,7 @@ describe('Create Auction Tests', () => {
     const numberOfSlots = 2001;
     const bidToken = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
     const whitelistAddresses = [];
+    const minimumReserveValues = [];
     await expect(
       auctionFactory.createAuction(
         startTime,
@@ -158,7 +169,8 @@ describe('Create Auction Tests', () => {
         resetTimer,
         numberOfSlots,
         bidToken,
-        whitelistAddresses
+        whitelistAddresses,
+        minimumReserveValues
       )
     ).to.be.reverted;
   });
@@ -173,6 +185,7 @@ describe('Create Auction Tests', () => {
     const numberOfSlots = 10;
     const bidToken = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
     const whitelistAddresses = [];
+    const minimumReserveValues = [];
 
     await auctionFactory.createAuction(
       startTime,
@@ -180,7 +193,8 @@ describe('Create Auction Tests', () => {
       resetTimer,
       numberOfSlots,
       bidToken,
-      whitelistAddresses
+      whitelistAddresses,
+      minimumReserveValues
     );
 
     expect(await auctionFactory.totalAuctions()).to.equal(1);

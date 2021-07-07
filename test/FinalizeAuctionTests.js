@@ -53,7 +53,8 @@ describe('Finalize auction ERC721 Tests', () => {
     const resetTimer = 3;
     const numberOfSlots = 1;
     const ethAddress = '0x0000000000000000000000000000000000000000';
-    const whitelistAddresses = []
+    const whitelistAddresses = [];
+    const minimumReserveValues = [];
   
     await auctionFactory.createAuction(
       startTime,
@@ -61,7 +62,8 @@ describe('Finalize auction ERC721 Tests', () => {
       resetTimer,
       numberOfSlots,
       ethAddress,
-      whitelistAddresses
+      whitelistAddresses,
+      minimumReserveValues
     );
 
     const [signer] = await ethers.getSigners();
@@ -142,7 +144,8 @@ describe('Finalize auction ERC721 Tests', () => {
     const resetTimer = 1;
     const numberOfSlots = 1;
     const tokenAddress = '0x0000000000000000000000000000000000000000';
-    const whitelistAddresses = []
+    const whitelistAddresses = [];
+    const minimumReserveValues = [];
 
     await auctionFactory.createAuction(
       startTime,
@@ -150,7 +153,8 @@ describe('Finalize auction ERC721 Tests', () => {
       resetTimer,
       numberOfSlots,
       tokenAddress,
-      whitelistAddresses
+      whitelistAddresses,
+      minimumReserveValues
     );
 
     const [signer, signer2] = await ethers.getSigners();
@@ -185,7 +189,8 @@ describe('Finalize auction ERC721 Tests', () => {
     const resetTimer = 3;
     const numberOfSlots = 1;
     const ethAddress = '0x0000000000000000000000000000000000000000';
-    const whitelistAddresses = []
+    const whitelistAddresses = [];
+    const minimumReserveValues = [];
 
     await auctionFactory.createAuction(
       startTime,
@@ -193,7 +198,8 @@ describe('Finalize auction ERC721 Tests', () => {
       resetTimer,
       numberOfSlots,
       ethAddress,
-      whitelistAddresses
+      whitelistAddresses,
+      minimumReserveValues
     );
 
     const [signer] = await ethers.getSigners();
@@ -223,7 +229,8 @@ describe('Finalize auction ERC721 Tests', () => {
     const resetTimer = 3;
     const numberOfSlots = 1;
     const ethAddress = '0x0000000000000000000000000000000000000000';
-    const whitelistAddresses = []
+    const whitelistAddresses = [];
+    const minimumReserveValues = [];
   
     await auctionFactory.createAuction(
       startTime,
@@ -231,7 +238,8 @@ describe('Finalize auction ERC721 Tests', () => {
       resetTimer,
       numberOfSlots,
       ethAddress,
-      whitelistAddresses
+      whitelistAddresses,
+      minimumReserveValues
     );
 
     const [signer, signer2] = await ethers.getSigners();
@@ -273,7 +281,8 @@ describe('Finalize auction ERC721 Tests', () => {
     const resetTimer = 1;
     const numberOfSlots = 1;
     const tokenAddress = mockToken.address;
-    const whitelistAddresses = []
+    const whitelistAddresses = [];
+    const minimumReserveValues = [];
 
     await auctionFactory.createAuction(
       startTime,
@@ -281,7 +290,8 @@ describe('Finalize auction ERC721 Tests', () => {
       resetTimer,
       numberOfSlots,
       tokenAddress,
-      whitelistAddresses
+      whitelistAddresses,
+      minimumReserveValues
     );
 
     const [signer] = await ethers.getSigners();
@@ -324,7 +334,8 @@ describe('Finalize auction ERC721 Tests', () => {
     const resetTimer = 1;
     const numberOfSlots = 1;
     const tokenAddress = '0x0000000000000000000000000000000000000000';
-    const whitelistAddresses = []
+    const whitelistAddresses = [];
+    const minimumReserveValues = [];
 
     await auctionFactory.createAuction(
       startTime,
@@ -332,7 +343,8 @@ describe('Finalize auction ERC721 Tests', () => {
       resetTimer,
       numberOfSlots,
       tokenAddress,
-      whitelistAddresses
+      whitelistAddresses,
+      minimumReserveValues
     );
 
     const [signer, signer2] = await ethers.getSigners();
@@ -367,7 +379,8 @@ describe('Finalize auction ERC721 Tests', () => {
     const resetTimer = 1;
     const numberOfSlots = 4;
     const tokenAddress = '0x0000000000000000000000000000000000000000';
-    const whitelistAddresses = []
+    const whitelistAddresses = [];
+    const minimumReserveValues = [];
 
     await auctionFactory.createAuction(
       startTime,
@@ -375,7 +388,8 @@ describe('Finalize auction ERC721 Tests', () => {
       resetTimer,
       numberOfSlots,
       tokenAddress,
-      whitelistAddresses
+      whitelistAddresses,
+      minimumReserveValues
     );
 
     const [signer, signer2, signer3, signer4] = await ethers.getSigners();
@@ -420,7 +434,8 @@ describe('Finalize auction ERC721 Tests', () => {
     const resetTimer = 1;
     const numberOfSlots = 1;
     const tokenAddress = '0x0000000000000000000000000000000000000000';
-    const whitelistAddresses = []
+    const whitelistAddresses = [];
+    const minimumReserveValues = [];
 
     await auctionFactory.createAuction(
       startTime,
@@ -428,7 +443,8 @@ describe('Finalize auction ERC721 Tests', () => {
       resetTimer,
       numberOfSlots,
       tokenAddress,
-      whitelistAddresses
+      whitelistAddresses,
+      minimumReserveValues
     );
 
     const [signer] = await ethers.getSigners();
@@ -467,7 +483,8 @@ describe('Finalize auction ERC721 Tests', () => {
     const resetTimer = 6;
     const numberOfSlots = 2;
     const ethAddress = '0x0000000000000000000000000000000000000000';
-    const whitelistAddresses = []
+    const whitelistAddresses = [];
+    const minimumReserveValues = [];
 
     await auctionFactory.createAuction(
       startTime,
@@ -475,7 +492,8 @@ describe('Finalize auction ERC721 Tests', () => {
       resetTimer,
       numberOfSlots,
       ethAddress,
-      whitelistAddresses
+      whitelistAddresses,
+      minimumReserveValues
     );
 
     const [signer, signer2] = await ethers.getSigners();
@@ -516,7 +534,8 @@ const createAuction = async (auctionFactory) => {
   const resetTimer = 3;
   const numberOfSlots = 1;
   const ethAddress = '0x0000000000000000000000000000000000000000';
-  const whitelistAddresses = []
+  const whitelistAddresses = [];
+  const minimumReserveValues = [];
 
   await auctionFactory.createAuction(
     startTime,
@@ -524,6 +543,7 @@ const createAuction = async (auctionFactory) => {
     resetTimer,
     numberOfSlots,
     ethAddress,
-    whitelistAddresses
+    whitelistAddresses,
+    minimumReserveValues
   );
 };

@@ -26,7 +26,8 @@ describe('Whitelist functionality', () => {
     const numberOfSlots = 1;
     const supportsWhitelist = true;
     const ethAddress = '0x0000000000000000000000000000000000000000';
-    const whitelistAddresses = [addr1.address, addr2.address]
+    const whitelistAddresses = [addr1.address, addr2.address];
+    const minimumReserveValues = [];
 
     await auctionFactory.createAuction(
       startTime,
@@ -34,7 +35,8 @@ describe('Whitelist functionality', () => {
       resetTimer,
       numberOfSlots,
       ethAddress,
-      whitelistAddresses
+      whitelistAddresses,
+      minimumReserveValues
     );
 
     const auctionId = 1;
@@ -74,7 +76,8 @@ describe('Whitelist functionality', () => {
     const numberOfSlots = 1;
     const supportsWhitelist = true;
     const ethAddress = '0x0000000000000000000000000000000000000000';
-    const whitelistAddresses = [addr1.address]
+    const whitelistAddresses = [addr1.address];
+    const minimumReserveValues = [];
 
     await auctionFactory.createAuction(
       startTime,
@@ -82,7 +85,8 @@ describe('Whitelist functionality', () => {
       resetTimer,
       numberOfSlots,
       ethAddress,
-      whitelistAddresses
+      whitelistAddresses,
+      minimumReserveValues
     );
 
     const auctionId = 1;

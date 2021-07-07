@@ -48,7 +48,8 @@ describe('Test royalty fee functionality', () => {
     const resetTimer = 3;
     const numberOfSlots = 1;
     const ethAddress = '0x0000000000000000000000000000000000000000';
-    const whitelistAddresses = []
+    const whitelistAddresses = [];
+    const minimumReserveValues = [];
 
     await auctionFactory.createAuction(
       startTime,
@@ -56,7 +57,8 @@ describe('Test royalty fee functionality', () => {
       resetTimer,
       numberOfSlots,
       ethAddress,
-      whitelistAddresses
+      whitelistAddresses,
+      minimumReserveValues
     );
 
     const [signer] = await ethers.getSigners();
@@ -108,7 +110,8 @@ describe('Test royalty fee functionality', () => {
     const resetTimer = 1;
     const numberOfSlots = 1;
     const tokenAddress = mockToken.address;
-    const whitelistAddresses = []
+    const whitelistAddresses = [];
+    const minimumReserveValues = [];
 
     await auctionFactory.createAuction(
       startTime,
@@ -116,7 +119,8 @@ describe('Test royalty fee functionality', () => {
       resetTimer,
       numberOfSlots,
       tokenAddress,
-      whitelistAddresses
+      whitelistAddresses,
+      minimumReserveValues
     );
 
     await mockNFT.mint(signer.address, 'tokenURI');

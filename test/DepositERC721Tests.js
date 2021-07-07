@@ -46,6 +46,7 @@ describe('DEPOSIT ERC721 Functionality', () => {
     const numberOfSlots = 10;
     const bidToken = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
     const whitelistAddresses = [];
+    const minimumReserveValues = [];
 
     await auctionFactory.createAuction(
       startTime,
@@ -53,7 +54,8 @@ describe('DEPOSIT ERC721 Functionality', () => {
       resetTimer,
       numberOfSlots,
       bidToken,
-      whitelistAddresses
+      whitelistAddresses,
+      minimumReserveValues
     );
 
     expect(await auctionFactory.totalAuctions()).to.equal(1);
@@ -173,6 +175,7 @@ describe('DEPOSIT ERC721 Functionality', () => {
     const supportsWhitelist = true;
     const bidToken = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
     const whitelistAddresses = [];
+    const minimumReserveValues = [];
 
     await auctionFactory.createAuction(
       startTime,
@@ -180,7 +183,8 @@ describe('DEPOSIT ERC721 Functionality', () => {
       resetTimer,
       numberOfSlots,
       bidToken,
-      whitelistAddresses
+      whitelistAddresses,
+      minimumReserveValues
     );
 
     const [owner] = await ethers.getSigners();
@@ -225,6 +229,7 @@ describe('DEPOSIT ERC721 Functionality', () => {
     const numberOfSlots = 10;
     const bidToken = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
     const whitelistAddresses = [];
+    const minimumReserveValues = [];
 
     await auctionFactory.createAuction(
       startTime,
@@ -232,7 +237,8 @@ describe('DEPOSIT ERC721 Functionality', () => {
       resetTimer,
       numberOfSlots,
       bidToken,
-      whitelistAddresses
+      whitelistAddresses,
+      minimumReserveValues
     );
     const [signer1, signer2] = await ethers.getSigners();
 
@@ -259,6 +265,7 @@ const createAuction = async (deployedContracts) => {
   const numberOfSlots = 10;
   const bidToken = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
   const whitelistAddresses = [];
+  const minimumReserveValues = [];
 
   await auctionFactory.createAuction(
     startTime,
@@ -266,6 +273,7 @@ const createAuction = async (deployedContracts) => {
     resetTimer,
     numberOfSlots,
     bidToken,
-    whitelistAddresses
+    whitelistAddresses,
+    minimumReserveValues
   );
 };
