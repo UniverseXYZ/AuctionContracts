@@ -49,7 +49,7 @@ describe('AuctionFactory', () => {
 
     await mockNFT.mint(owner.address, 'testURI');
     mockNFT.approve(auctionFactory.address, 1);
-    depositData = await auctionFactory.depositERC721(1, 1, 1, mockNFT.address);
+    depositData = await auctionFactory.depositERC721(1, 1, [[1, mockNFT.address]]);
 
     return { auctionFactory, mockNFT, mockToken };
   }
@@ -136,7 +136,7 @@ describe('AuctionFactory', () => {
     await mockNFT.mint(signer.address, 'nftURI');
     await mockNFT.approve(auctionFactory.address, tokenId);
 
-    await auctionFactory.depositERC721(auctionId, slotIdx, tokenId, mockNFT.address);
+    await auctionFactory.depositERC721(auctionId, slotIdx, [[tokenId, mockNFT.address]]);
 
     mockToken.connect(signer).approve(auctionFactory.address, 100);
 
@@ -177,7 +177,7 @@ describe('AuctionFactory', () => {
     await mockNFT.mint(signer.address, 'nftURI');
     await mockNFT.approve(auctionFactory.address, tokenId);
 
-    await auctionFactory.depositERC721(auctionId, slotIdx, tokenId, mockNFT.address);
+    await auctionFactory.depositERC721(auctionId, slotIdx, [[tokenId, mockNFT.address]]);
 
     mockToken.connect(signer).approve(auctionFactory.address, 100);
 

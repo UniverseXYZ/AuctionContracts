@@ -49,7 +49,7 @@ describe('Secondary Sale Fees Tests', () => {
 
     await universeERC721.approve(auctionFactory.address, 1);
 
-    await auctionFactory.depositERC721(1, 1, 1, universeERC721.address);
+    await auctionFactory.depositERC721(1, 1, [[1, universeERC721.address]]);
 
     await ethers.provider.send('evm_setNextBlockTimestamp', [startTime + 100]); 
     await ethers.provider.send('evm_mine');
@@ -127,7 +127,7 @@ describe('Secondary Sale Fees Tests', () => {
 
     await universeERC721.approve(auctionFactory.address, 1);
 
-    await auctionFactory.depositERC721(1, 1, 1, universeERC721.address);
+    await auctionFactory.depositERC721(1, 1, [[1, universeERC721.address]]);
 
     await ethers.provider.send('evm_setNextBlockTimestamp', [startTime + 100]); 
     await ethers.provider.send('evm_mine');

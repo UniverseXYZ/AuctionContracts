@@ -46,7 +46,7 @@ describe('Extend auction ERC721 Tests', () => {
     await mockNFT.mint(singer.address, 'NFT_URI');
     await mockNFT.approve(auctionFactory.address, 1);
 
-    await auctionFactory.depositERC721(1, 1, 1, mockNFT.address);
+    await auctionFactory.depositERC721(1, 1, [[1, mockNFT.address]]);
 
     await ethers.provider.send('evm_setNextBlockTimestamp', [startTime + 100]); 
     await ethers.provider.send('evm_mine');
@@ -111,7 +111,7 @@ describe('Extend auction ERC721 Tests', () => {
 
     await mockToken.connect(signer2).approve(auctionFactory.address, 100);
 
-    await auctionFactory.depositERC721(1, 1, 1, mockNFT.address);
+    await auctionFactory.depositERC721(1, 1, [[1, mockNFT.address]]);
 
     await ethers.provider.send('evm_setNextBlockTimestamp', [startTime + 100]); 
     await ethers.provider.send('evm_mine');
@@ -163,7 +163,7 @@ describe('Extend auction ERC721 Tests', () => {
     await mockNFT.mint(singer.address, 'NFT_URI');
     await mockNFT.approve(auctionFactory.address, 1);
 
-    await auctionFactory.depositERC721(1, 1, 1, mockNFT.address);
+    await auctionFactory.depositERC721(1, 1, [[1, mockNFT.address]]);
 
     await ethers.provider.send('evm_setNextBlockTimestamp', [startTime + 100]); 
     await ethers.provider.send('evm_mine');

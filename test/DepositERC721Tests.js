@@ -30,7 +30,7 @@ describe('DEPOSIT ERC721 Functionality', () => {
     await mockNFT.mint(owner.address, 'nftURI');
     await mockNFT.approve(auctionFactory.address, tokenId);
 
-    expect(await auctionFactory.depositERC721(auctionId, slotIdx, tokenId, mockNFT.address)).to.be.emit(
+    expect(await auctionFactory.depositERC721(auctionId, slotIdx, [[tokenId, mockNFT.address]])).to.be.emit(
       auctionFactory,
       'LogERC721Deposit'
     );
@@ -72,7 +72,7 @@ describe('DEPOSIT ERC721 Functionality', () => {
     await mockNFT.mint(owner.address, 'nftURI');
     await mockNFT.approve(auctionFactory.address, tokenId);
 
-    await auctionFactory.depositERC721(auctionId, slotIdx, tokenId, mockNFT.address);
+    await auctionFactory.depositERC721(auctionId, slotIdx, [[tokenId, mockNFT.address]]);
     await auctionFactory.cancelAuction(auctionId);
 
     await expect(auctionFactory.withdrawDepositedERC721(1, 1, 1)).to.be.emit(auctionFactory, 'LogERC721Withdrawal');
@@ -92,7 +92,7 @@ describe('DEPOSIT ERC721 Functionality', () => {
     await mockNFT.mint(owner.address, 'nftURI');
     await mockNFT.approve(auctionFactory.address, tokenId);
 
-    await expect(auctionFactory.depositERC721(auctionId, slotIdx, tokenId, mockNFT.address)).to.be.reverted;
+    await expect(auctionFactory.depositERC721(auctionId, slotIdx, [[tokenId, mockNFT.address]])).to.be.reverted;
   });
 
   it('should revert if auctionId do not exists', async () => {
@@ -109,7 +109,7 @@ describe('DEPOSIT ERC721 Functionality', () => {
     await mockNFT.mint(owner.address, 'nftURI');
     await mockNFT.approve(auctionFactory.address, tokenId);
 
-    await expect(auctionFactory.depositERC721(auctionId, slotIdx, tokenId, mockNFT.address)).to.be.reverted;
+    await expect(auctionFactory.depositERC721(auctionId, slotIdx, [[tokenId, mockNFT.address]])).to.be.reverted;
   });
 
   it('should revert if auction slot > 2000', async () => {
@@ -126,7 +126,7 @@ describe('DEPOSIT ERC721 Functionality', () => {
     await mockNFT.mint(owner.address, 'nftURI');
     await mockNFT.approve(auctionFactory.address, tokenId);
 
-    await expect(auctionFactory.depositERC721(auctionId, slotIdx, tokenId, mockNFT.address)).to.be.reverted;
+    await expect(auctionFactory.depositERC721(auctionId, slotIdx, [[tokenId, mockNFT.address]])).to.be.reverted;
   });
 
   it('should revert if tokenAddress is zero address', async () => {
@@ -144,7 +144,7 @@ describe('DEPOSIT ERC721 Functionality', () => {
     await mockNFT.approve(auctionFactory.address, tokenId);
 
     await expect(
-      auctionFactory.depositERC721(auctionId, slotIdx, tokenId, '0x0000000000000000000000000000000000000000')
+      auctionFactory.depositERC721(auctionId, slotIdx, [[tokenId, '0x0000000000000000000000000000000000000000']])
     ).to.be.reverted;
   });
 
@@ -163,7 +163,7 @@ describe('DEPOSIT ERC721 Functionality', () => {
     await mockNFT.approve(auctionFactory.address, tokenId);
 
     await expect(
-      auctionFactory.depositERC721(auctionId, slotIdx, tokenId, '0x0000000000000000000000000000000000000000')
+      auctionFactory.depositERC721(auctionId, slotIdx, [[tokenId, '0x0000000000000000000000000000000000000000']])
     ).to.be.reverted;
   });
 
@@ -201,7 +201,7 @@ describe('DEPOSIT ERC721 Functionality', () => {
     await mockNFT.mint(owner.address, 'nftURI');
     await mockNFT.approve(auctionFactory.address, tokenId);
 
-    await expect(auctionFactory.depositERC721(auctionId, slotIdx, tokenId, mockNFT.address)).to.be.reverted;
+    await expect(auctionFactory.depositERC721(auctionId, slotIdx, [[tokenId, mockNFT.address]])).to.be.reverted;
   });
 
   it('should revert if user try to deposit in no existing slot', async () => {
@@ -220,7 +220,7 @@ describe('DEPOSIT ERC721 Functionality', () => {
     await mockNFT.mint(owner.address, 'nftURI');
     await mockNFT.approve(auctionFactory.address, tokenId);
 
-    await expect(auctionFactory.depositERC721(auctionId, slotIdx, tokenId, mockNFT.address)).to.be.reverted;
+    await expect(auctionFactory.depositERC721(auctionId, slotIdx, [[tokenId, mockNFT.address]])).to.be.reverted;
   });
 
   it('should revert cuz Only depositor can withdraw', async () => {
@@ -256,7 +256,7 @@ describe('DEPOSIT ERC721 Functionality', () => {
     await mockNFT.connect(signer2).mint(signer2.address, 'nftURI');
     await mockNFT.connect(signer2).approve(auctionFactory.address, tokenId);
 
-    await auctionFactory.connect(signer2).depositERC721(auctionId, slotIdx, tokenId, mockNFT.address);
+    await auctionFactory.connect(signer2).depositERC721(auctionId, slotIdx, [[tokenId, mockNFT.address]]);
 
     await expect(auctionFactory.connect(signer1).withdrawDepositedERC721(1, 0, 1)).to.be.reverted;
   });

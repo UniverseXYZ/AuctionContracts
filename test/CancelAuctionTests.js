@@ -96,5 +96,5 @@ const depositNFT = async (auctionFactory, mockNFT) => {
   await mockNFT.mint(owner.address, 'nftURI');
   await mockNFT.approve(auctionFactory.address, tokenId);
 
-  await auctionFactory.depositERC721(auctionId, slotIdx, tokenId, mockNFT.address);
+  await auctionFactory.depositERC721(auctionId, slotIdx, [[tokenId, mockNFT.address]]);
 };

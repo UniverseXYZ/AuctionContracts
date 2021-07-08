@@ -59,7 +59,7 @@ describe('Deposit multiple ERC721 Tests', () => {
 
     // iterate chunks and deposit each one
     for (let chunk = 0; chunk < chunksOfNfts.length; chunk++) {
-      await auctionFactory.depositMultipleERC721(1, 1, chunksOfNfts[chunk]);
+      await auctionFactory.depositERC721(1, 1, chunksOfNfts[chunk]);
     }
 
     const res = await auctionFactory.getDepositedNftsInSlot(1, 1);
@@ -77,7 +77,7 @@ describe('Deposit multiple ERC721 Tests', () => {
     await mockNFT.mint(signer.address, 1);
     await mockNFT.approve(auctionFactory.address, 1);
 
-    await auctionFactory.depositMultipleERC721(1, 1, [[1, mockNFT.address]]);
+    await auctionFactory.depositERC721(1, 1, [[1, mockNFT.address]]);
   });
 
   it('should revert if token address is 0', async () => {
@@ -90,7 +90,7 @@ describe('Deposit multiple ERC721 Tests', () => {
     await mockNFT.mint(signer.address, 1);
     await mockNFT.approve(auctionFactory.address, 1);
 
-    await expect(auctionFactory.depositMultipleERC721(1, 1, [[1, '0x0000000000000000000000000000000000000000']])).to.be
+    await expect(auctionFactory.depositERC721(1, 1, [[1, '0x0000000000000000000000000000000000000000']])).to.be
       .reverted;
   });
 
@@ -124,7 +124,7 @@ describe('Deposit multiple ERC721 Tests', () => {
     await mockNFT.mint(signer.address, 1);
     await mockNFT.approve(auctionFactory.address, 1);
 
-    await expect(auctionFactory.depositMultipleERC721(1, 1, [[1, mockNFT.address]])).to.be.reverted;
+    await expect(auctionFactory.depositERC721(1, 1, [[1, mockNFT.address]])).to.be.reverted;
   });
 
   it('should deposit if user is part of the whitelist', async () => {
@@ -157,7 +157,7 @@ describe('Deposit multiple ERC721 Tests', () => {
     await mockNFT.mint(signer.address, 1);
     await mockNFT.approve(auctionFactory.address, 1);
 
-    await auctionFactory.depositMultipleERC721(1, 1, [[1, mockNFT.address]]);
+    await auctionFactory.depositERC721(1, 1, [[1, mockNFT.address]]);
   });
 
   it('should revert if try to deposit in no existing slot', async () => {
@@ -170,7 +170,7 @@ describe('Deposit multiple ERC721 Tests', () => {
     await mockNFT.mint(signer.address, 1);
     await mockNFT.approve(auctionFactory.address, 1);
 
-    await expect(auctionFactory.depositMultipleERC721(1, 2, [[1, mockNFT.address]])).to.be.reverted;
+    await expect(auctionFactory.depositERC721(1, 2, [[1, mockNFT.address]])).to.be.reverted;
   });
 });
 

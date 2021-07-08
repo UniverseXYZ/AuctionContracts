@@ -49,7 +49,7 @@ describe('Whitelist functionality', () => {
     await mockNft.connect(addr1).mint(addr1.address, 'testNft');
     await mockNft.connect(addr1).approve(auctionFactory.address, 1);
 
-    await expect(auctionFactory.connect(addr1).depositERC721(auctionId, slotIdx, tokenId, mockNft.address)).to.be.emit(
+    await expect(auctionFactory.connect(addr1).depositERC721(auctionId, slotIdx, [[tokenId, mockNft.address]])).to.be.emit(
       auctionFactory,
       'LogERC721Deposit'
     );
@@ -57,7 +57,7 @@ describe('Whitelist functionality', () => {
     await mockNft.connect(addr2).mint(addr2.address, 'testNft2');
     await mockNft.connect(addr2).approve(auctionFactory.address, 2);
 
-    await expect(auctionFactory.connect(addr2).depositERC721(auctionId, slotIdx, 2, mockNft.address)).to.be.emit(
+    await expect(auctionFactory.connect(addr2).depositERC721(auctionId, slotIdx, [[2, mockNft.address]])).to.be.emit(
       auctionFactory,
       'LogERC721Deposit'
     );
@@ -101,7 +101,7 @@ describe('Whitelist functionality', () => {
     await mockNft.connect(addr1).mint(addr1.address, 'testNft');
     await mockNft.connect(addr1).approve(auctionFactory.address, 1);
 
-    await expect(auctionFactory.connect(addr1).depositERC721(auctionId, slotIdx, tokenId, mockNft.address)).to.be.emit(
+    await expect(auctionFactory.connect(addr1).depositERC721(auctionId, slotIdx, [[tokenId, mockNft.address]])).to.be.emit(
       auctionFactory,
       'LogERC721Deposit'
     );
@@ -109,7 +109,7 @@ describe('Whitelist functionality', () => {
     await mockNft.connect(addr2).mint(addr2.address, 'testNft2');
     await mockNft.connect(addr2).approve(auctionFactory.address, 2);
 
-    await expect(auctionFactory.connect(addr2).depositERC721(auctionId, slotIdx, 2, mockNft.address)).to.be.reverted;
+    await expect(auctionFactory.connect(addr2).depositERC721(auctionId, slotIdx, [[2, mockNft.address]])).to.be.reverted;
   });
 
 });
@@ -144,5 +144,5 @@ const depositNFT = async (auctionFactory, mockNFT) => {
   await mockNFT.mint(owner.address, 'nftURI');
   await mockNFT.approve(auctionFactory.address, tokenId);
 
-  await auctionFactory.depositERC721(auctionId, slotIdx, tokenId, mockNFT.address);
+  await auctionFactory.depositERC721(auctionId, slotIdx, [[tokenId, mockNFT.address]]);
 };

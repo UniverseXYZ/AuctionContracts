@@ -1,4 +1,4 @@
-//SPDX-License-Identifier: Unlicense
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.7.0;
 pragma experimental ABIEncoderV2;
 
@@ -87,20 +87,8 @@ interface IAuctionFactory {
     /// @notice Deposit ERC721 assets to the specified Auction
     /// @param auctionId The auction id
     /// @param slotIndex Index of the slot
-    /// @param tokenId Id of the ERC721 token
-    /// @param tokenAddress Address of the ERC721 contract
-    function depositERC721(
-        uint256 auctionId,
-        uint256 slotIndex,
-        uint256 tokenId,
-        address tokenAddress
-    ) external returns (uint256);
-
-    /// @notice Deposit ERC721 assets to the specified Auction
-    /// @param auctionId The auction id
-    /// @param slotIndex Index of the slot
     /// @param tokens Array of ERC721 objects
-    function depositMultipleERC721(
+    function depositERC721(
         uint256 auctionId,
         uint256 slotIndex,
         ERC721[] calldata tokens
@@ -158,20 +146,10 @@ interface IAuctionFactory {
     /// @param auctionId The auction id
     /// @param slotIndex The slot index
     /// @param amount The amount which should be withdrawn
-    function withdrawMultipleERC721FromNonWinningSlot(
-        uint256 auctionId,
-        uint256 slotIndex,
-        uint256 amount
-    ) external returns (bool);
-
-    /// @notice Withdraws the deposited ERC721 if the reserve price is not reached
-    /// @param auctionId The auction id
-    /// @param slotIndex The slot index
-    /// @param nftSlotIndex The index of the NFT inside the particular slot - it is returned on depositERC721() call
     function withdrawERC721FromNonWinningSlot(
         uint256 auctionId,
         uint256 slotIndex,
-        uint256 nftSlotIndex
+        uint256 amount
     ) external returns (bool);
 
     /// @notice Cancels an auction which has not started yet

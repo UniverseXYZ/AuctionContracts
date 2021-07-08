@@ -81,7 +81,7 @@ describe('Withdraw functionalities', () => {
 
     // iterate chunks and deposit each one
     for (let chunk = 0; chunk < chunksOfNfts.length; chunk++) {
-      await auctionFactory.depositMultipleERC721(1, 1, chunksOfNfts[chunk]);
+      await auctionFactory.depositERC721(1, 1, chunksOfNfts[chunk]);
     }
 
     // const res = await auctionFactory.getDepositedNftsInSlot(1, 1);
@@ -111,21 +111,21 @@ describe('Withdraw functionalities', () => {
     await auctionFactory.finalizeAuction(1);
     await auctionFactory.captureAuctionRevenue(1);
 
-    await expect(auctionFactory.withdrawMultipleERC721FromNonWinningSlot(1, 1, 40)).emit(
+    await expect(auctionFactory.withdrawERC721FromNonWinningSlot(1, 1, 40)).emit(
       auctionFactory,
       "LogERC721Withdrawal"
     );
-    await expect(auctionFactory.withdrawMultipleERC721FromNonWinningSlot(1, 1, 40)).emit(
+    await expect(auctionFactory.withdrawERC721FromNonWinningSlot(1, 1, 40)).emit(
       auctionFactory,
       "LogERC721Withdrawal"
     );
-    await expect(auctionFactory.withdrawMultipleERC721FromNonWinningSlot(1, 1, 30)).revertedWith(
-      "Cannot withdraw more than the existing available"
+    await expect(auctionFactory.withdrawERC721FromNonWinningSlot(1, 1, 30)).revertedWith(
+      "Not enough available"
     );
-    await expect(auctionFactory.withdrawMultipleERC721FromNonWinningSlot(1, 1, 41)).revertedWith(
-      "Cannot withdraw more than 40 NFTs in one transaction"
+    await expect(auctionFactory.withdrawERC721FromNonWinningSlot(1, 1, 41)).revertedWith(
+      "Cannot withdraw more than 40"
     );
-    await expect(auctionFactory.withdrawMultipleERC721FromNonWinningSlot(1, 1, 20)).emit(
+    await expect(auctionFactory.withdrawERC721FromNonWinningSlot(1, 1, 20)).emit(
       auctionFactory,
       "LogERC721Withdrawal"
     );
@@ -164,7 +164,7 @@ describe('Withdraw functionalities', () => {
 
     await mockNFT.approve(auctionFactory.address, tokenId);
 
-    await auctionFactory.depositERC721(auctionId, slotIdx, tokenId, mockNFT.address);
+    await auctionFactory.depositERC721(auctionId, slotIdx, [[tokenId, mockNFT.address]]);
 
     await ethers.provider.send('evm_setNextBlockTimestamp', [startTime + 400]); 
     await ethers.provider.send('evm_mine');
@@ -225,7 +225,7 @@ describe('Withdraw functionalities', () => {
 
     await mockNFT.approve(auctionFactory.address, tokenId);
 
-    await auctionFactory.depositERC721(auctionId, slotIdx, tokenId, mockNFT.address);
+    await auctionFactory.depositERC721(auctionId, slotIdx, [[tokenId, mockNFT.address]]);
 
     await ethers.provider.send('evm_setNextBlockTimestamp', [startTime + 400]); 
     await ethers.provider.send('evm_mine');
@@ -277,7 +277,7 @@ describe('Withdraw functionalities', () => {
     await mockNFT.mint(signer.address, 'NFT_URI');
 
     await mockNFT.approve(auctionFactory.address, tokenId);
-    await auctionFactory.depositERC721(1, 1, 1, mockNFT.address);
+    await auctionFactory.depositERC721(1, 1, [[1, mockNFT.address]]);
 
     await ethers.provider.send('evm_setNextBlockTimestamp', [startTime + 400]); 
     await ethers.provider.send('evm_mine');
@@ -301,7 +301,7 @@ describe('Withdraw functionalities', () => {
     await auctionFactory.captureAuctionRevenue(1);
 
     await expect(auctionFactory.withdrawERC721FromNonWinningSlot(1, 1, 1)).revertedWith(
-      'Can withdraw only if reserve price is not met'
+      'Reserve price met'
     );
   });
 
@@ -338,7 +338,7 @@ describe('Withdraw functionalities', () => {
 
     await mockNFT.approve(auctionFactory.address, tokenId);
 
-    await auctionFactory.depositERC721(auctionId, slotIdx, tokenId, mockNFT.address);
+    await auctionFactory.depositERC721(auctionId, slotIdx, [[tokenId, mockNFT.address]]);
 
     await ethers.provider.send('evm_setNextBlockTimestamp', [startTime + 400]); 
     await ethers.provider.send('evm_mine');
@@ -401,7 +401,7 @@ describe('Withdraw functionalities', () => {
 
     await mockNFT.approve(auctionFactory.address, tokenId);
 
-    await auctionFactory.depositERC721(auctionId, slotIdx, tokenId, mockNFT.address);
+    await auctionFactory.depositERC721(auctionId, slotIdx, [[tokenId, mockNFT.address]]);
 
     await ethers.provider.send('evm_setNextBlockTimestamp', [startTime + 400]); 
     await ethers.provider.send('evm_mine')
@@ -422,7 +422,7 @@ describe('Withdraw functionalities', () => {
       value: '500000000000000000000'
     });
 
-    await expect(auctionFactory.withdrawEthBid(1)).revertedWith('Cannot withdraw winning bid!');
+    await expect(auctionFactory.withdrawEthBid(1)).revertedWith('Cannot withdraw winning bid');
   });
 
   it('should withdraw erc20', async () => {
@@ -470,7 +470,7 @@ describe('Withdraw functionalities', () => {
 
     await mockNFT.approve(auctionFactory.address, tokenId);
 
-    await auctionFactory.depositERC721(auctionId, slotIdx, tokenId, mockNFT.address);
+    await auctionFactory.depositERC721(auctionId, slotIdx, [[tokenId, mockNFT.address]]);
 
     await ethers.provider.send('evm_setNextBlockTimestamp', [startTime + 400]); 
     await ethers.provider.send('evm_mine')
@@ -539,7 +539,7 @@ describe('Withdraw functionalities', () => {
 
     await mockNFT.approve(auctionFactory.address, tokenId);
 
-    await auctionFactory.depositERC721(auctionId, slotIdx, tokenId, mockNFT.address);
+    await auctionFactory.depositERC721(auctionId, slotIdx, [[tokenId, mockNFT.address]]);
 
     await ethers.provider.send('evm_setNextBlockTimestamp', [startTime + 400]); 
     await ethers.provider.send('evm_mine')
@@ -604,7 +604,7 @@ describe('Withdraw functionalities', () => {
 
     await mockNFT.approve(auctionFactory.address, tokenId);
 
-    await auctionFactory.depositERC721(auctionId, slotIdx, tokenId, mockNFT.address);
+    await auctionFactory.depositERC721(auctionId, slotIdx, [[tokenId, mockNFT.address]]);
 
     await ethers.provider.send('evm_setNextBlockTimestamp', [startTime + 400]); 
     await ethers.provider.send('evm_mine')
@@ -615,7 +615,7 @@ describe('Withdraw functionalities', () => {
 
     await auctionFactory.connect(signer3).functions['erc20Bid(uint256,uint256)'](1, 120);
 
-    await expect(auctionFactory.withdrawERC20Bid(1)).revertedWith('Cannot withdraw winning bid!');
+    await expect(auctionFactory.withdrawERC20Bid(1)).revertedWith('Cannot withdraw winning bid');
   });
 });
 

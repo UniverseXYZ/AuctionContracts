@@ -56,7 +56,7 @@ describe('Test royalty fee functionality', () => {
 
     await mockNFT.approve(auctionFactory.address, 1);
 
-    await auctionFactory.depositERC721(1, 1, 1, mockNFT.address);
+    await auctionFactory.depositERC721(1, 1, [[1, mockNFT.address]]);
 
     await auctionFactory.setRoyaltyFeeBps('5000');
 
@@ -119,7 +119,7 @@ describe('Test royalty fee functionality', () => {
 
     await mockNFT.approve(auctionFactory.address, 1);
 
-    await auctionFactory.depositERC721(1, 1, 1, mockNFT.address);
+    await auctionFactory.depositERC721(1, 1, [[1, mockNFT.address]]);
 
     await auctionFactory.setRoyaltyFeeBps('5000');
 
