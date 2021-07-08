@@ -28,16 +28,18 @@ describe('Whitelist functionality', () => {
     const ethAddress = '0x0000000000000000000000000000000000000000';
     const whitelistAddresses = [addr1.address, addr2.address];
     const minimumReserveValues = [];
+    const paymentSplits = [];
 
-    await auctionFactory.createAuction(
+    await auctionFactory.createAuction([
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
       ethAddress,
       whitelistAddresses,
-      minimumReserveValues
-    );
+      minimumReserveValues,
+      paymentSplits
+    ]);
 
     const auctionId = 1;
     const slotIdx = 1;
@@ -78,16 +80,18 @@ describe('Whitelist functionality', () => {
     const ethAddress = '0x0000000000000000000000000000000000000000';
     const whitelistAddresses = [addr1.address];
     const minimumReserveValues = [];
+    const paymentSplits = [];
 
-    await auctionFactory.createAuction(
+    await auctionFactory.createAuction([
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
       ethAddress,
       whitelistAddresses,
-      minimumReserveValues
-    );
+      minimumReserveValues,
+      paymentSplits
+    ]);
 
     const auctionId = 1;
     const slotIdx = 1;

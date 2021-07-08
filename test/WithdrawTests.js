@@ -50,16 +50,18 @@ describe('Withdraw functionalities', () => {
     const ethAddress = '0x0000000000000000000000000000000000000000';
     const whitelistAddresses = []
     const minimumReserveValues = ['100000000000000000000', '100000000000000000000', '100000000000000000000'];
+    const paymentSplits = [];
 
-    await auctionFactory.createAuction(
+    await auctionFactory.createAuction([
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
       ethAddress,
       whitelistAddresses,
-      minimumReserveValues
-    );
+      minimumReserveValues,
+      paymentSplits
+    ]);
 
     const [signer, signer2, signer3] = await ethers.getSigners();
 
@@ -106,6 +108,7 @@ describe('Withdraw functionalities', () => {
     await ethers.provider.send('evm_mine');
 
     await auctionFactory.finalizeAuction(1);
+    await auctionFactory.captureAuctionRevenue(1);
 
     await expect(auctionFactory.withdrawMultipleERC721FromNonWinningSlot(1, 1, 40)).emit(
       auctionFactory,
@@ -138,16 +141,18 @@ describe('Withdraw functionalities', () => {
     const ethAddress = '0x0000000000000000000000000000000000000000';
     const whitelistAddresses = []
     const minimumReserveValues = ['100000000000000000000', '100000000000000000000', '100000000000000000000'];
+    const paymentSplits = [];
   
-    await auctionFactory.createAuction(
+    await auctionFactory.createAuction([
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
       ethAddress,
       whitelistAddresses,
-      minimumReserveValues
-    );
+      minimumReserveValues,
+      paymentSplits
+    ]);
 
     const [signer, signer2, signer3] = await ethers.getSigners();
     const auctionId = 1;
@@ -179,6 +184,7 @@ describe('Withdraw functionalities', () => {
     await ethers.provider.send('evm_mine');
 
     await auctionFactory.finalizeAuction(1);
+    await auctionFactory.captureAuctionRevenue(1);
 
     await expect(auctionFactory.connect(signer2).withdrawERC721FromNonWinningSlot(1, 1, 1)).revertedWith(
       'Only depositor can withdraw'
@@ -196,16 +202,18 @@ describe('Withdraw functionalities', () => {
     const ethAddress = '0x0000000000000000000000000000000000000000';
     const whitelistAddresses = []
     const minimumReserveValues = ['100000000000000000000', '100000000000000000000', '100000000000000000000'];
+    const paymentSplits = [];
   
-    await auctionFactory.createAuction(
+    await auctionFactory.createAuction([
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
       ethAddress,
       whitelistAddresses,
-      minimumReserveValues
-    );
+      minimumReserveValues,
+      paymentSplits
+    ]);
 
     const [signer, signer2, signer3] = await ethers.getSigners();
     const auctionId = 1;
@@ -247,16 +255,18 @@ describe('Withdraw functionalities', () => {
     const ethAddress = '0x0000000000000000000000000000000000000000';
     const whitelistAddresses = []
     const minimumReserveValues = ['1000000000000000000', '1000000000000000000', '1000000000000000000'];
+    const paymentSplits = [];
   
-    await auctionFactory.createAuction(
+    await auctionFactory.createAuction([
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
       ethAddress,
       whitelistAddresses,
-      minimumReserveValues
-    );
+      minimumReserveValues,
+      paymentSplits
+    ]);
 
     const [signer, signer2, signer3] = await ethers.getSigners();
     const auctionId = 1;
@@ -287,6 +297,7 @@ describe('Withdraw functionalities', () => {
     await ethers.provider.send('evm_mine');
 
     await auctionFactory.finalizeAuction(1);
+    await auctionFactory.captureAuctionRevenue(1);
 
     await expect(auctionFactory.withdrawERC721FromNonWinningSlot(1, 1, 1)).revertedWith(
       'Can withdraw only if reserve price is not met'
@@ -304,16 +315,18 @@ describe('Withdraw functionalities', () => {
     const ethAddress = '0x0000000000000000000000000000000000000000';
     const whitelistAddresses = []
     const minimumReserveValues = ['100000000000000000000', '100000000000000000000', '100000000000000000000'];
+    const paymentSplits = [];
   
-    await auctionFactory.createAuction(
+    await auctionFactory.createAuction([
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
       ethAddress,
       whitelistAddresses,
-      minimumReserveValues
-    );
+      minimumReserveValues,
+      paymentSplits
+    ]);
 
     const [signer, signer2, signer3, signer4, signer5] = await ethers.getSigners();
     const auctionId = 1;
@@ -349,6 +362,7 @@ describe('Withdraw functionalities', () => {
     await ethers.provider.send('evm_mine');
 
     await auctionFactory.finalizeAuction(1);
+    await auctionFactory.captureAuctionRevenue(1);
 
     await expect(auctionFactory.connect(signer5).withdrawEthBid(1)).revertedWith('You have 0 deposited');
   });
@@ -364,16 +378,18 @@ describe('Withdraw functionalities', () => {
     const ethAddress = '0x0000000000000000000000000000000000000000';
     const whitelistAddresses = []
     const minimumReserveValues = ['100000000000000000000', '100000000000000000000', '100000000000000000000', '100000000000000000000'];
+    const paymentSplits = [];
   
-    await auctionFactory.createAuction(
+    await auctionFactory.createAuction([
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
       ethAddress,
       whitelistAddresses,
-      minimumReserveValues
-    );
+      minimumReserveValues,
+      paymentSplits
+    ]);
 
     const [signer, signer2, signer3, signer4] = await ethers.getSigners();
     const auctionId = 1;
@@ -418,16 +434,18 @@ describe('Withdraw functionalities', () => {
     const numberOfSlots = 2;
     const whitelistAddresses = []
     const minimumReserveValues = ['200', '200']
+    const paymentSplits = [];
   
-    await auctionFactory.createAuction(
+    await auctionFactory.createAuction([
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
       mockToken.address,
       whitelistAddresses,
-      minimumReserveValues
-    );
+      minimumReserveValues,
+      paymentSplits
+    ]);
 
     const [signer, signer2, signer3] = await ethers.getSigners();
 
@@ -466,6 +484,7 @@ describe('Withdraw functionalities', () => {
     await ethers.provider.send('evm_mine')
 
     await auctionFactory.finalizeAuction(1);
+    await auctionFactory.captureAuctionRevenue(1);
 
     await expect(auctionFactory.withdrawERC20Bid(1)).emit(auctionFactory, 'LogBidWithdrawal');
 
@@ -484,16 +503,18 @@ describe('Withdraw functionalities', () => {
     const numberOfSlots = 3;
     const whitelistAddresses = []
     const minimumReserveValues = ['200', '200', '200'];
+    const paymentSplits = [];
   
-    await auctionFactory.createAuction(
+    await auctionFactory.createAuction([
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
       mockToken.address,
       whitelistAddresses,
-      minimumReserveValues
-    );
+      minimumReserveValues,
+      paymentSplits
+    ]);
 
     const [signer, signer2, signer3, signer4] = await ethers.getSigners();
 
@@ -532,6 +553,7 @@ describe('Withdraw functionalities', () => {
     await ethers.provider.send('evm_mine')
 
     await auctionFactory.finalizeAuction(1);
+    await auctionFactory.captureAuctionRevenue(1);
 
     await expect(auctionFactory.connect(signer4).withdrawERC20Bid(1)).revertedWith('You have 0 deposited');
   });
@@ -546,16 +568,18 @@ describe('Withdraw functionalities', () => {
     const numberOfSlots = 3;
     const whitelistAddresses = [];
     const minimumReserveValues = ['200', '200', '200'];
+    const paymentSplits = [];
   
-    await auctionFactory.createAuction(
+    await auctionFactory.createAuction([
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
       mockToken.address,
       whitelistAddresses,
-      minimumReserveValues
-    );
+      minimumReserveValues,
+      paymentSplits
+    ]);
 
     const [signer, signer2, signer3, signer4] = await ethers.getSigners();
 

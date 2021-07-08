@@ -15,28 +15,14 @@ describe('Test royalty fee functionality', () => {
     return { auctionFactory, mockNFT, mockToken };
   };
 
-  it('should set royalty fee if is set by the owner and is less than 10%', async () => {
-    const { auctionFactory } = await loadFixture(deployContracts);
-
-    await auctionFactory.setRoyaltyFeeMantissa('90000000000000000');
-
-    expect(await auctionFactory.royaltyFeeMantissa()).to.equal('90000000000000000');
-  });
-
   it('should revert if not the contract owner try to set it', async () => {
     const { auctionFactory } = await loadFixture(deployContracts);
 
     const [signer, signer2] = await ethers.getSigners();
 
-    await expect(auctionFactory.connect(signer2).setRoyaltyFeeMantissa('90000000000000000')).revertedWith(
+    await expect(auctionFactory.connect(signer2).setRoyaltyFeeBps('9000')).revertedWith(
       'Ownable: caller is not the owner'
     );
-  });
-
-  it('should revert if fee is equal or higher than 10%', async () => {
-    const { auctionFactory } = await loadFixture(deployContracts);
-
-    await expect(auctionFactory.setRoyaltyFeeMantissa('100000000000000000')).revertedWith('Should be less than 10%');
   });
 
   it('should withdraw royaltee with eth successfully', async () => {
@@ -50,16 +36,18 @@ describe('Test royalty fee functionality', () => {
     const ethAddress = '0x0000000000000000000000000000000000000000';
     const whitelistAddresses = [];
     const minimumReserveValues = [];
+    const paymentSplits = [];
 
-    await auctionFactory.createAuction(
+    await auctionFactory.createAuction([
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
       ethAddress,
       whitelistAddresses,
-      minimumReserveValues
-    );
+      minimumReserveValues,
+      paymentSplits
+    ]);
 
     const [signer] = await ethers.getSigners();
 
@@ -69,9 +57,9 @@ describe('Test royalty fee functionality', () => {
 
     await auctionFactory.depositERC721(1, 1, 1, mockNFT.address);
 
-    await auctionFactory.setRoyaltyFeeMantissa('50000000000000000');
+    await auctionFactory.setRoyaltyFeeBps('5000');
 
-    expect(await auctionFactory.royaltyFeeMantissa()).to.equal('50000000000000000');
+    expect(await auctionFactory.royaltyFeeBps()).to.equal('5000');
 
     await ethers.provider.send('evm_setNextBlockTimestamp', [startTime + 700]); 
     await ethers.provider.send('evm_mine');
@@ -84,8 +72,9 @@ describe('Test royalty fee functionality', () => {
     await ethers.provider.send('evm_mine');
 
     await auctionFactory.finalizeAuction(1);
+    await auctionFactory.captureAuctionRevenue(1);
 
-    expect(await auctionFactory.royaltiesReserve(ethAddress)).to.equal('50000000000000000');
+    expect(await auctionFactory.royaltiesReserve(ethAddress)).to.equal("500000000000000000");
 
     await expect(auctionFactory.withdrawRoyalties(ethAddress, signer.address)).emit(
       auctionFactory,
@@ -112,16 +101,18 @@ describe('Test royalty fee functionality', () => {
     const tokenAddress = mockToken.address;
     const whitelistAddresses = [];
     const minimumReserveValues = [];
+    const paymentSplits = [];
 
-    await auctionFactory.createAuction(
+    await auctionFactory.createAuction([
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
       tokenAddress,
       whitelistAddresses,
-      minimumReserveValues
-    );
+      minimumReserveValues,
+      paymentSplits
+    ]);
 
     await mockNFT.mint(signer.address, 'tokenURI');
 
@@ -129,9 +120,9 @@ describe('Test royalty fee functionality', () => {
 
     await auctionFactory.depositERC721(1, 1, 1, mockNFT.address);
 
-    await auctionFactory.setRoyaltyFeeMantissa('50000000000000000');
+    await auctionFactory.setRoyaltyFeeBps('5000');
 
-    expect(await auctionFactory.royaltyFeeMantissa()).to.equal('50000000000000000');
+    expect(await auctionFactory.royaltyFeeBps()).to.equal('5000');
 
     await ethers.provider.send('evm_setNextBlockTimestamp', [startTime + 700]); 
     await ethers.provider.send('evm_mine');
@@ -142,8 +133,9 @@ describe('Test royalty fee functionality', () => {
     await ethers.provider.send('evm_mine');
 
     await auctionFactory.finalizeAuction(1);
+    await auctionFactory.captureAuctionRevenue(1);
 
-    expect(await auctionFactory.royaltiesReserve(tokenAddress)).to.equal('50000000000000000');
+    expect(await auctionFactory.royaltiesReserve(tokenAddress)).to.equal('500000000000000000');
 
     await expect(auctionFactory.withdrawRoyalties(tokenAddress, signer.address)).emit(
       auctionFactory,

@@ -25,16 +25,18 @@ describe('Test bidding with ETH', () => {
     const ethAddress = '0x0000000000000000000000000000000000000000';
     const whitelistAddresses = [];
     const minimumReserveValues = [];
+    const paymentSplits = [];
   
-    await auctionFactory.createAuction(
+    await auctionFactory.createAuction([
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
       ethAddress,
       whitelistAddresses,
-      minimumReserveValues
-    );
+      minimumReserveValues,
+      paymentSplits
+    ]);
 
     await depositNFT(auctionFactory, mockNFT);
 
@@ -82,16 +84,18 @@ describe('Test bidding with ETH', () => {
     const ethAddress = '0x0000000000000000000000000000000000000000';
     const whitelistAddresses = [];
     const minimumReserveValues = [];
+    const paymentSplits = [];
 
-    await auctionFactory.createAuction(
+    await auctionFactory.createAuction([
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
       ethAddress,
       whitelistAddresses,
-      minimumReserveValues
-    );
+      minimumReserveValues,
+      paymentSplits
+    ]);
 
     await depositNFT(auctionFactory, mockNFT);
 
@@ -128,16 +132,18 @@ describe('Test bidding with ETH', () => {
     const tokenAddress = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
     const whitelistAddresses = [];
     const minimumReserveValues = [];
+    const paymentSplits = [];
 
-    await auctionFactory.createAuction(
+    await auctionFactory.createAuction([
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
       tokenAddress,
       whitelistAddresses,
-      minimumReserveValues
-    );
+      minimumReserveValues,
+      paymentSplits
+    ]);
 
     await depositNFT(auctionFactory, mockNFT);
 
@@ -160,16 +166,18 @@ describe('Test bidding with ETH', () => {
     const ethAddress = '0x0000000000000000000000000000000000000000';
     const whitelistAddresses = [];
     const minimumReserveValues = [];
+    const paymentSplits = [];
 
-    await auctionFactory.createAuction(
+    await auctionFactory.createAuction([
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
       ethAddress,
       whitelistAddresses,
-      minimumReserveValues
-    );
+      minimumReserveValues,
+      paymentSplits
+    ]);
 
     await depositNFT(auctionFactory, mockNFT);
 
@@ -194,16 +202,18 @@ describe('Test bidding with ETH', () => {
     const ethAddress = '0x0000000000000000000000000000000000000000';
     const whitelistAddresses = [];
     const minimumReserveValues = [];
+    const paymentSplits = [];
 
-    await auctionFactory.createAuction(
+    await auctionFactory.createAuction([
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
       ethAddress,
       whitelistAddresses,
-      minimumReserveValues
-    );
+      minimumReserveValues,
+      paymentSplits
+    ]);
 
     await depositNFT(auctionFactory, mockNFT);
 
@@ -229,16 +239,18 @@ describe('Test bidding with ETH', () => {
     const ethAddress = '0x0000000000000000000000000000000000000000';
     const whitelistAddresses = [];
     const minimumReserveValues = [];
+    const paymentSplits = [];
 
-    await auctionFactory.createAuction(
+    await auctionFactory.createAuction([
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
       ethAddress,
       whitelistAddresses,
-      minimumReserveValues
-    );
+      minimumReserveValues,
+      paymentSplits
+    ]);
 
     await depositNFT(auctionFactory, mockNFT);
 
@@ -268,16 +280,18 @@ describe('Test bidding with ETH', () => {
     const ethAddress = '0x0000000000000000000000000000000000000000';
     const whitelistAddresses = [];
     const minimumReserveValues = [];
+    const paymentSplits = [];
 
-    await auctionFactory.createAuction(
+    await auctionFactory.createAuction([
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
       ethAddress,
       whitelistAddresses,
-      minimumReserveValues
-    );
+      minimumReserveValues,
+      paymentSplits
+    ]);
 
     await depositNFT(auctionFactory, mockNFT);
 
@@ -308,16 +322,18 @@ const createAuction = async (auctionFactory) => {
   const ethAddress = '0x0000000000000000000000000000000000000000';
   const whitelistAddresses = [];
   const minimumReserveValues = [];
+  const paymentSplits = [];
 
-  await auctionFactory.createAuction(
+  await auctionFactory.createAuction([
     startTime,
     endTime,
     resetTimer,
     numberOfSlots,
     ethAddress,
     whitelistAddresses,
-    minimumReserveValues
-  );
+    minimumReserveValues,
+    paymentSplits
+  ]);
 };
 
 const depositNFT = async (auctionFactory, mockNFT) => {

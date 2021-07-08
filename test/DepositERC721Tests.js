@@ -47,16 +47,18 @@ describe('DEPOSIT ERC721 Functionality', () => {
     const bidToken = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
     const whitelistAddresses = [];
     const minimumReserveValues = [];
+    const paymentSplits = [];
 
-    await auctionFactory.createAuction(
+    await auctionFactory.createAuction([
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
       bidToken,
       whitelistAddresses,
-      minimumReserveValues
-    );
+      minimumReserveValues,
+      paymentSplits
+    ]);
 
     expect(await auctionFactory.totalAuctions()).to.equal(1);
 
@@ -176,16 +178,18 @@ describe('DEPOSIT ERC721 Functionality', () => {
     const bidToken = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
     const whitelistAddresses = [];
     const minimumReserveValues = [];
+    const paymentSplits = [];
 
-    await auctionFactory.createAuction(
+    await auctionFactory.createAuction([
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
       bidToken,
       whitelistAddresses,
-      minimumReserveValues
-    );
+      minimumReserveValues,
+      paymentSplits
+    ]);
 
     const [owner] = await ethers.getSigners();
 
@@ -230,16 +234,18 @@ describe('DEPOSIT ERC721 Functionality', () => {
     const bidToken = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
     const whitelistAddresses = [];
     const minimumReserveValues = [];
+    const paymentSplits = [];
 
-    await auctionFactory.createAuction(
+    await auctionFactory.createAuction([
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
       bidToken,
       whitelistAddresses,
-      minimumReserveValues
-    );
+      minimumReserveValues,
+      paymentSplits
+    ]);
     const [signer1, signer2] = await ethers.getSigners();
 
     const auctionId = 1;
@@ -266,14 +272,16 @@ const createAuction = async (deployedContracts) => {
   const bidToken = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
   const whitelistAddresses = [];
   const minimumReserveValues = [];
+  const paymentSplits = [];
 
-  await auctionFactory.createAuction(
+  await auctionFactory.createAuction([
     startTime,
     endTime,
     resetTimer,
     numberOfSlots,
     bidToken,
     whitelistAddresses,
-    minimumReserveValues
-  );
+    minimumReserveValues,
+    paymentSplits
+  ]);
 };

@@ -27,16 +27,18 @@ describe('Extend auction ERC721 Tests', () => {
     const ethAddress = '0x0000000000000000000000000000000000000000';
     const whitelistAddresses = [];
     const minimumReserveValues = [];
+    const paymentSplits = [];
   
-    await auctionFactory.createAuction(
+    await auctionFactory.createAuction([
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
       ethAddress,
       whitelistAddresses,
-      minimumReserveValues
-    );
+      minimumReserveValues,
+      paymentSplits
+    ]);
 
     const [singer, signer2] = await ethers.getSigners();
 
@@ -85,16 +87,18 @@ describe('Extend auction ERC721 Tests', () => {
     const tokenAddress = mockToken.address;
     const whitelistAddresses = [];
     const minimumReserveValues = [];
+    const paymentSplits = [];
 
-    await auctionFactory.createAuction(
+    await auctionFactory.createAuction([
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
       tokenAddress,
       whitelistAddresses,
-      minimumReserveValues
-    );
+      minimumReserveValues,
+      paymentSplits
+    ]);
 
     const [singer, signer2] = await ethers.getSigners();
 
@@ -140,16 +144,18 @@ describe('Extend auction ERC721 Tests', () => {
     const ethAddress = '0x0000000000000000000000000000000000000000';
     const whitelistAddresses = [];
     const minimumReserveValues = [];
+    const paymentSplits = [];
 
-    await auctionFactory.createAuction(
+    await auctionFactory.createAuction([
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
       ethAddress,
       whitelistAddresses,
-      minimumReserveValues
-    );
+      minimumReserveValues,
+      paymentSplits
+    ]);
 
     const [singer] = await ethers.getSigners();
 
@@ -188,14 +194,16 @@ const createAuction = async (auctionFactory) => {
   const ethAddress = '0x0000000000000000000000000000000000000000';
   const whitelistAddresses = [];
   const minimumReserveValues = [];
+  const paymentSplits = [];
 
-  await auctionFactory.createAuction(
+  await auctionFactory.createAuction([
     startTime,
     endTime,
     resetTimer,
     numberOfSlots,
     ethAddress,
     whitelistAddresses,
-    minimumReserveValues
-  );
+    minimumReserveValues,
+    paymentSplits
+  ]);
 };

@@ -7,17 +7,18 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721Holder.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "./IAuctionFactory.sol";
 import "./HasSecondarySaleFees.sol";
 
-contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
+contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable, ReentrancyGuard {
     using SafeMath for uint256;
 
     uint256 public totalAuctions;
     uint256 public maxNumberOfSlotsPerAuction;
-    uint256 public royaltyFeeMantissa;
+    uint256 public royaltyFeeBps;
     uint256 public nftSlotLimit;
-    bytes4 private constant _INTERFACE_ID_FEES = 0xb7799584;
+    bytes4  private constant _INTERFACE_ID_FEES = 0xb7799584;
     address private constant GUARD = address(1);
     
     mapping(uint256 => Auction) public auctions;
@@ -110,7 +111,6 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         uint256 time
     );
 
-
     modifier onlyExistingAuction(uint256 _auctionId) {
         require(_auctionId > 0 && _auctionId <= totalAuctions, "Auction doesn't exist");
         _;
@@ -162,47 +162,46 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
     }
 
     constructor(uint256 _maxNumberOfSlotsPerAuction, uint256 _nftSlotLimit) {
-        require(_maxNumberOfSlotsPerAuction > 0 && _maxNumberOfSlotsPerAuction <= 2000, "Number of slots cannot be more than 2000");
         maxNumberOfSlotsPerAuction = _maxNumberOfSlotsPerAuction;
         nftSlotLimit = _nftSlotLimit;
     }
 
-    function createAuction(
-        uint256 _startTime,
-        uint256 _endTime,
-        uint256 _resetTimer,
-        uint256 _numberOfSlots,
-        address _bidToken,
-        address[] calldata _addressesToWhitelist,
-        uint256[] calldata _minimumReserveValues
-    ) external override returns (uint256) {
+    function createAuction(AuctionConfig calldata _config) 
+        external
+        override
+        returns (uint256) {
         uint256 currentTime = block.timestamp;
 
-        require(currentTime < _startTime, "Auction cannot begin before current block timestamp");
-        require(_startTime < _endTime, "Auction cannot end before it has launched");
-        require(_resetTimer > 0, "Reset timer must be higher than 0 seconds");
-        require(_numberOfSlots > 0 && _numberOfSlots <= maxNumberOfSlotsPerAuction, "Auction can have between 1 and 2000 slots");
-        if (_minimumReserveValues.length > 0) {
-            require(_numberOfSlots == _minimumReserveValues.length, "Incorrect number of slots");
+        require(currentTime < _config.startTime, "Auction cannot begin before current block timestamp");
+        require(_config.startTime < _config.endTime, "Auction cannot end before it has launched");
+        require(_config.resetTimer > 0, "Reset timer must be higher than 0 seconds");
+        require(_config.numberOfSlots > 0 && _config.numberOfSlots <= maxNumberOfSlotsPerAuction, "Auction can have between 1 and 2000 slots");
+
+        if (_config.minimumReserveValues.length > 0) {
+            require(_config.numberOfSlots == _config.minimumReserveValues.length, "Incorrect number of slots");
         }
         
         uint256 _auctionId = totalAuctions.add(1);
 
         auctions[_auctionId].auctionOwner = msg.sender;
-        auctions[_auctionId].startTime = _startTime;
-        auctions[_auctionId].endTime = _endTime;
-        auctions[_auctionId].resetTimer = _resetTimer;
-        auctions[_auctionId].numberOfSlots = _numberOfSlots;
-        auctions[_auctionId].supportsWhitelist = _addressesToWhitelist.length > 0 ? true : false;
-        auctions[_auctionId].bidToken = _bidToken;
+        auctions[_auctionId].startTime = _config.startTime;
+        auctions[_auctionId].endTime = _config.endTime;
+        auctions[_auctionId].resetTimer = _config.resetTimer;
+        auctions[_auctionId].numberOfSlots = _config.numberOfSlots;
+        auctions[_auctionId].supportsWhitelist = _config.addressesToWhitelist.length > 0 ? true : false;
+        auctions[_auctionId].bidToken = _config.bidToken;
         auctions[_auctionId].nextBidders[GUARD] = GUARD;
 
-        for (uint256 i = 0; i < _addressesToWhitelist.length; i++) {
-            auctions[_auctionId].whitelistAddresses[_addressesToWhitelist[i]] = true;
+        for (uint256 i = 0; i < _config.addressesToWhitelist.length; i+=1) {
+            auctions[_auctionId].whitelistAddresses[_config.addressesToWhitelist[i]] = true;
         }
 
-        for (uint256 i = 0; i < _minimumReserveValues.length; i++) {
-            auctions[_auctionId].slots[i + 1].reservePrice = _minimumReserveValues[i];
+        for (uint256 j = 0; j < _config.minimumReserveValues.length; j+=1) {
+            auctions[_auctionId].slots[j + 1].reservePrice = _config.minimumReserveValues[j];
+        }
+
+        for (uint256 k = 0; k < _config.paymentSplits.length; k+=1) {
+            auctions[_auctionId].paymentSplits.push(_config.paymentSplits[k]);
         }
 
         totalAuctions = _auctionId;
@@ -210,10 +209,10 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         emit LogAuctionCreated(
             _auctionId,
             msg.sender,
-            _numberOfSlots,
-            _startTime,
-            _endTime,
-            _resetTimer,
+            _config.numberOfSlots,
+            _config.startTime,
+            _config.endTime,
+            _config.resetTimer,
             block.timestamp
         );
 
@@ -292,7 +291,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         require((_tokens.length <= 40),"Cannot deposit more than 40 nfts at once");
         require((auctions[_auctionId].slots[_slotIndex].totalDepositedNfts + _tokens.length <= nftSlotLimit), "Nfts slot limit exceeded");
 
-        for (uint256 i = 0; i < _tokens.length; i++) {
+        for (uint256 i = 0; i < _tokens.length; i+=1) {
             _nftSlotIndexes[i] = depositERC721(
                 _auctionId,
                 _slotIndex,
@@ -322,7 +321,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         require(_slotIndices.length <= 10, "Slots should be no more than 10");
         require(_slotIndices.length == _tokens.length, "Slots number should be equal to the ERC721 batches");
 
-        for (uint256 i = 0; i < _slotIndices.length; i++) {
+        for (uint256 i = 0; i < _slotIndices.length; i+=1) {
             require(_tokens[i].length <= 5, "Max 5 ERC721s could be transferred");
             depositMultipleERC721(_auctionId, _slotIndices[i], _tokens[i]);
         }
@@ -468,7 +467,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         }
 
         // Award the slots by checking the highest bidders and minimum reserve values
-        for (uint256 i = 0; i < bidders.length; i++) {
+        for (uint256 i = 0; i < bidders.length; i+=1) {
             for (lastAwardedIndex; lastAwardedIndex < auction.numberOfSlots; lastAwardedIndex++) {
 
                 if (auction.bidBalance[bidders[i]] >= auction.slots[lastAwardedIndex + 1].reservePrice) {
@@ -493,8 +492,24 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
             }
         }
 
+        auction.isFinalized = true;
+
+        return true;
+    }
+
+    function captureAuctionRevenue(uint256 auctionId)
+        external
+        override
+        onlyExistingAuction(auctionId)
+        onlyAuctionNotCanceled(auctionId)
+        returns (bool)
+    {
+        Auction storage auction = auctions[auctionId];
+
+        require(auction.isFinalized, "Auction has not finished");
+
         // Calculate the auction revenue from sold slots and reset bid balances
-        for (uint256 i = 0; i < auction.numberOfSlots; i++) {
+        for (uint256 i = 0; i < auction.numberOfSlots; i+=1) {
             if (auction.slots[i + 1].reservePriceReached) {
                 auction.winners[i + 1] = auction.slots[i + 1].winner;
                 auctionsRevenue[auctionId] = auctionsRevenue[auctionId].add(auction.bidBalance[auction.slots[i + 1].winner]);
@@ -507,11 +522,13 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
             }
         }
 
+        // Calculate payment splits and deduct from auction revenue
+
         // Calculate DAO fee and deduct from auction revenue
-        uint256 _royaltyFee = calculateRoyaltyFee(auctionsRevenue[auctionId], royaltyFeeMantissa);
+        uint256 _royaltyFee = royaltyFeeBps.mul(auctionsRevenue[auctionId]).div(10000);
         auctionsRevenue[auctionId] = auctionsRevenue[auctionId].sub(_royaltyFee);
         royaltiesReserve[auction.bidToken] = royaltiesReserve[auction.bidToken].add(_royaltyFee);
-        auction.isFinalized = true;
+        auction.revenueCaptured = true;
 
         return true;
     }
@@ -628,11 +645,11 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
 
         require(!auction.slots[slotIndex].reservePriceReached, "Can withdraw only if reserve price is not met");
 
-        require(auction.isFinalized, "Auction should be finalized");
+        require(auction.isFinalized && auction.revenueCaptured, "Auction should be finalized");
         require(amount <= 40, "Cannot withdraw more than 40 NFTs in one transaction");
         require(amount <= totalDeposited.sub(totalWithdrawn), "Cannot withdraw more than the existing available");
 
-        for (uint256 i = totalWithdrawn; i < amount.add(totalWithdrawn); i++) {
+        for (uint256 i = totalWithdrawn; i < amount.add(totalWithdrawn); i+=1) {
             withdrawERC721FromNonWinningSlot(auctionId, slotIndex, (i + 1));
         }
 
@@ -656,7 +673,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
 
         require(msg.sender == nftForWithdrawal.depositor, "Only depositor can withdraw");
         require(!auction.slots[slotIndex].reservePriceReached, "Can withdraw only if reserve price is not met");
-        require(auction.isFinalized, "Auction should be finalized");
+        require(auction.isFinalized && auction.revenueCaptured, "Auction should be finalized");
 
         auction.totalWithdrawnERC721s = auction.totalWithdrawnERC721s.add(1);
         auction.slots[slotIndex].totalWithdrawnNfts = auction.slots[slotIndex].totalWithdrawnNfts.add(1);
@@ -707,20 +724,10 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
 
         DepositedERC721[] memory nfts = new DepositedERC721[](nftsInSlot);
 
-        for (uint256 i = 0; i < nftsInSlot; i++) {
+        for (uint256 i = 0; i < nftsInSlot; i+=1) {
             nfts[i] = auctions[auctionId].slots[slotIndex].depositedNfts[i + 1];
         }
         return nfts;
-    }
-
-    function getTotalDepositedNftsInSlot(uint256 auctionId, uint256 slotIndex)
-        external
-        view
-        override
-        onlyExistingAuction(auctionId)
-        returns (uint256)
-    {
-        return auctions[auctionId].slots[slotIndex].totalDepositedNfts;
     }
 
     function getSlotWinner(uint256 auctionId, uint256 slotIndex)
@@ -776,7 +783,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         returns (bool)
     {
         Auction storage auction = auctions[auctionId];
-        require(auction.isFinalized, "Auction should have ended");
+        require(auction.isFinalized && auction.revenueCaptured, "Auction should have ended");
 
         uint256 amountToWithdraw = auctionsRevenue[auctionId];
 
@@ -815,14 +822,14 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         uint256 totalDeposited = winningSlot.totalDepositedNfts;
         uint256 totalWithdrawn = winningSlot.totalWithdrawnNfts;
 
-        require(auction.isFinalized, "Auction should have ended");
+        require(auction.isFinalized && auction.revenueCaptured, "Auction should have ended");
         require(auction.winners[slotIndex] == claimer, "Only the winner can claim rewards");
         require(winningSlot.reservePriceReached, "The reserve price hasn't been met");
 
         require(amount <= 40, "Cannot claim more than 40 NFTs in one transaction");
         require(amount <= totalDeposited.sub(totalWithdrawn), "Cannot claim more than the existing available");
 
-        for (uint256 i = totalWithdrawn; i < amount.add(totalWithdrawn); i++) {
+        for (uint256 i = totalWithdrawn; i < amount.add(totalWithdrawn); i+=1) {
             DepositedERC721 memory nftForWithdrawal = winningSlot.depositedNfts[i + 1];
 
             auction.totalWithdrawnERC721s = auction.totalWithdrawnERC721s.add(1);
@@ -847,26 +854,24 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         return true;
     }
 
-    function setRoyaltyFeeMantissa(uint256 _royaltyFeeMantissa)
+    function setRoyaltyFeeBps(uint256 _royaltyFeeBps)
         external
         override
         onlyOwner
         returns (uint256)
     {
-        require(_royaltyFeeMantissa < 1e17, "Should be less than 10%");
-        royaltyFeeMantissa = _royaltyFeeMantissa;
-
-        return royaltyFeeMantissa;
+        royaltyFeeBps = _royaltyFeeBps;
+        return royaltyFeeBps;
     }
 
-    function calculateRoyaltyFee(uint256 amount, uint256 _royaltyFeeMantissa)
-        internal
-        pure
+    function setNftSlotLimit(uint256 _nftSlotLimit)
+        external
+        override
+        onlyOwner
         returns (uint256)
     {
-        uint256 result = _royaltyFeeMantissa.mul(amount);
-        result = result.div(1e18);
-        return result;
+        nftSlotLimit = _nftSlotLimit;
+        return nftSlotLimit;
     }
 
     function calculateSecondarySaleFees(
@@ -881,7 +886,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
 
         uint256 totalFeesPayableForSlot = 0;
 
-        for (uint256 i = 0; i < slot.totalDepositedNfts; i++) {
+        for (uint256 i = 0; i < slot.totalDepositedNfts; i+=1) {
             DepositedERC721 memory nft = slot.depositedNfts[i + 1];
 
             if (nft.hasSecondarySaleFees) {
@@ -909,7 +914,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
     )  external override returns (bool) {
         Auction storage auction = auctions[_auctionId];
         Slot storage slot = auction.slots[_slotIndex];
-        DepositedERC721 memory nft = slot.depositedNfts[_nftSlotIndex];
+        DepositedERC721 storage nft = slot.depositedNfts[_nftSlotIndex];
 
         require(nft.hasSecondarySaleFees && !nft.feesPaid, "Cannot distribute if interface not supported/fees already paid");
 
@@ -921,7 +926,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         require(fees.length == recipients.length, "Splits number should be equal");
         uint256 value = averageERC721SalePrice;
 
-        for (uint256 i = 0; i < fees.length && i < 5; i++) {
+        for (uint256 i = 0; i < fees.length && i < 5; i+=1) {
             Fee memory interimFee = subFee(value, averageERC721SalePrice.mul(fees[i]).div(10000));
             value = interimFee.remainingValue;
 
@@ -935,6 +940,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
                 token.transfer(address(recipients[i]), interimFee.feeValue);
             }
         }
+        nft.feesPaid = true;
         return true;
     }
 
@@ -981,13 +987,6 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable {
         );
 
         return amountToWithdraw;
-    }
-
-    function setNftSlotLimit(uint256 _nftSlotLimit)
-        external
-        onlyOwner
-    {
-        nftSlotLimit = _nftSlotLimit;
     }
 
     function getMinimumReservePriceForSlot(uint256 auctionId, uint256 slotIndex)

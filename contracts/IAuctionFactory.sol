@@ -17,6 +17,7 @@ interface IAuctionFactory {
         bool isCanceled;
         address bidToken;
         bool isFinalized;
+        bool revenueCaptured;
         uint256 totalDepositedERC721s;
         uint256 totalWithdrawnERC721s;
         mapping(uint256 => Slot) slots;
@@ -24,6 +25,7 @@ interface IAuctionFactory {
         mapping(address => uint256) bidBalance;
         mapping(address => address) nextBidders;
         mapping(uint256 => address) winners;
+        PaymentSplit[] paymentSplits;
     }
 
     struct Slot {
@@ -54,23 +56,33 @@ interface IAuctionFactory {
         uint feeValue;
     }
 
+    struct AuctionConfig {
+        uint256 startTime;
+        uint256 endTime;
+        uint256 resetTimer;
+        uint256 numberOfSlots;
+        address bidToken;
+        address[] addressesToWhitelist;
+        uint256[] minimumReserveValues;
+        PaymentSplit[] paymentSplits;
+    }
+
+    struct PaymentSplit {
+        address payable recipient;
+        uint256 value;
+    }
+
     /// @notice Create an auction with initial parameters
-    /// @param _startTime The start of the auction
-    /// @param _endTime End of the auction
-    /// @param _resetTimer Reset timer in seconds
-    /// @param _numberOfSlots The number of slots which the auction will have
-    /// @param _bidToken Address of the token used for bidding - can be address(0)
-    /// @param _addressesToWhitelist Address which should be whitelisted to participate in the auction
-    /// @param _minimumReserveValues Minimum reserve values for each slot, starting from 1st. Leave empty if no minimum reserve
-    function createAuction(
-        uint256 _startTime,
-        uint256 _endTime,
-        uint256 _resetTimer,
-        uint256 _numberOfSlots,
-        address _bidToken,
-        address[] calldata _addressesToWhitelist,
-        uint256[] calldata _minimumReserveValues
-    ) external returns (uint256);
+    /// @param config Auction configuration
+    /// @dev config.startTime The start of the auction
+    /// @dev config.endTime End of the auction
+    /// @dev config.resetTimer Reset timer in seconds
+    /// @dev config.numberOfSlots The number of slots which the auction will have
+    /// @dev config.bidToken Address of the token used for bidding - can be address(0)
+    /// @dev config.addressesToWhitelist Address which should be whitelisted to participate in the auction
+    /// @dev config.minimumReserveValues Minimum reserve values for each slot, starting from 1st. Leave empty if no minimum reserve
+    /// @dev config.paymentSplits Array of payment splits which will be distributed after auction ends
+    function createAuction(AuctionConfig calldata config) external returns (uint256);
 
     /// @notice Deposit ERC721 assets to the specified Auction
     /// @param auctionId The auction id
@@ -112,9 +124,15 @@ interface IAuctionFactory {
     /// @param auctionId The auction id
     function erc20Bid(uint256 auctionId, uint256 amount) external;
 
-    /// @notice Distributes all slot assets to the bidders and winning bids to the collector
+    /// @notice Calculates and sets the auction winners for all slots
     /// @param auctionId The auction id
     function finalizeAuction(uint256 auctionId)
+        external
+        returns (bool);
+
+    /// @notice Captures the auction revenue and deductible fees/royalties once the auction is finalized
+    /// @param auctionId The auction id
+    function captureAuctionRevenue(uint256 auctionId)
         external
         returns (bool);
 
@@ -168,14 +186,6 @@ interface IAuctionFactory {
         view
         returns (DepositedERC721[] memory);
 
-    /// @notice Gets the amount of deposited erc721s in slot
-    /// @param auctionId The auction id
-    /// @param slotIndex The slot index
-    function getTotalDepositedNftsInSlot(uint256 auctionId, uint256 slotIndex)
-        external
-        view
-        returns (uint256);
-
     /// @notice Gets slot winner for particular auction
     /// @param auctionId The auction id
     /// @param slotIndex The slot index
@@ -213,8 +223,14 @@ interface IAuctionFactory {
         returns (bool);
 
     /// @notice Sets the percentage of the royalty which wil be kept from each sale
-    /// @param royaltyFeeMantissa The royalty percentage
-    function setRoyaltyFeeMantissa(uint256 royaltyFeeMantissa)
+    /// @param royaltyFeeBps The royalty percentage in Basis points (1000 - 10%)
+    function setRoyaltyFeeBps(uint256 royaltyFeeBps)
+        external
+        returns (uint256);
+
+    /// @notice Sets the NFT slot limit for auction
+    /// @param nftSlotLimit The royalty percentage
+    function setNftSlotLimit(uint256 nftSlotLimit)
         external
         returns (uint256);
 

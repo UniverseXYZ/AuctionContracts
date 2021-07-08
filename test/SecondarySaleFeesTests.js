@@ -28,16 +28,18 @@ describe('Secondary Sale Fees Tests', () => {
     const ethAddress = '0x0000000000000000000000000000000000000000';
     const whitelistAddresses = [];
     const minimumReserveValues = [];
+    const paymentSplits = [];
   
-    await auctionFactory.createAuction(
+    await auctionFactory.createAuction([
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
       ethAddress,
       whitelistAddresses,
-      minimumReserveValues
-    );
+      minimumReserveValues,
+      paymentSplits
+    ]);
 
     let randomWallet1 = ethers.Wallet.createRandom();
     let randomWallet2= ethers.Wallet.createRandom();
@@ -69,6 +71,7 @@ describe('Secondary Sale Fees Tests', () => {
     await ethers.provider.send('evm_mine');
 
     await auctionFactory.finalizeAuction(1);
+    await auctionFactory.captureAuctionRevenue(1);
 
     const auction = await auctionFactory.auctions(1);
 
@@ -103,16 +106,18 @@ describe('Secondary Sale Fees Tests', () => {
     const ethAddress = '0x0000000000000000000000000000000000000000';
     const whitelistAddresses = [];
     const minimumReserveValues = [];
+    const paymentSplits = [];
   
-    await auctionFactory.createAuction(
+    await auctionFactory.createAuction([
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
       ethAddress,
       whitelistAddresses,
-      minimumReserveValues
-    );
+      minimumReserveValues,
+      paymentSplits
+    ]);
 
     let randomWallet1 = ethers.Wallet.createRandom();
     let randomWallet2= ethers.Wallet.createRandom();
@@ -144,6 +149,7 @@ describe('Secondary Sale Fees Tests', () => {
     await ethers.provider.send('evm_mine');
 
     await auctionFactory.finalizeAuction(1);
+    await auctionFactory.captureAuctionRevenue(1);
 
     const auction = await auctionFactory.auctions(1);
 

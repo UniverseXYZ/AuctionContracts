@@ -107,16 +107,18 @@ describe('Deposit multiple ERC721 Tests', () => {
     const ethAddress = '0x0000000000000000000000000000000000000000';
     const whitelistAddresses = [signer2.address];
     const minimumReserveValues = [];
+    const paymentSplits = [];
 
-    await auctionFactory.createAuction(
+    await auctionFactory.createAuction([
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
       ethAddress,
       whitelistAddresses,
-      minimumReserveValues
-    );
+      minimumReserveValues,
+      paymentSplits
+    ]);
 
     await mockNFT.mint(signer.address, 1);
     await mockNFT.approve(auctionFactory.address, 1);
@@ -138,16 +140,18 @@ describe('Deposit multiple ERC721 Tests', () => {
     const ethAddress = '0x0000000000000000000000000000000000000000';
     const whitelistAddresses = [signer.address]
     const minimumReserveValues = [];
+    const paymentSplits = [];
 
-    await auctionFactory.createAuction(
+    await auctionFactory.createAuction([
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
       ethAddress,
       whitelistAddresses,
-      minimumReserveValues
-    );
+      minimumReserveValues,
+      paymentSplits
+    ]);
 
     await mockNFT.mint(signer.address, 1);
     await mockNFT.approve(auctionFactory.address, 1);
@@ -179,14 +183,16 @@ const createAuction = async (auctionFactory) => {
   const ethAddress = '0x0000000000000000000000000000000000000000';
   const whitelistAddresses = [];
   const minimumReserveValues = [];
+  const paymentSplits = [];
 
-  await auctionFactory.createAuction(
+  await auctionFactory.createAuction([
     startTime,
     endTime,
     resetTimer,
     numberOfSlots,
     ethAddress,
     whitelistAddresses,
-    minimumReserveValues
-  );
+    minimumReserveValues,
+    paymentSplits
+  ]);
 };

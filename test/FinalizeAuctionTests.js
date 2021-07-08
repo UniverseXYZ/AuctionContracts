@@ -55,16 +55,18 @@ describe('Finalize auction ERC721 Tests', () => {
     const ethAddress = '0x0000000000000000000000000000000000000000';
     const whitelistAddresses = [];
     const minimumReserveValues = [];
+    const paymentSplits = [];
   
-    await auctionFactory.createAuction(
+    await auctionFactory.createAuction([
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
       ethAddress,
       whitelistAddresses,
-      minimumReserveValues
-    );
+      minimumReserveValues,
+      paymentSplits
+    ]);
 
     const [signer] = await ethers.getSigners();
 
@@ -105,6 +107,7 @@ describe('Finalize auction ERC721 Tests', () => {
     await ethers.provider.send('evm_mine');
 
     await auctionFactory.finalizeAuction(1);
+    await auctionFactory.captureAuctionRevenue(1);
 
     const auction = await auctionFactory.auctions(1);
 
@@ -146,16 +149,18 @@ describe('Finalize auction ERC721 Tests', () => {
     const tokenAddress = '0x0000000000000000000000000000000000000000';
     const whitelistAddresses = [];
     const minimumReserveValues = [];
+    const paymentSplits = [];
 
-    await auctionFactory.createAuction(
+    await auctionFactory.createAuction([
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
       tokenAddress,
       whitelistAddresses,
-      minimumReserveValues
-    );
+      minimumReserveValues,
+      paymentSplits
+    ]);
 
     const [signer, signer2] = await ethers.getSigners();
 
@@ -191,16 +196,18 @@ describe('Finalize auction ERC721 Tests', () => {
     const ethAddress = '0x0000000000000000000000000000000000000000';
     const whitelistAddresses = [];
     const minimumReserveValues = [];
+    const paymentSplits = [];
 
-    await auctionFactory.createAuction(
+    await auctionFactory.createAuction([
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
       ethAddress,
       whitelistAddresses,
-      minimumReserveValues
-    );
+      minimumReserveValues,
+      paymentSplits
+    ]);
 
     const [signer] = await ethers.getSigners();
 
@@ -231,16 +238,18 @@ describe('Finalize auction ERC721 Tests', () => {
     const ethAddress = '0x0000000000000000000000000000000000000000';
     const whitelistAddresses = [];
     const minimumReserveValues = [];
+    const paymentSplits = [];
   
-    await auctionFactory.createAuction(
+    await auctionFactory.createAuction([
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
       ethAddress,
       whitelistAddresses,
-      minimumReserveValues
-    );
+      minimumReserveValues,
+      paymentSplits
+    ]);
 
     const [signer, signer2] = await ethers.getSigners();
 
@@ -283,16 +292,18 @@ describe('Finalize auction ERC721 Tests', () => {
     const tokenAddress = mockToken.address;
     const whitelistAddresses = [];
     const minimumReserveValues = [];
+    const paymentSplits = [];
 
-    await auctionFactory.createAuction(
+    await auctionFactory.createAuction([
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
       tokenAddress,
       whitelistAddresses,
-      minimumReserveValues
-    );
+      minimumReserveValues,
+      paymentSplits
+    ]);
 
     const [signer] = await ethers.getSigners();
 
@@ -312,6 +323,7 @@ describe('Finalize auction ERC721 Tests', () => {
     await ethers.provider.send('evm_mine');
 
     await auctionFactory.finalizeAuction(1);
+    await auctionFactory.captureAuctionRevenue(1);
 
     await auctionFactory.withdrawAuctionRevenue(1);
   });
@@ -336,16 +348,18 @@ describe('Finalize auction ERC721 Tests', () => {
     const tokenAddress = '0x0000000000000000000000000000000000000000';
     const whitelistAddresses = [];
     const minimumReserveValues = [];
+    const paymentSplits = [];
 
-    await auctionFactory.createAuction(
+    await auctionFactory.createAuction([
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
       tokenAddress,
       whitelistAddresses,
-      minimumReserveValues
-    );
+      minimumReserveValues,
+      paymentSplits
+    ]);
 
     const [signer, signer2] = await ethers.getSigners();
 
@@ -365,6 +379,7 @@ describe('Finalize auction ERC721 Tests', () => {
     await ethers.provider.send('evm_mine');
 
     await auctionFactory.finalizeAuction(1);
+    await auctionFactory.captureAuctionRevenue(1);
 
     await expect(auctionFactory.connect(signer2).claimERC721Rewards(1, 1)).to.be.reverted;
   });
@@ -381,16 +396,18 @@ describe('Finalize auction ERC721 Tests', () => {
     const tokenAddress = '0x0000000000000000000000000000000000000000';
     const whitelistAddresses = [];
     const minimumReserveValues = [];
+    const paymentSplits = [];
 
-    await auctionFactory.createAuction(
+    await auctionFactory.createAuction([
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
       tokenAddress,
       whitelistAddresses,
-      minimumReserveValues
-    );
+      minimumReserveValues,
+      paymentSplits
+    ]);
 
     const [signer, signer2, signer3, signer4] = await ethers.getSigners();
 
@@ -422,6 +439,7 @@ describe('Finalize auction ERC721 Tests', () => {
     await ethers.provider.send('evm_mine');
 
     await auctionFactory.finalizeAuction(1);
+    await auctionFactory.captureAuctionRevenue(1);
   });
 
   it('should have 0 id for nft', async () => {
@@ -436,16 +454,18 @@ describe('Finalize auction ERC721 Tests', () => {
     const tokenAddress = '0x0000000000000000000000000000000000000000';
     const whitelistAddresses = [];
     const minimumReserveValues = [];
+    const paymentSplits = [];
 
-    await auctionFactory.createAuction(
+    await auctionFactory.createAuction([
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
       tokenAddress,
       whitelistAddresses,
-      minimumReserveValues
-    );
+      minimumReserveValues,
+      paymentSplits
+    ]);
 
     const [signer] = await ethers.getSigners();
 
@@ -469,6 +489,7 @@ describe('Finalize auction ERC721 Tests', () => {
     await ethers.provider.send('evm_mine');
 
     await auctionFactory.finalizeAuction(1);
+    await auctionFactory.captureAuctionRevenue(1);
 
     await auctionFactory.connect(signer).claimERC721Rewards(1, 1, 2);
   });
@@ -485,16 +506,18 @@ describe('Finalize auction ERC721 Tests', () => {
     const ethAddress = '0x0000000000000000000000000000000000000000';
     const whitelistAddresses = [];
     const minimumReserveValues = [];
+    const paymentSplits = [];
 
-    await auctionFactory.createAuction(
+    await auctionFactory.createAuction([
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
       ethAddress,
       whitelistAddresses,
-      minimumReserveValues
-    );
+      minimumReserveValues,
+      paymentSplits
+    ]);
 
     const [signer, signer2] = await ethers.getSigners();
 
@@ -536,14 +559,16 @@ const createAuction = async (auctionFactory) => {
   const ethAddress = '0x0000000000000000000000000000000000000000';
   const whitelistAddresses = [];
   const minimumReserveValues = [];
+  const paymentSplits = [];
 
-  await auctionFactory.createAuction(
+  await auctionFactory.createAuction([
     startTime,
     endTime,
     resetTimer,
     numberOfSlots,
     ethAddress,
     whitelistAddresses,
-    minimumReserveValues
-  );
+    minimumReserveValues,
+    paymentSplits
+  ]);
 };

@@ -29,16 +29,18 @@ describe('AuctionFactory', () => {
     const bidToken = mockToken.address;
     const whitelistAddresses = [];
     const minimumReserveValues = [];
+    const paymentSplits = [];
 
-    auction = await auctionFactory.createAuction(
+    auction = await auctionFactory.createAuction([
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
       bidToken,
       whitelistAddresses,
-      minimumReserveValues
-    );
+      minimumReserveValues,
+      paymentSplits,
+    ]);
     return { auctionFactory, mockNFT, mockToken };
   }
   async function depositERC721() {
@@ -112,16 +114,18 @@ describe('AuctionFactory', () => {
     const tokenAddress = mockToken.address;
     const whitelistAddresses = [];
     const minimumReserveValues = [];
+    const paymentSplits = [];
 
-    await auctionFactory.createAuction(
+    await auctionFactory.createAuction([
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
       tokenAddress,
       whitelistAddresses,
-      minimumReserveValues
-    );
+      minimumReserveValues,
+      paymentSplits
+    ]);
 
     const [signer] = await ethers.getSigners();
 
@@ -151,16 +155,18 @@ describe('AuctionFactory', () => {
     const tokenAddress = '0x0000000000000000000000000000000000000000';
     const whitelistAddresses = [];
     const minimumReserveValues = [];
+    const paymentSplits = [];
 
-    await auctionFactory.createAuction(
+    await auctionFactory.createAuction([
       startTime,
       endTime,
       resetTimer,
       numberOfSlots,
       tokenAddress,
       whitelistAddresses,
-      minimumReserveValues
-    );
+      minimumReserveValues,
+      paymentSplits
+    ]);
 
     const [signer] = await ethers.getSigners();
 

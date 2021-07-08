@@ -51,10 +51,11 @@ describe('Test cancel functionality', () => {
     const ethAddress = '0x0000000000000000000000000000000000000000';
     const whitelistAddresses = [];
     const minimumReserveValues = [];
+    const paymentSplits = [];
 
     await auctionFactory
       .connect(signer1)
-      .createAuction(startTime, endTime, resetTimer, numberOfSlots, ethAddress, whitelistAddresses, minimumReserveValues);
+      .createAuction([startTime, endTime, resetTimer, numberOfSlots, ethAddress, whitelistAddresses, minimumReserveValues, paymentSplits]);
 
     await expect(auctionFactory.connect(signer2).cancelAuction(1)).to.be.reverted;
   });
@@ -70,16 +71,18 @@ const createAuction = async (auctionFactory) => {
   const ethAddress = '0x0000000000000000000000000000000000000000';
   const whitelistAddresses = [];
   const minimumReserveValues = [];
+  const paymentSplits = [];
 
-  await auctionFactory.createAuction(
+  await auctionFactory.createAuction([
     startTime,
     endTime,
     resetTimer,
     numberOfSlots,
     ethAddress,
     whitelistAddresses,
-    minimumReserveValues
-  );
+    minimumReserveValues,
+    paymentSplits
+  ]);
 };
 
 const depositNFT = async (auctionFactory, mockNFT) => {
