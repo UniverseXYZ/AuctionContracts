@@ -5,8 +5,9 @@ const { loadFixture } = waffle;
 
 describe('UniverseERC721', () => {
   const deployContracts = async () => {
+    const [owner, addr1] = await ethers.getSigners();
     const AuctionFactory = await ethers.getContractFactory('AuctionFactory');
-    const auctionFactory = await AuctionFactory.deploy(2000, 100);
+    const auctionFactory = await AuctionFactory.deploy(2000, 100, 0, owner.address, []);
 
     const UniverseERC721 = await ethers.getContractFactory('UniverseERC721');
     const universeERC721 = await UniverseERC721.deploy("Non Fungible Universe", "NFU");

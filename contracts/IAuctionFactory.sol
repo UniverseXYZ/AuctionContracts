@@ -234,10 +234,16 @@ interface IAuctionFactory {
         external
         returns (uint256);
 
+    /// @notice Modifies whether a token is supported for bidding
+    /// @param erc20token The erc20 token
+    /// @param value True or false
+    function setSupportedBidToken(address erc20token, bool value)
+        external
+        returns (address, bool);
+
     /// @notice Withdraws the aggregated royalites amount of specific token to a specified address
     /// @param token The address of the token to withdraw
-    /// @param to The address to which the royalties will be transfered
-    function withdrawRoyalties(address token, address to)
+    function withdrawRoyalties(address token)
         external
         returns (uint256);
 

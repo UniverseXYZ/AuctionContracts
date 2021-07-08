@@ -4,8 +4,9 @@ const { loadFixture } = waffle;
 
 describe('Create Auction Tests', () => {
   async function deployContract() {
+    const [owner, addr1] = await ethers.getSigners();
     const AuctionFactory = await ethers.getContractFactory('AuctionFactory');
-    const auctionFactory = await AuctionFactory.deploy(2000, 100);
+    const auctionFactory = await AuctionFactory.deploy(2000, 100, 0, owner.address, ['0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2']);
 
     return { auctionFactory };
   }

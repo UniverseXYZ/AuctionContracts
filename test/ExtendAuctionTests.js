@@ -4,13 +4,14 @@ const { loadFixture } = waffle;
 
 describe('Extend auction ERC721 Tests', () => {
   const deployedContracts = async () => {
+    const [owner, addr1] = await ethers.getSigners();
     const AuctionFactory = await ethers.getContractFactory('AuctionFactory');
     const MockNFT = await ethers.getContractFactory('MockNFT');
     const MockToken = await ethers.getContractFactory('MockToken');
-
-    const auctionFactory = await AuctionFactory.deploy(2000, 100);
     const mockNFT = await MockNFT.deploy();
     const mockToken = await MockToken.deploy(1000);
+
+    const auctionFactory = await AuctionFactory.deploy(2000, 100, 0, owner.address, [mockToken.address]);
 
     return { auctionFactory, mockNFT, mockToken };
   };

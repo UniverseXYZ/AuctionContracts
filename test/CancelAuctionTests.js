@@ -4,12 +4,13 @@ const { loadFixture } = waffle;
 
 describe('Test cancel functionality', () => {
   const deployContracts = async () => {
+    const [owner, addr1] = await ethers.getSigners();
     const [AuctionFactory, MockNFT] = await Promise.all([
       ethers.getContractFactory('AuctionFactory'),
       ethers.getContractFactory('MockNFT')
     ]);
 
-    const [auctionFactory, mockNft] = await Promise.all([AuctionFactory.deploy(2000, 100), MockNFT.deploy()]);
+    const [auctionFactory, mockNft] = await Promise.all([AuctionFactory.deploy(2000, 100, 0, owner.address, []), MockNFT.deploy()]);
 
     return {
       auctionFactory,

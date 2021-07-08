@@ -4,13 +4,14 @@ const { loadFixture } = waffle;
 
 describe('Test royalty fee functionality', () => {
   const deployContracts = async () => {
+    const [owner, addr1] = await ethers.getSigners();
     const AuctionFactory = await ethers.getContractFactory('AuctionFactory');
     const MockNFT = await ethers.getContractFactory('MockNFT');
     const MockToken = await ethers.getContractFactory('MockToken');
-
-    const auctionFactory = await AuctionFactory.deploy(5, 100);
     const mockNFT = await MockNFT.deploy();
     const mockToken = await MockToken.deploy('1000000000000000000');
+
+    const auctionFactory = await AuctionFactory.deploy(5, 100, 0, owner.address, [mockToken.address]);
 
     return { auctionFactory, mockNFT, mockToken };
   };
@@ -21,7 +22,7 @@ describe('Test royalty fee functionality', () => {
     const [signer, signer2] = await ethers.getSigners();
 
     await expect(auctionFactory.connect(signer2).setRoyaltyFeeBps('9000')).revertedWith(
-      'Ownable: caller is not the owner'
+      'Not called from the dao'
     );
   });
 
@@ -76,7 +77,7 @@ describe('Test royalty fee functionality', () => {
 
     expect(await auctionFactory.royaltiesReserve(ethAddress)).to.equal("500000000000000000");
 
-    await expect(auctionFactory.withdrawRoyalties(ethAddress, signer.address)).emit(
+    await expect(auctionFactory.withdrawRoyalties(ethAddress)).emit(
       auctionFactory,
       'LogRoyaltiesWithdrawal'
     );
@@ -137,7 +138,7 @@ describe('Test royalty fee functionality', () => {
 
     expect(await auctionFactory.royaltiesReserve(tokenAddress)).to.equal('500000000000000000');
 
-    await expect(auctionFactory.withdrawRoyalties(tokenAddress, signer.address)).emit(
+    await expect(auctionFactory.withdrawRoyalties(tokenAddress)).emit(
       auctionFactory,
       'LogRoyaltiesWithdrawal'
     );
@@ -151,7 +152,7 @@ describe('Test royalty fee functionality', () => {
     const [signer] = await ethers.getSigners();
 
     await expect(
-      auctionFactory.withdrawRoyalties('0x0000000000000000000000000000000000000000', signer.address)
+      auctionFactory.withdrawRoyalties('0x0000000000000000000000000000000000000000')
     ).revertedWith('Amount is 0');
   });
 });

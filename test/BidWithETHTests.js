@@ -4,10 +4,11 @@ const { loadFixture } = waffle;
 
 describe('Test bidding with ETH', () => {
   const deployedContracts = async () => {
+    const [owner, addr1] = await ethers.getSigners();
     const AuctionFactory = await ethers.getContractFactory('AuctionFactory');
     const MockNFT = await ethers.getContractFactory('MockNFT');
 
-    const auctionFactory = await AuctionFactory.deploy(2000, 100);
+    const auctionFactory = await AuctionFactory.deploy(2000, 100, 0, owner.address, ['0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2']);
     const mockNFT = await MockNFT.deploy();
 
     return { auctionFactory, mockNFT };

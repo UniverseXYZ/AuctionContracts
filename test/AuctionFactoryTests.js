@@ -4,15 +4,15 @@ const { loadFixture } = waffle;
 
 describe('AuctionFactory', () => {
   async function deployContract() {
+    const [owner, addr1] = await ethers.getSigners();
     const AuctionFactory = await ethers.getContractFactory('AuctionFactory');
     const MockNFT = await ethers.getContractFactory('MockNFT');
     const MockToken = await ethers.getContractFactory('MockToken');
-
-    const auctionFactory = await AuctionFactory.deploy(2000, 100);
     const mockNFT = await MockNFT.deploy();
     const mockToken = await MockToken.deploy(1000);
-    const [owner, addr1] = await ethers.getSigners();
     await mockToken.transfer(addr1.address, 600);
+
+    const auctionFactory = await AuctionFactory.deploy(2000, 100, 0, owner.address, [mockToken.address]);
 
     return { auctionFactory, mockNFT, mockToken };
   }

@@ -24,10 +24,11 @@ function chunkifyArray(
 
 describe('Deposit multiple ERC721 Tests', () => {
   const deployedContracts = async () => {
+    const [owner, addr1] = await ethers.getSigners();
     const AuctionFactory = await ethers.getContractFactory('AuctionFactory');
     const MockNFT = await ethers.getContractFactory('MockNFT');
 
-    const auctionFactory = await AuctionFactory.deploy(2000, 100);
+    const auctionFactory = await AuctionFactory.deploy(2000, 100, 0, owner.address, []);
     const mockNFT = await MockNFT.deploy();
 
     return { auctionFactory, mockNFT };

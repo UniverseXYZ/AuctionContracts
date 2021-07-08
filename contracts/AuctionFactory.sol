@@ -5,25 +5,27 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721Holder.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "./IAuctionFactory.sol";
 import "./HasSecondarySaleFees.sol";
 
-contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable, ReentrancyGuard {
+contract AuctionFactory is IAuctionFactory, ERC721Holder, ReentrancyGuard {
     using SafeMath for uint256;
 
     uint256 public totalAuctions;
     uint256 public maxNumberOfSlotsPerAuction;
     uint256 public royaltyFeeBps;
     uint256 public nftSlotLimit;
+    address payable public daoAddress;
+
     bytes4  private constant _INTERFACE_ID_FEES = 0xb7799584;
     address private constant GUARD = address(1);
     
     mapping(uint256 => Auction) public auctions;
     mapping(uint256 => uint256) public auctionsRevenue;
     mapping(address => uint256) public royaltiesReserve;
+    mapping(address => bool) public supportedBidTokens;
 
     event LogERC721Deposit(
         address depositor,
@@ -161,9 +163,27 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable, ReentrancyGua
         _;
     }
 
-    constructor(uint256 _maxNumberOfSlotsPerAuction, uint256 _nftSlotLimit) {
+    modifier onlyDAO() {
+        require(msg.sender == daoAddress, "Not called from the dao");
+        _;
+    }
+
+    constructor(
+        uint256 _maxNumberOfSlotsPerAuction, 
+        uint256 _nftSlotLimit, 
+        uint256 _royaltyFeeBps, 
+        address payable _daoAddress, 
+        address[] memory _supportedBidTokens 
+    ) {
         maxNumberOfSlotsPerAuction = _maxNumberOfSlotsPerAuction;
         nftSlotLimit = _nftSlotLimit;
+        royaltyFeeBps = _royaltyFeeBps;
+        daoAddress = _daoAddress;
+        
+        for (uint256 i = 0; i < _supportedBidTokens.length; i+=1) {
+            supportedBidTokens[_supportedBidTokens[i]] = true;
+        }
+        supportedBidTokens[address(0)] = true;
     }
 
     function createAuction(AuctionConfig calldata _config) 
@@ -176,6 +196,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable, ReentrancyGua
         require(_config.startTime < _config.endTime, "Auction cannot end before it has launched");
         require(_config.resetTimer > 0, "Reset timer must be higher than 0 seconds");
         require(_config.numberOfSlots > 0 && _config.numberOfSlots <= maxNumberOfSlotsPerAuction, "Auction can have between 1 and 2000 slots");
+        require(supportedBidTokens[_config.bidToken], "Bid token is not supported");
 
         if (_config.minimumReserveValues.length > 0) {
             require(_config.numberOfSlots == _config.minimumReserveValues.length, "Incorrect number of slots");
@@ -857,7 +878,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable, ReentrancyGua
     function setRoyaltyFeeBps(uint256 _royaltyFeeBps)
         external
         override
-        onlyOwner
+        onlyDAO
         returns (uint256)
     {
         royaltyFeeBps = _royaltyFeeBps;
@@ -867,11 +888,21 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable, ReentrancyGua
     function setNftSlotLimit(uint256 _nftSlotLimit)
         external
         override
-        onlyOwner
+        onlyDAO
         returns (uint256)
     {
         nftSlotLimit = _nftSlotLimit;
         return nftSlotLimit;
+    }
+
+    function setSupportedBidToken(address erc20token, bool value)
+        external
+        override
+        onlyDAO
+        returns (address, bool)
+    {
+        supportedBidTokens[erc20token] = value;
+        return (erc20token, value);
     }
 
     function calculateSecondarySaleFees(
@@ -958,10 +989,10 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable, ReentrancyGua
         }
     }
 
-    function withdrawRoyalties(address _token, address _to)
+    function withdrawRoyalties(address _token)
         external
         override
-        onlyOwner
+        onlyDAO
         returns (uint256)
     {
         uint256 amountToWithdraw = royaltiesReserve[_token];
@@ -970,18 +1001,18 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, Ownable, ReentrancyGua
         royaltiesReserve[_token] = 0;
 
         if (_token == address(0)) {
-            (bool success, ) = payable(_to).call{value: amountToWithdraw}("");
+            (bool success, ) = payable(daoAddress).call{value: amountToWithdraw}("");
             require(success, "Transfer failed.");
         }
 
         if (_token != address(0)) {
             IERC20 token = IERC20(_token);
-            token.transfer(_to, amountToWithdraw);
+            token.transfer(daoAddress, amountToWithdraw);
         }
 
         emit LogRoyaltiesWithdrawal(
             amountToWithdraw,
-            _to,
+            daoAddress,
             _token,
             block.timestamp
         );
