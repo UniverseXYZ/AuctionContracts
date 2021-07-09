@@ -4,7 +4,7 @@
       "name": "ganache",
       "chainId": "1337",
       "contracts": {
-        "AuctionFactory": {
+        "UniverseAuctionHouse": {
           "address": "0xF49a7Df6A44a4e94E8201C8F3e2fAe587E96AD69",
           "abi": [
             {
@@ -815,7 +815,7 @@
                       "type": "address"
                     }
                   ],
-                  "internalType": "struct IAuctionFactory.DepositedERC721[]",
+                  "internalType": "struct IUniverseAuctionHouse.DepositedERC721[]",
                   "name": "",
                   "type": "tuple[]"
                 }

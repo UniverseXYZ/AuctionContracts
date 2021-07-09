@@ -7,10 +7,10 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721Holder.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "./IAuctionFactory.sol";
+import "./IUniverseAuctionHouse.sol";
 import "./HasSecondarySaleFees.sol";
 
-contract AuctionFactory is IAuctionFactory, ERC721Holder, ReentrancyGuard {
+contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, ReentrancyGuard {
     using SafeMath for uint256;
 
     uint256 public totalAuctions;

@@ -5,27 +5,27 @@ const { loadFixture } = waffle;
 describe('Create Auction Tests', () => {
   async function deployContract() {
     const [owner, addr1] = await ethers.getSigners();
-    const AuctionFactory = await ethers.getContractFactory('AuctionFactory');
-    const auctionFactory = await AuctionFactory.deploy(2000, 100, 0, owner.address, ['0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2']);
+    const UniverseAuctionHouse = await ethers.getContractFactory('UniverseAuctionHouse');
+    const universeAuctionHouse = await UniverseAuctionHouse.deploy(2000, 100, 0, owner.address, ['0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2']);
 
-    return { auctionFactory };
+    return { universeAuctionHouse };
   }
 
   it('should deploy contract with the correct number of nfts per slot limit', async () => {
-    const { auctionFactory } = await loadFixture(deployContract);
+    const { universeAuctionHouse } = await loadFixture(deployContract);
 
-    expect(await auctionFactory.nftSlotLimit()).to.equal(100);
+    expect(await universeAuctionHouse.nftSlotLimit()).to.equal(100);
   });
 
   it('set the nfts per slot limit', async () => {
-    const { auctionFactory } = await loadFixture(deployContract);
+    const { universeAuctionHouse } = await loadFixture(deployContract);
 
-    await auctionFactory.setNftSlotLimit(50);
-    expect(await auctionFactory.nftSlotLimit()).to.equal(50);
+    await universeAuctionHouse.setNftSlotLimit(50);
+    expect(await universeAuctionHouse.nftSlotLimit()).to.equal(50);
   });
 
-  it('should Deploy the AuctionFactory and MockNFT', async function () {
-    const { auctionFactory } = await loadFixture(deployContract);
+  it('should Deploy the UniverseAuctionHouse and MockNFT', async function () {
+    const { universeAuctionHouse } = await loadFixture(deployContract);
     const currentTime = Math.round((new Date()).getTime() / 1000);
 
     const startTime = currentTime + 1500;
@@ -36,7 +36,7 @@ describe('Create Auction Tests', () => {
     const whitelistAddresses = [];
     const minimumReserveValues = [];
     const paymentSplits = [];
-    auction = await auctionFactory.createAuction([
+    auction = await universeAuctionHouse.createAuction([
       startTime,
       endTime,
       resetTimer,
@@ -49,7 +49,7 @@ describe('Create Auction Tests', () => {
   });
 
   it('should fail on startTime < currenTime', async function () {
-    const { auctionFactory } = await loadFixture(deployContract);
+    const { universeAuctionHouse } = await loadFixture(deployContract);
     const currentTime = Math.round((new Date()).getTime() / 1000);
 
     const startTime = currentTime - 1500;
@@ -61,7 +61,7 @@ describe('Create Auction Tests', () => {
     const minimumReserveValues = [];
     const paymentSplits = [];
     await expect(
-      auctionFactory.createAuction([
+      universeAuctionHouse.createAuction([
         startTime,
         endTime,
         resetTimer,
@@ -75,7 +75,7 @@ describe('Create Auction Tests', () => {
   });
 
   it('should fail on endTime < startTime', async function () {
-    const { auctionFactory } = await loadFixture(deployContract);
+    const { universeAuctionHouse } = await loadFixture(deployContract);
     const currentTime = Math.round((new Date()).getTime() / 1000);
 
     const startTime = currentTime + 1000;
@@ -87,7 +87,7 @@ describe('Create Auction Tests', () => {
     const minimumReserveValues = [];
     const paymentSplits = [];
     await expect(
-      auctionFactory.createAuction([
+      universeAuctionHouse.createAuction([
         startTime,
         endTime,
         resetTimer,
@@ -101,7 +101,7 @@ describe('Create Auction Tests', () => {
   });
 
   it('should fail if resetTimer === 0', async function () {
-    const { auctionFactory } = await loadFixture(deployContract);
+    const { universeAuctionHouse } = await loadFixture(deployContract);
     const currentTime = Math.round((new Date()).getTime() / 1000);
 
     const startTime = currentTime + 100;
@@ -113,7 +113,7 @@ describe('Create Auction Tests', () => {
     const minimumReserveValues = [];
     const paymentSplits = [];
     await expect(
-      auctionFactory.createAuction([
+      universeAuctionHouse.createAuction([
         startTime,
         endTime,
         resetTimer,
@@ -127,7 +127,7 @@ describe('Create Auction Tests', () => {
   });
 
   it('should fail if numberOfSlots === 0', async function () {
-    const { auctionFactory } = await loadFixture(deployContract);
+    const { universeAuctionHouse } = await loadFixture(deployContract);
     const currentTime = Math.round((new Date()).getTime() / 1000);
 
     const startTime = currentTime + 100;
@@ -139,7 +139,7 @@ describe('Create Auction Tests', () => {
     const minimumReserveValues = [];
     const paymentSplits = [];
     await expect(
-      auctionFactory.createAuction([
+      universeAuctionHouse.createAuction([
         startTime,
         endTime,
         resetTimer,
@@ -153,7 +153,7 @@ describe('Create Auction Tests', () => {
   });
 
   it('should fail if numberOfSlots > 2000', async function () {
-    const { auctionFactory } = await loadFixture(deployContract);
+    const { universeAuctionHouse } = await loadFixture(deployContract);
     const currentTime = Math.round((new Date()).getTime() / 1000);
 
     const startTime = currentTime + 100;
@@ -165,7 +165,7 @@ describe('Create Auction Tests', () => {
     const minimumReserveValues = [];
     const paymentSplits = [];
     await expect(
-      auctionFactory.createAuction([
+      universeAuctionHouse.createAuction([
         startTime,
         endTime,
         resetTimer,
@@ -179,7 +179,7 @@ describe('Create Auction Tests', () => {
   });
 
   it('should create auction successfully and set totalAuctions to 1', async () => {
-    const { auctionFactory } = await loadFixture(deployContract);
+    const { universeAuctionHouse } = await loadFixture(deployContract);
     const currentTime = Math.round((new Date()).getTime() / 1000);
 
     const startTime = currentTime + 1500;
@@ -191,7 +191,7 @@ describe('Create Auction Tests', () => {
     const minimumReserveValues = [];
     const paymentSplits = [];
 
-    await auctionFactory.createAuction([
+    await universeAuctionHouse.createAuction([
       startTime,
       endTime,
       resetTimer,
@@ -202,6 +202,6 @@ describe('Create Auction Tests', () => {
       paymentSplits
     ]);
 
-    expect(await auctionFactory.totalAuctions()).to.equal(1);
+    expect(await universeAuctionHouse.totalAuctions()).to.equal(1);
   });
 });

@@ -5,7 +5,7 @@ pragma experimental ABIEncoderV2;
 /// @title Users bid to this contract in order to win a slot with deposited ERC721 tokens.
 /// @notice This interface should be implemented by the Auction contract
 /// @dev This interface should be implemented by the Auction contract
-interface IAuctionFactory {
+interface IUniverseAuctionHouse {
     struct Auction {
         address auctionOwner;
         uint256 startTime;

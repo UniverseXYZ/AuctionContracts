@@ -20,9 +20,9 @@ describe('MockNFT', () => {
   }
 
   it('Deploy the MockNFT', async function () {
-    const auctionFactory = await loadFixture(deployContract);
+    const universeAuctionHouse = await loadFixture(deployContract);
 
-    expect(auctionFactory.address).to.have.string('0x');
+    expect(universeAuctionHouse.address).to.have.string('0x');
   });
   it('Mint an NFT', async function () {
     const { mockNFT, addr1 } = await loadFixture(mint);

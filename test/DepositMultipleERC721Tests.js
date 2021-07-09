@@ -25,22 +25,22 @@ function chunkifyArray(
 describe('Deposit multiple ERC721 Tests', () => {
   const deployedContracts = async () => {
     const [owner, addr1] = await ethers.getSigners();
-    const AuctionFactory = await ethers.getContractFactory('AuctionFactory');
+    const UniverseAuctionHouse = await ethers.getContractFactory('UniverseAuctionHouse');
     const MockNFT = await ethers.getContractFactory('MockNFT');
 
-    const auctionFactory = await AuctionFactory.deploy(2000, 100, 0, owner.address, []);
+    const universeAuctionHouse = await UniverseAuctionHouse.deploy(2000, 100, 0, owner.address, []);
     const mockNFT = await MockNFT.deploy();
 
-    return { auctionFactory, mockNFT };
+    return { universeAuctionHouse, mockNFT };
   };
 
   it('should deposit multiple nft', async () => {
     const NFT_TOKEN_COUNT = 100;
     const NFT_CHUNK_SIZE = 20;
 
-    const { auctionFactory, mockNFT } = await loadFixture(deployedContracts);
+    const { universeAuctionHouse, mockNFT } = await loadFixture(deployedContracts);
 
-    await createAuction(auctionFactory);
+    await createAuction(universeAuctionHouse);
 
     const [signer] = await ethers.getSigners();
 
@@ -49,7 +49,7 @@ describe('Deposit multiple ERC721 Tests', () => {
     // mint required nfts
     for (let i = 1; i <= NFT_TOKEN_COUNT; i++) {
       await mockNFT.mint(signer.address, i);
-      await mockNFT.approve(auctionFactory.address, i);
+      await mockNFT.approve(universeAuctionHouse.address, i);
 
       multipleMockNFTs[i - 1] = [i, mockNFT.address];
     }
@@ -59,43 +59,43 @@ describe('Deposit multiple ERC721 Tests', () => {
 
     // iterate chunks and deposit each one
     for (let chunk = 0; chunk < chunksOfNfts.length; chunk++) {
-      await auctionFactory.depositERC721(1, 1, chunksOfNfts[chunk]);
+      await universeAuctionHouse.depositERC721(1, 1, chunksOfNfts[chunk]);
     }
 
-    const res = await auctionFactory.getDepositedNftsInSlot(1, 1);
+    const res = await universeAuctionHouse.getDepositedNftsInSlot(1, 1);
 
     expect(res.length).to.equal(NFT_TOKEN_COUNT);
   });
 
   it('should not be reverted if auction has not started', async () => {
-    const { auctionFactory, mockNFT } = await loadFixture(deployedContracts);
+    const { universeAuctionHouse, mockNFT } = await loadFixture(deployedContracts);
 
-    await createAuction(auctionFactory);
+    await createAuction(universeAuctionHouse);
 
     const [signer] = await ethers.getSigners();
 
     await mockNFT.mint(signer.address, 1);
-    await mockNFT.approve(auctionFactory.address, 1);
+    await mockNFT.approve(universeAuctionHouse.address, 1);
 
-    await auctionFactory.depositERC721(1, 1, [[1, mockNFT.address]]);
+    await universeAuctionHouse.depositERC721(1, 1, [[1, mockNFT.address]]);
   });
 
   it('should revert if token address is 0', async () => {
-    const { auctionFactory, mockNFT } = await loadFixture(deployedContracts);
+    const { universeAuctionHouse, mockNFT } = await loadFixture(deployedContracts);
 
-    await createAuction(auctionFactory);
+    await createAuction(universeAuctionHouse);
 
     const [signer] = await ethers.getSigners();
 
     await mockNFT.mint(signer.address, 1);
-    await mockNFT.approve(auctionFactory.address, 1);
+    await mockNFT.approve(universeAuctionHouse.address, 1);
 
-    await expect(auctionFactory.depositERC721(1, 1, [[1, '0x0000000000000000000000000000000000000000']])).to.be
+    await expect(universeAuctionHouse.depositERC721(1, 1, [[1, '0x0000000000000000000000000000000000000000']])).to.be
       .reverted;
   });
 
   it('should revert if whitelist is supported', async () => {
-    const { auctionFactory, mockNFT } = await loadFixture(deployedContracts);
+    const { universeAuctionHouse, mockNFT } = await loadFixture(deployedContracts);
     const [signer, signer2] = await ethers.getSigners();
 
     const currentTime = Math.round((new Date()).getTime() / 1000);
@@ -110,7 +110,7 @@ describe('Deposit multiple ERC721 Tests', () => {
     const minimumReserveValues = [];
     const paymentSplits = [];
 
-    await auctionFactory.createAuction([
+    await universeAuctionHouse.createAuction([
       startTime,
       endTime,
       resetTimer,
@@ -122,13 +122,13 @@ describe('Deposit multiple ERC721 Tests', () => {
     ]);
 
     await mockNFT.mint(signer.address, 1);
-    await mockNFT.approve(auctionFactory.address, 1);
+    await mockNFT.approve(universeAuctionHouse.address, 1);
 
-    await expect(auctionFactory.depositERC721(1, 1, [[1, mockNFT.address]])).to.be.reverted;
+    await expect(universeAuctionHouse.depositERC721(1, 1, [[1, mockNFT.address]])).to.be.reverted;
   });
 
   it('should deposit if user is part of the whitelist', async () => {
-    const { auctionFactory, mockNFT } = await loadFixture(deployedContracts);    
+    const { universeAuctionHouse, mockNFT } = await loadFixture(deployedContracts);    
     const [signer] = await ethers.getSigners();
 
     const currentTime = Math.round((new Date()).getTime() / 1000);
@@ -143,7 +143,7 @@ describe('Deposit multiple ERC721 Tests', () => {
     const minimumReserveValues = [];
     const paymentSplits = [];
 
-    await auctionFactory.createAuction([
+    await universeAuctionHouse.createAuction([
       startTime,
       endTime,
       resetTimer,
@@ -155,26 +155,26 @@ describe('Deposit multiple ERC721 Tests', () => {
     ]);
 
     await mockNFT.mint(signer.address, 1);
-    await mockNFT.approve(auctionFactory.address, 1);
+    await mockNFT.approve(universeAuctionHouse.address, 1);
 
-    await auctionFactory.depositERC721(1, 1, [[1, mockNFT.address]]);
+    await universeAuctionHouse.depositERC721(1, 1, [[1, mockNFT.address]]);
   });
 
   it('should revert if try to deposit in no existing slot', async () => {
-    const { auctionFactory, mockNFT } = await loadFixture(deployedContracts);
+    const { universeAuctionHouse, mockNFT } = await loadFixture(deployedContracts);
 
-    await createAuction(auctionFactory);
+    await createAuction(universeAuctionHouse);
 
     const [signer] = await ethers.getSigners();
 
     await mockNFT.mint(signer.address, 1);
-    await mockNFT.approve(auctionFactory.address, 1);
+    await mockNFT.approve(universeAuctionHouse.address, 1);
 
-    await expect(auctionFactory.depositERC721(1, 2, [[1, mockNFT.address]])).to.be.reverted;
+    await expect(universeAuctionHouse.depositERC721(1, 2, [[1, mockNFT.address]])).to.be.reverted;
   });
 });
 
-const createAuction = async (auctionFactory) => {
+const createAuction = async (universeAuctionHouse) => {
   const currentTime = Math.round((new Date()).getTime() / 1000);
 
   const startTime = currentTime + 1500;
@@ -186,7 +186,7 @@ const createAuction = async (auctionFactory) => {
   const minimumReserveValues = [];
   const paymentSplits = [];
 
-  await auctionFactory.createAuction([
+  await universeAuctionHouse.createAuction([
     startTime,
     endTime,
     resetTimer,

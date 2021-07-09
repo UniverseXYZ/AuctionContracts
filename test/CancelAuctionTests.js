@@ -5,41 +5,41 @@ const { loadFixture } = waffle;
 describe('Test cancel functionality', () => {
   const deployContracts = async () => {
     const [owner, addr1] = await ethers.getSigners();
-    const [AuctionFactory, MockNFT] = await Promise.all([
-      ethers.getContractFactory('AuctionFactory'),
+    const [UniverseAuctionHouse, MockNFT] = await Promise.all([
+      ethers.getContractFactory('UniverseAuctionHouse'),
       ethers.getContractFactory('MockNFT')
     ]);
 
-    const [auctionFactory, mockNft] = await Promise.all([AuctionFactory.deploy(2000, 100, 0, owner.address, []), MockNFT.deploy()]);
+    const [universeAuctionHouse, mockNft] = await Promise.all([UniverseAuctionHouse.deploy(2000, 100, 0, owner.address, []), MockNFT.deploy()]);
 
     return {
-      auctionFactory,
+      universeAuctionHouse,
       mockNft
     };
   };
 
   it('should be successfully canceled', async () => {
-    const { auctionFactory, mockNft } = await loadFixture(deployContracts);
+    const { universeAuctionHouse, mockNft } = await loadFixture(deployContracts);
 
-    await createAuction(auctionFactory);
+    await createAuction(universeAuctionHouse);
 
-    await auctionFactory.cancelAuction(1);
+    await universeAuctionHouse.cancelAuction(1);
 
-    const auction = await auctionFactory.auctions(1);
+    const auction = await universeAuctionHouse.auctions(1);
 
     expect(auction.isCanceled).to.be.true;
   });
 
   it('should not be reverted if auction has not started', async () => {
-    const { auctionFactory } = await loadFixture(deployContracts);
+    const { universeAuctionHouse } = await loadFixture(deployContracts);
 
-    await createAuction(auctionFactory);
+    await createAuction(universeAuctionHouse);
 
-    await expect(auctionFactory.cancelAuction(1));
+    await expect(universeAuctionHouse.cancelAuction(1));
   });
 
   it('should be reverted if other than auction owner try to cancel it', async () => {
-    const { auctionFactory } = await loadFixture(deployContracts);
+    const { universeAuctionHouse } = await loadFixture(deployContracts);
 
     const currentTime = Math.round((new Date()).getTime() / 1000);
 
@@ -54,15 +54,15 @@ describe('Test cancel functionality', () => {
     const minimumReserveValues = [];
     const paymentSplits = [];
 
-    await auctionFactory
+    await universeAuctionHouse
       .connect(signer1)
       .createAuction([startTime, endTime, resetTimer, numberOfSlots, ethAddress, whitelistAddresses, minimumReserveValues, paymentSplits]);
 
-    await expect(auctionFactory.connect(signer2).cancelAuction(1)).to.be.reverted;
+    await expect(universeAuctionHouse.connect(signer2).cancelAuction(1)).to.be.reverted;
   });
 });
 
-const createAuction = async (auctionFactory) => {
+const createAuction = async (universeAuctionHouse) => {
   const currentTime = Math.round((new Date()).getTime() / 1000);
 
   const startTime = currentTime + 1500;
@@ -74,7 +74,7 @@ const createAuction = async (auctionFactory) => {
   const minimumReserveValues = [];
   const paymentSplits = [];
 
-  await auctionFactory.createAuction([
+  await universeAuctionHouse.createAuction([
     startTime,
     endTime,
     resetTimer,
@@ -86,7 +86,7 @@ const createAuction = async (auctionFactory) => {
   ]);
 };
 
-const depositNFT = async (auctionFactory, mockNFT) => {
+const depositNFT = async (universeAuctionHouse, mockNFT) => {
   const [owner] = await ethers.getSigners();
 
   const auctionId = 1;
@@ -94,7 +94,7 @@ const depositNFT = async (auctionFactory, mockNFT) => {
   const tokenId = 1;
 
   await mockNFT.mint(owner.address, 'nftURI');
-  await mockNFT.approve(auctionFactory.address, tokenId);
+  await mockNFT.approve(universeAuctionHouse.address, tokenId);
 
-  await auctionFactory.depositERC721(auctionId, slotIdx, [[tokenId, mockNFT.address]]);
+  await universeAuctionHouse.depositERC721(auctionId, slotIdx, [[tokenId, mockNFT.address]]);
 };

@@ -5,29 +5,29 @@ const { loadFixture } = waffle;
 describe('Test royalty fee functionality', () => {
   const deployContracts = async () => {
     const [owner, addr1] = await ethers.getSigners();
-    const AuctionFactory = await ethers.getContractFactory('AuctionFactory');
+    const UniverseAuctionHouse = await ethers.getContractFactory('UniverseAuctionHouse');
     const MockNFT = await ethers.getContractFactory('MockNFT');
     const MockToken = await ethers.getContractFactory('MockToken');
     const mockNFT = await MockNFT.deploy();
     const mockToken = await MockToken.deploy('1000000000000000000');
 
-    const auctionFactory = await AuctionFactory.deploy(5, 100, 0, owner.address, [mockToken.address]);
+    const universeAuctionHouse = await UniverseAuctionHouse.deploy(5, 100, 0, owner.address, [mockToken.address]);
 
-    return { auctionFactory, mockNFT, mockToken };
+    return { universeAuctionHouse, mockNFT, mockToken };
   };
 
   it('should revert if not the contract owner try to set it', async () => {
-    const { auctionFactory } = await loadFixture(deployContracts);
+    const { universeAuctionHouse } = await loadFixture(deployContracts);
 
     const [signer, signer2] = await ethers.getSigners();
 
-    await expect(auctionFactory.connect(signer2).setRoyaltyFeeBps('9000')).revertedWith(
+    await expect(universeAuctionHouse.connect(signer2).setRoyaltyFeeBps('9000')).revertedWith(
       'Not called from the dao'
     );
   });
 
   it('should withdraw royaltee with eth successfully', async () => {
-    const { auctionFactory, mockNFT } = await loadFixture(deployContracts);
+    const { universeAuctionHouse, mockNFT } = await loadFixture(deployContracts);
     const currentTime = Math.round((new Date()).getTime() / 1000);
 
     const startTime = currentTime + 10000;
@@ -39,7 +39,7 @@ describe('Test royalty fee functionality', () => {
     const minimumReserveValues = [];
     const paymentSplits = [];
 
-    await auctionFactory.createAuction([
+    await universeAuctionHouse.createAuction([
       startTime,
       endTime,
       resetTimer,
@@ -54,46 +54,46 @@ describe('Test royalty fee functionality', () => {
 
     await mockNFT.mint(signer.address, 'tokenURI');
 
-    await mockNFT.approve(auctionFactory.address, 1);
+    await mockNFT.approve(universeAuctionHouse.address, 1);
 
-    await auctionFactory.depositERC721(1, 1, [[1, mockNFT.address]]);
+    await universeAuctionHouse.depositERC721(1, 1, [[1, mockNFT.address]]);
 
-    await auctionFactory.setRoyaltyFeeBps('5000');
+    await universeAuctionHouse.setRoyaltyFeeBps('5000');
 
-    expect(await auctionFactory.royaltyFeeBps()).to.equal('5000');
+    expect(await universeAuctionHouse.royaltyFeeBps()).to.equal('5000');
 
     await ethers.provider.send('evm_setNextBlockTimestamp', [startTime + 700]); 
     await ethers.provider.send('evm_mine');
 
-    await auctionFactory.functions['ethBid(uint256)'](1, {
+    await universeAuctionHouse.functions['ethBid(uint256)'](1, {
       value: '1000000000000000000'
     });
 
     await ethers.provider.send('evm_setNextBlockTimestamp', [endTime + 1000]); 
     await ethers.provider.send('evm_mine');
 
-    await auctionFactory.finalizeAuction(1);
-    await auctionFactory.captureAuctionRevenue(1);
+    await universeAuctionHouse.finalizeAuction(1);
+    await universeAuctionHouse.captureAuctionRevenue(1);
 
-    expect(await auctionFactory.royaltiesReserve(ethAddress)).to.equal("500000000000000000");
+    expect(await universeAuctionHouse.royaltiesReserve(ethAddress)).to.equal("500000000000000000");
 
-    await expect(auctionFactory.withdrawRoyalties(ethAddress)).emit(
-      auctionFactory,
+    await expect(universeAuctionHouse.withdrawRoyalties(ethAddress)).emit(
+      universeAuctionHouse,
       'LogRoyaltiesWithdrawal'
     );
 
-    expect(await auctionFactory.royaltiesReserve(ethAddress)).to.equal('0');
+    expect(await universeAuctionHouse.royaltiesReserve(ethAddress)).to.equal('0');
   });
 
   it('should withdraw royaltee with ERC20 successfully', async () => {
-    const { auctionFactory, mockNFT, mockToken } = await loadFixture(deployContracts);
+    const { universeAuctionHouse, mockNFT, mockToken } = await loadFixture(deployContracts);
     const currentTime = Math.round((new Date()).getTime() / 1000);
 
     const [signer] = await ethers.getSigners();
 
     const balance = await signer.getBalance();
 
-    await mockToken.approve(auctionFactory.address, balance.toString());
+    await mockToken.approve(universeAuctionHouse.address, balance.toString());
 
     const startTime = currentTime + 10000;
     const endTime = startTime + 1500;
@@ -104,7 +104,7 @@ describe('Test royalty fee functionality', () => {
     const minimumReserveValues = [];
     const paymentSplits = [];
 
-    await auctionFactory.createAuction([
+    await universeAuctionHouse.createAuction([
       startTime,
       endTime,
       resetTimer,
@@ -117,42 +117,42 @@ describe('Test royalty fee functionality', () => {
 
     await mockNFT.mint(signer.address, 'tokenURI');
 
-    await mockNFT.approve(auctionFactory.address, 1);
+    await mockNFT.approve(universeAuctionHouse.address, 1);
 
-    await auctionFactory.depositERC721(1, 1, [[1, mockNFT.address]]);
+    await universeAuctionHouse.depositERC721(1, 1, [[1, mockNFT.address]]);
 
-    await auctionFactory.setRoyaltyFeeBps('5000');
+    await universeAuctionHouse.setRoyaltyFeeBps('5000');
 
-    expect(await auctionFactory.royaltyFeeBps()).to.equal('5000');
+    expect(await universeAuctionHouse.royaltyFeeBps()).to.equal('5000');
 
     await ethers.provider.send('evm_setNextBlockTimestamp', [startTime + 700]); 
     await ethers.provider.send('evm_mine');
 
-    await auctionFactory.functions['erc20Bid(uint256,uint256)'](1, '1000000000000000000');
+    await universeAuctionHouse.functions['erc20Bid(uint256,uint256)'](1, '1000000000000000000');
 
     await ethers.provider.send('evm_setNextBlockTimestamp', [endTime + 1500]); 
     await ethers.provider.send('evm_mine');
 
-    await auctionFactory.finalizeAuction(1);
-    await auctionFactory.captureAuctionRevenue(1);
+    await universeAuctionHouse.finalizeAuction(1);
+    await universeAuctionHouse.captureAuctionRevenue(1);
 
-    expect(await auctionFactory.royaltiesReserve(tokenAddress)).to.equal('500000000000000000');
+    expect(await universeAuctionHouse.royaltiesReserve(tokenAddress)).to.equal('500000000000000000');
 
-    await expect(auctionFactory.withdrawRoyalties(tokenAddress)).emit(
-      auctionFactory,
+    await expect(universeAuctionHouse.withdrawRoyalties(tokenAddress)).emit(
+      universeAuctionHouse,
       'LogRoyaltiesWithdrawal'
     );
 
-    expect(await auctionFactory.royaltiesReserve(tokenAddress)).to.equal('0');
+    expect(await universeAuctionHouse.royaltiesReserve(tokenAddress)).to.equal('0');
   });
 
   it('should revert if amount is zero', async () => {
-    const { auctionFactory } = await loadFixture(deployContracts);
+    const { universeAuctionHouse } = await loadFixture(deployContracts);
 
     const [signer] = await ethers.getSigners();
 
     await expect(
-      auctionFactory.withdrawRoyalties('0x0000000000000000000000000000000000000000')
+      universeAuctionHouse.withdrawRoyalties('0x0000000000000000000000000000000000000000')
     ).revertedWith('Amount is 0');
   });
 });
