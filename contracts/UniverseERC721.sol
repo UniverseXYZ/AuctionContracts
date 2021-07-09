@@ -91,17 +91,19 @@ contract UniverseERC721 is ERC721, Ownable, HasSecondarySaleFees {
     {
         address[] memory recipients = new address[](_fees.length);
         uint256[] memory bps = new uint256[](_fees.length);
+        uint256 sum = 0;
         for (uint256 i = 0; i < _fees.length; i++) {
             require(
                 _fees[i].recipient != address(0x0),
                 "Recipient should be present"
             );
             require(_fees[i].value != 0, "Fee value should be positive");
-            require(_fees[i].value < 10000, "Fee should be less than 100%");
+            sum += _fees[i].value;
             fees[_tokenId].push(_fees[i]);
             recipients[i] = _fees[i].recipient;
             bps[i] = _fees[i].value;
         }
+        require(sum < 10000, "Fee should be less than 100%");
         if (_fees.length > 0) {
             emit SecondarySaleFees(_tokenId, recipients, bps);
         }

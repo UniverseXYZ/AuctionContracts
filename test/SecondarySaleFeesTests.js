@@ -123,7 +123,7 @@ describe('Secondary Sale Fees Tests', () => {
 
     const [signer] = await ethers.getSigners();
 
-    await universeERC721.mint(signer.address, "TokenURI", [[randomWallet1.address, 1000], [randomWallet2.address, 9500]]);
+    await universeERC721.mint(signer.address, "TokenURI", [[randomWallet1.address, 1000], [randomWallet2.address, 8999]]);
 
     await universeERC721.approve(universeAuctionHouse.address, 1);
 
@@ -164,7 +164,7 @@ describe('Secondary Sale Fees Tests', () => {
     const balance2 = await ethers.provider.getBalance(randomWallet2.address);
     
     expect(Number(ethers.utils.formatEther(balance1).toString())).to.equal(0.9);
-    expect(Number(ethers.utils.formatEther(balance2).toString())).to.equal(8.1);
+    expect(Number(ethers.utils.formatEther(balance2).toString())).to.equal(8.0991);
 
     await expect(universeAuctionHouse.distributeAuctionRevenue(1)).to.be.emit(universeAuctionHouse, 'LogAuctionRevenueWithdrawal');
 

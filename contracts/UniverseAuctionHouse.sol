@@ -218,9 +218,14 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
             auctions[_auctionId].slots[j + 1].reservePrice = _config.minimumReserveValues[j];
         }
 
+        uint256 checkSum = 0;
         for (uint256 k = 0; k < _config.paymentSplits.length; k+=1) {
+            require(_config.paymentSplits[k].recipient != address(0), "Recipient should be present");
+            require(_config.paymentSplits[k].value != 0, "Fee value should be positive");
+            checkSum += _config.paymentSplits[k].value;
             auctions[_auctionId].paymentSplits.push(_config.paymentSplits[k]);
         }
+        require(checkSum < 10000, "Splits should be less than 100%");
 
         totalAuctions = _auctionId;
 
@@ -264,12 +269,6 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
         auctions[_auctionId].slots[_slotIndex].totalDepositedNfts = _nftSlotIndex;
         auctions[_auctionId].totalDepositedERC721s = auctions[_auctionId].totalDepositedERC721s.add(1);
 
-        IERC721(_tokenAddress).safeTransferFrom(
-            msg.sender,
-            address(this),
-            _tokenId
-        );
-
         emit LogERC721Deposit(
             msg.sender,
             _tokenAddress,
@@ -278,6 +277,12 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
             _slotIndex,
             _nftSlotIndex,
             block.timestamp
+        );
+
+        IERC721(_tokenAddress).safeTransferFrom(
+            msg.sender,
+            address(this),
+            _tokenId
         );
 
         return _nftSlotIndex;
@@ -420,14 +425,14 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
             // Add bid without checks if total bids are less than total slots
             if (auction.numberOfBids < auction.numberOfSlots) {
                 addBid(auctionId, msg.sender, amount);
-                bidToken.transferFrom(msg.sender, address(this), amount);
+                require(bidToken.transferFrom(msg.sender, address(this), amount), "Transfer failed");
                 // Check if slots are filled (if we have more bids than slots)
             } else if (auction.numberOfBids >= auction.numberOfSlots) {
                 // If slots are filled, check if the bid is within the winning slots
                 require(isWinningBid(auctionId, amount), "Bid should be winnning");
                 // Add bid only if it is within the winning slots
                 addBid(auctionId, msg.sender, amount);
-                bidToken.transferFrom(msg.sender, address(this), amount);
+                require(bidToken.transferFrom(msg.sender, address(this), amount), "Transfer failed");
                 if (auction.endTime.sub(block.timestamp) < auction.resetTimer) {
                     // Extend the auction if the remaining time is less than the reset timer
                     extendAuction(auctionId);
@@ -441,13 +446,13 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
             // Update bid directly without additional checks if total bids are less than total slots
             if (auction.numberOfBids < auction.numberOfSlots) {
                 updateBid(auctionId, msg.sender, bidderCurrentBalance.add(amount));
-                bidToken.transferFrom(msg.sender, address(this), amount);
+                require(bidToken.transferFrom(msg.sender, address(this), amount), "Transfer failed");
                 // If slots are filled, check if the current bidder balance + the new amount will be withing the winning slots
             } else if (auction.numberOfBids >= auction.numberOfSlots) {
                 require(isWinningBid(auctionId, bidderCurrentBalance.add(amount)), "Bid should be winnning");
                 // Update the bid if the new incremented balance falls within the winning slots
                 updateBid(auctionId, msg.sender, bidderCurrentBalance.add(amount));
-                bidToken.transferFrom(msg.sender, address(this), amount);
+                require(bidToken.transferFrom(msg.sender, address(this), amount), "Transfer failed");
                 if (auction.endTime.sub(block.timestamp) < auction.resetTimer) {
                     // Extend the auction if the remaining time is less than the reset timer
                     extendAuction(auctionId);
@@ -478,6 +483,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
         }
 
         // Award the slots by checking the highest bidders and minimum reserve values
+        // Upper bound for bidders.length is maxNumberOfSlotsPerAuction
         for (uint256 i = 0; i < bidders.length; i+=1) {
             for (lastAwardedIndex; lastAwardedIndex < auction.numberOfSlots; lastAwardedIndex+=1) {
 
@@ -561,9 +567,10 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
 
         removeBid(auctionId, sender);
         IERC20 bidToken = IERC20(auction.bidToken);
-        bidToken.transfer(sender, amount);
 
         emit LogBidWithdrawal(sender, auctionId, amount, block.timestamp);
+
+        require(bidToken.transfer(sender, amount), "Transfer Failed");
 
         return true;
     }
@@ -586,10 +593,10 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
         require(!isWinningBid(auctionId, amount), "Can't withdraw winning bid");
 
         removeBid(auctionId, recipient);
+        emit LogBidWithdrawal(recipient, auctionId, amount, block.timestamp);
+
         (bool success, ) = recipient.call{value: amount}("");
         require(success, "Transfer failed");
-
-        emit LogBidWithdrawal(recipient, auctionId, amount, block.timestamp);
 
         return true;
     }
@@ -615,12 +622,6 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
         auction.totalWithdrawnERC721s = auction.totalWithdrawnERC721s.add(1);
         auction.slots[slotIndex].totalWithdrawnNfts = auction.slots[slotIndex].totalWithdrawnNfts.add(1);
 
-        IERC721(nftForWithdrawal.tokenAddress).safeTransferFrom(
-            address(this),
-            nftForWithdrawal.depositor,
-            nftForWithdrawal.tokenId
-        );
-
         emit LogERC721Withdrawal(
             msg.sender,
             nftForWithdrawal.tokenAddress,
@@ -629,6 +630,12 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
             slotIndex,
             nftSlotIndex,
             block.timestamp
+        );
+
+        IERC721(nftForWithdrawal.tokenAddress).safeTransferFrom(
+            address(this),
+            nftForWithdrawal.depositor,
+            nftForWithdrawal.tokenId
         );
 
         return true;
@@ -681,12 +688,6 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
         auction.totalWithdrawnERC721s = auction.totalWithdrawnERC721s.add(1);
         auction.slots[slotIndex].totalWithdrawnNfts = auction.slots[slotIndex].totalWithdrawnNfts.add(1);
 
-        IERC721(nftForWithdrawal.tokenAddress).safeTransferFrom(
-            address(this),
-            nftForWithdrawal.depositor,
-            nftForWithdrawal.tokenId
-        );
-
         emit LogERC721Withdrawal(
             msg.sender,
             nftForWithdrawal.tokenAddress,
@@ -695,6 +696,12 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
             slotIndex,
             nftSlotIndex,
             block.timestamp
+        );
+
+        IERC721(nftForWithdrawal.tokenAddress).safeTransferFrom(
+            address(this),
+            nftForWithdrawal.depositor,
+            nftForWithdrawal.tokenId
         );
 
         return true;
@@ -793,6 +800,13 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
 
         auctionsRevenue[auctionId] = 0;
 
+        emit LogAuctionRevenueWithdrawal(
+            auction.auctionOwner,
+            auctionId,
+            amountToWithdraw,
+            block.timestamp
+        );
+
         // Distribute the payment splits to the respective recipients
         for (uint256 i = 0; i < auction.paymentSplits.length && i < 5; i+=1) {
             Fee memory interimFee = subFee(value, amountToWithdraw.mul(auction.paymentSplits[i].value).div(10000));
@@ -806,7 +820,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
             
             if (auction.bidToken != address(0) && interimFee.feeValue > 0) {
                 IERC20 token = IERC20(auction.bidToken);
-                token.transfer(address(auction.paymentSplits[i].recipient), interimFee.feeValue);
+                require(token.transfer(address(auction.paymentSplits[i].recipient), interimFee.feeValue), "Transfer Failed");
             }
         }
 
@@ -818,15 +832,8 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
 
         if (auction.bidToken != address(0)) {
             IERC20 bidToken = IERC20(auction.bidToken);
-            bidToken.transfer(auction.auctionOwner, amountToWithdraw.sub(paymentSplitsPaid));
+            require(bidToken.transfer(auction.auctionOwner, amountToWithdraw.sub(paymentSplitsPaid)), "Transfer Failed");
         }
-
-        emit LogAuctionRevenueWithdrawal(
-            auction.auctionOwner,
-            auctionId,
-            amountToWithdraw.sub(paymentSplitsPaid),
-            block.timestamp
-        );
 
         return true;
     }
@@ -851,6 +858,13 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
         require(amount <= 40, "More than 40 NFTs");
         require(amount <= totalDeposited.sub(totalWithdrawn), "Can't claim more than available");
 
+        emit LogERC721RewardsClaim(
+            claimer,
+            auctionId,
+            slotIndex,
+            block.timestamp
+        );
+
         for (uint256 i = totalWithdrawn; i < amount.add(totalWithdrawn); i+=1) {
             DepositedERC721 memory nftForWithdrawal = winningSlot.depositedNfts[i + 1];
 
@@ -865,13 +879,6 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
                 );
             }
         }
-
-        emit LogERC721RewardsClaim(
-            claimer,
-            auctionId,
-            slotIndex,
-            block.timestamp
-        );
 
         return true;
     }
@@ -957,6 +964,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
         uint256[] memory fees = withFees.getFeeBps(nft.tokenId);
         require(fees.length == recipients.length, "Splits number should be equal");
         uint256 value = averageERC721SalePrice;
+        nft.feesPaid = true;
 
         for (uint256 i = 0; i < fees.length && i < 5; i+=1) {
             Fee memory interimFee = subFee(value, averageERC721SalePrice.mul(fees[i]).div(10000));
@@ -969,10 +977,10 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
             
             if (auction.bidToken != address(0) && interimFee.feeValue > 0) {
                 IERC20 token = IERC20(auction.bidToken);
-                token.transfer(address(recipients[i]), interimFee.feeValue);
+                require(token.transfer(address(recipients[i]), interimFee.feeValue), "Transfer Failed");
             }
         }
-        nft.feesPaid = true;
+        
         return true;
     }
 
@@ -1001,6 +1009,13 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
 
         royaltiesReserve[_token] = 0;
 
+        emit LogRoyaltiesWithdrawal(
+            amountToWithdraw,
+            daoAddress,
+            _token,
+            block.timestamp
+        );
+
         if (_token == address(0)) {
             (bool success, ) = payable(daoAddress).call{value: amountToWithdraw}("");
             require(success, "Transfer failed");
@@ -1008,15 +1023,8 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
 
         if (_token != address(0)) {
             IERC20 token = IERC20(_token);
-            token.transfer(daoAddress, amountToWithdraw);
+            require(token.transfer(daoAddress, amountToWithdraw), "Transfer Failed");
         }
-
-        emit LogRoyaltiesWithdrawal(
-            amountToWithdraw,
-            daoAddress,
-            _token,
-            block.timestamp
-        );
 
         return amountToWithdraw;
     }

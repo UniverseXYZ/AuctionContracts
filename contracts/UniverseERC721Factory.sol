@@ -19,14 +19,14 @@ contract UniverseERC721Factory is Ownable {
 
     constructor() {}
 
-    function getDeployedContractsCount() public view returns (uint256 count) {
+    function getDeployedContractsCount() external view returns (uint256 count) {
         return deployedContracts.length;
     }
 
     function deployUniverseERC721(
         string memory tokenName,
         string memory tokenSymbol
-    ) public returns (address universeERC721Contract) {
+    ) external returns (address universeERC721Contract) {
         UniverseERC721 deployedContract =
             new UniverseERC721(tokenName, tokenSymbol);
 
