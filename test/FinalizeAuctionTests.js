@@ -40,7 +40,11 @@ describe('Finalize auction ERC721 Tests', () => {
   };
 
   it('should finalize successfully', async () => {
-    const { auctionFactory, mockNFT } = await loadFixture(deployedContracts);
+    const { auctionFactory, mockNFT } = await loadFixture(deployedContracts);  
+    const [signer, signer2] = await ethers.getSigners();
+
+    let randomWallet1 = ethers.Wallet.createRandom();
+    let randomWallet2= ethers.Wallet.createRandom();
 
     const NFT_TOKEN_COUNT = 100;
     const NFT_CHUNK_SIZE = 40;
@@ -54,7 +58,7 @@ describe('Finalize auction ERC721 Tests', () => {
     const ethAddress = '0x0000000000000000000000000000000000000000';
     const whitelistAddresses = [];
     const minimumReserveValues = [];
-    const paymentSplits = [];
+    const paymentSplits = [[randomWallet1.address, "2000"], [randomWallet2.address, "1000"]];
   
     await auctionFactory.createAuction([
       startTime,
@@ -66,8 +70,6 @@ describe('Finalize auction ERC721 Tests', () => {
       minimumReserveValues,
       paymentSplits
     ]);
-
-    const [signer] = await ethers.getSigners();
 
     const multipleMockNFTs = new Array(NFT_TOKEN_COUNT);
 
@@ -119,14 +121,25 @@ describe('Finalize auction ERC721 Tests', () => {
     await ethers.provider.send('evm_setNextBlockTimestamp', [endTime + 1000]); 
     await ethers.provider.send('evm_mine');
 
-    await expect(auctionFactory.withdrawAuctionRevenue(1)).to.be.emit(auctionFactory, "LogAuctionRevenueWithdrawal");
+
+    const balanceSignerBefore = await ethers.provider.getBalance(signer.address);
+
+    await expect(auctionFactory.connect(signer2).distributeAuctionRevenue(1)).to.be.emit(auctionFactory, "LogAuctionRevenueWithdrawal");
+
+    const balance1 = await ethers.provider.getBalance(randomWallet1.address);
+    const balance2 = await ethers.provider.getBalance(randomWallet2.address);
+    const balance3 = await ethers.provider.getBalance(signer.address);
+    
+    expect(Number(ethers.utils.formatEther(balance1).toString())).to.equal(40);
+    expect(Number(ethers.utils.formatEther(balance2).toString())).to.equal(20);
+    expect(Number(ethers.utils.formatEther(balance3).toString())).to.equal(parseFloat(ethers.utils.formatEther(balanceSignerBefore)) + 140);
 
     await expect(auctionFactory.claimERC721Rewards(1, 1, 40)).to.be.emit(auctionFactory, "LogERC721RewardsClaim");
 
     await expect(auctionFactory.claimERC721Rewards(1, 1, 40)).to.be.emit(auctionFactory, "LogERC721RewardsClaim");
 
     await expect(auctionFactory.claimERC721Rewards(1, 1, 30)).revertedWith(
-      "Cannot claim more than available"
+      "Can't claim more than available"
     );
 
     await expect(auctionFactory.claimERC721Rewards(1, 1, 41)).revertedWith(
@@ -276,7 +289,7 @@ describe('Finalize auction ERC721 Tests', () => {
 
     await createAuction(auctionFactory);
 
-    await expect(auctionFactory.withdrawAuctionRevenue(1)).to.be.reverted;
+    await expect(auctionFactory.distributeAuctionRevenue(1)).to.be.reverted;
   });
 
   it("should transfer erc20 when it's supported by auction", async () => {
@@ -324,7 +337,7 @@ describe('Finalize auction ERC721 Tests', () => {
     await auctionFactory.finalizeAuction(1);
     await auctionFactory.captureAuctionRevenue(1);
 
-    await auctionFactory.withdrawAuctionRevenue(1);
+    await auctionFactory.distributeAuctionRevenue(1);
   });
 
   it('should revert when is not finalized and user try to claim erc721', async () => {

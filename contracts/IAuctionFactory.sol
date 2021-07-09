@@ -190,7 +190,7 @@ interface IAuctionFactory {
 
     /// @notice Withdraws the generated revenue from the auction to the auction owner
     /// @param auctionId The auction id
-    function withdrawAuctionRevenue(uint256 auctionId) external returns (bool);
+    function distributeAuctionRevenue(uint256 auctionId) external returns (bool);
 
     /// @notice Claims and distributes the NFTs from a winning slot
     /// @param auctionId The auction id

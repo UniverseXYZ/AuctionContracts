@@ -88,7 +88,7 @@ describe('Secondary Sale Fees Tests', () => {
     expect(Number(ethers.utils.formatEther(balance1).toString())).to.equal(0.2);
     expect(Number(ethers.utils.formatEther(balance2).toString())).to.equal(0.1);
 
-    await expect(auctionFactory.withdrawAuctionRevenue(1)).to.be.emit(auctionFactory, 'LogAuctionRevenueWithdrawal');
+    await expect(auctionFactory.distributeAuctionRevenue(1)).to.be.emit(auctionFactory, 'LogAuctionRevenueWithdrawal');
 
     await expect(auctionFactory.claimERC721Rewards(1, 1, 1)).to.be.emit(auctionFactory, 'LogERC721RewardsClaim');
   });
@@ -166,7 +166,7 @@ describe('Secondary Sale Fees Tests', () => {
     expect(Number(ethers.utils.formatEther(balance1).toString())).to.equal(0.9);
     expect(Number(ethers.utils.formatEther(balance2).toString())).to.equal(8.1);
 
-    await expect(auctionFactory.withdrawAuctionRevenue(1)).to.be.emit(auctionFactory, 'LogAuctionRevenueWithdrawal');
+    await expect(auctionFactory.distributeAuctionRevenue(1)).to.be.emit(auctionFactory, 'LogAuctionRevenueWithdrawal');
 
     await expect(auctionFactory.claimERC721Rewards(1, 1, 1)).to.be.emit(auctionFactory, 'LogERC721RewardsClaim');
   });

@@ -517,7 +517,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, ReentrancyGuard {
     {
         Auction storage auction = auctions[auctionId];
 
-        require(auction.isFinalized, "Auction not finished");
+        require(auction.isFinalized, "Auction not finalized");
 
         // Calculate the auction revenue from sold slots and reset bid balances
         for (uint256 i = 0; i < auction.numberOfSlots; i+=1) {
@@ -532,8 +532,6 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, ReentrancyGuard {
                 }
             }
         }
-
-        // Calculate payment splits and deduct from auction revenue
 
         // Calculate DAO fee and deduct from auction revenue
         uint256 _royaltyFee = royaltyFeeBps.mul(auctionsRevenue[auctionId]).div(10000);
@@ -558,8 +556,8 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, ReentrancyGuard {
         uint256 amount = auction.bidBalance[sender];
 
         require(amount > 0, "You have 0 deposited");
-        require(auction.numberOfBids > auction.numberOfSlots, "Cannot withdraw winning bid");
-        require(!isWinningBid(auctionId, amount), "Cannot withdraw winning bid");
+        require(auction.numberOfBids > auction.numberOfSlots, "Can't withdraw winning bid");
+        require(!isWinningBid(auctionId, amount), "Can't withdraw winning bid");
 
         removeBid(auctionId, sender);
         IERC20 bidToken = IERC20(auction.bidToken);
@@ -584,12 +582,12 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, ReentrancyGuard {
         uint256 amount = auction.bidBalance[recipient];
 
         require(amount > 0, "You have 0 deposited");
-        require(auction.numberOfBids > auction.numberOfSlots, "Cannot withdraw winning bid");
-        require(!isWinningBid(auctionId, amount), "Cannot withdraw winning bid");
+        require(auction.numberOfBids > auction.numberOfSlots, "Can't withdraw winning bid");
+        require(!isWinningBid(auctionId, amount), "Can't withdraw winning bid");
 
         removeBid(auctionId, recipient);
         (bool success, ) = recipient.call{value: amount}("");
-        require(success, "Transfer failed.");
+        require(success, "Transfer failed");
 
         emit LogBidWithdrawal(recipient, auctionId, amount, block.timestamp);
 
@@ -657,7 +655,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, ReentrancyGuard {
         require(!auction.slots[slotIndex].reservePriceReached, "Reserve price met");
 
         require(auction.isFinalized && auction.revenueCaptured, "Auction should be finalized");
-        require(amount <= 40, "Cannot withdraw more than 40");
+        require(amount <= 40, "Can't withdraw more than 40");
         require(amount <= totalDeposited.sub(totalWithdrawn), "Not enough available");
 
         for (uint256 i = totalWithdrawn; i < amount.add(totalWithdrawn); i+=1) {
@@ -770,7 +768,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, ReentrancyGuard {
     {
         Auction storage auction = auctions[auctionId];
 
-        require(block.timestamp < auction.endTime, "Cannot extend auction if ended");
+        require(block.timestamp < auction.endTime, "Can't extend auction if ended");
 
         uint256 resetTimer = auction.resetTimer;
         auction.endTime = auction.endTime.add(resetTimer);
@@ -780,7 +778,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, ReentrancyGuard {
         return true;
     }
 
-    function withdrawAuctionRevenue(uint256 auctionId)
+    function distributeAuctionRevenue(uint256 auctionId)
         external
         override
         onlyExistingAuction(auctionId)
@@ -790,23 +788,43 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, ReentrancyGuard {
         require(auction.isFinalized && auction.revenueCaptured, "Auction should have ended");
 
         uint256 amountToWithdraw = auctionsRevenue[auctionId];
+        uint256 value = amountToWithdraw;
+        uint256 paymentSplitsPaid;
 
         auctionsRevenue[auctionId] = 0;
 
+        // Distribute the payment splits to the respective recipients
+        for (uint256 i = 0; i < auction.paymentSplits.length && i < 5; i+=1) {
+            Fee memory interimFee = subFee(value, amountToWithdraw.mul(auction.paymentSplits[i].value).div(10000));
+            value = interimFee.remainingValue;
+            paymentSplitsPaid = paymentSplitsPaid.add(interimFee.feeValue);
+
+            if (auction.bidToken == address(0) && interimFee.feeValue > 0) {
+                (bool success, ) = auction.paymentSplits[i].recipient.call{value: interimFee.feeValue}("");
+                require(success, "Transfer failed");
+            }
+            
+            if (auction.bidToken != address(0) && interimFee.feeValue > 0) {
+                IERC20 token = IERC20(auction.bidToken);
+                token.transfer(address(auction.paymentSplits[i].recipient), interimFee.feeValue);
+            }
+        }
+
+        // Distribute the remaining revenue to the auction owner
         if (auction.bidToken == address(0)) {
-            (bool success, ) = payable(auction.auctionOwner).call{value: amountToWithdraw}("");
-            require(success, "Transfer failed.");
+            (bool success, ) = payable(auction.auctionOwner).call{value: amountToWithdraw.sub(paymentSplitsPaid)}("");
+            require(success, "Transfer failed");
         }
 
         if (auction.bidToken != address(0)) {
             IERC20 bidToken = IERC20(auction.bidToken);
-            bidToken.transfer(auction.auctionOwner, amountToWithdraw);
+            bidToken.transfer(auction.auctionOwner, amountToWithdraw.sub(paymentSplitsPaid));
         }
 
         emit LogAuctionRevenueWithdrawal(
             auction.auctionOwner,
             auctionId,
-            amountToWithdraw,
+            amountToWithdraw.sub(paymentSplitsPaid),
             block.timestamp
         );
 
@@ -831,7 +849,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, ReentrancyGuard {
         require(winningSlot.reservePriceReached, "Reserve price not met");
 
         require(amount <= 40, "More than 40 NFTs");
-        require(amount <= totalDeposited.sub(totalWithdrawn), "Cannot claim more than available");
+        require(amount <= totalDeposited.sub(totalWithdrawn), "Can't claim more than available");
 
         for (uint256 i = totalWithdrawn; i < amount.add(totalWithdrawn); i+=1) {
             DepositedERC721 memory nftForWithdrawal = winningSlot.depositedNfts[i + 1];
@@ -946,7 +964,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, ReentrancyGuard {
 
             if (auction.bidToken == address(0) && interimFee.feeValue > 0) {
                 (bool success, ) = recipients[i].call{value: interimFee.feeValue}("");
-                require(success, "Transfer failed.");
+                require(success, "Transfer failed");
             }
             
             if (auction.bidToken != address(0) && interimFee.feeValue > 0) {
@@ -1059,7 +1077,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, ReentrancyGuard {
     }
 
     function getTopBidders(uint256 auctionId, uint256 n)
-        internal
+        public
         view
         returns (address[] memory)
     {
@@ -1075,7 +1093,7 @@ contract AuctionFactory is IAuctionFactory, ERC721Holder, ReentrancyGuard {
     }
 
     function isWinningBid(uint256 auctionId, uint256 bid)
-        internal
+        public
         view
         returns (bool)
     {

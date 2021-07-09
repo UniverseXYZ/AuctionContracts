@@ -123,7 +123,7 @@ describe('Withdraw functionalities', () => {
       "Not enough available"
     );
     await expect(auctionFactory.withdrawERC721FromNonWinningSlot(1, 1, 41)).revertedWith(
-      "Cannot withdraw more than 40"
+      "Can't withdraw more than 40"
     );
     await expect(auctionFactory.withdrawERC721FromNonWinningSlot(1, 1, 20)).emit(
       auctionFactory,
@@ -422,7 +422,7 @@ describe('Withdraw functionalities', () => {
       value: '500000000000000000000'
     });
 
-    await expect(auctionFactory.withdrawEthBid(1)).revertedWith('Cannot withdraw winning bid');
+    await expect(auctionFactory.withdrawEthBid(1)).revertedWith("Can't withdraw winning bid");
   });
 
   it('should withdraw erc20', async () => {
@@ -615,7 +615,7 @@ describe('Withdraw functionalities', () => {
 
     await auctionFactory.connect(signer3).functions['erc20Bid(uint256,uint256)'](1, 120);
 
-    await expect(auctionFactory.withdrawERC20Bid(1)).revertedWith('Cannot withdraw winning bid');
+    await expect(auctionFactory.withdrawERC20Bid(1)).revertedWith("Can't withdraw winning bid");
   });
 });
 
