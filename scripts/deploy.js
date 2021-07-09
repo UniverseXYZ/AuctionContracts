@@ -15,14 +15,18 @@ async function main() {
 
   // We get the max number of slots
   const MAX_SLOT = process.env.MAX_SLOT;
+  const MAX_NFTS_PER_SLOT = process.env.MAX_NFTS_PER_SLOT;
+  const ROYALTY_FEE_BPS = process.env.ROYALTY_FEE_BPS;
+  const DAO_ADDRESS = process.env.DAO_ADDRESS;
+  const SUPPORTED_BID_TOKENS = process.env.SUPPORTED_BID_TOKENS.split(",");
 
   // We get the contract to deploy
-  const AuctionFactory = await hre.ethers.getContractFactory("AuctionFactory");
-  const auctionFactory = await AuctionFactory.deploy(MAX_SLOT);
+  const UniverseAuctionHouse = await hre.ethers.getContractFactory("UniverseAuctionHouse");
+  const universeAuctionHouse = await UniverseAuctionHouse.deploy(MAX_SLOT, MAX_NFTS_PER_SLOT, ROYALTY_FEE_BPS, DAO_ADDRESS, SUPPORTED_BID_TOKENS);
 
-  await auctionFactory.deployed();
+  await universeAuctionHouse.deployed();
 
-  console.log("AuctionFactory deployed to:", auctionFactory.address);
+  console.log("UniverseAuctionHouse deployed to:", universeAuctionHouse.address);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

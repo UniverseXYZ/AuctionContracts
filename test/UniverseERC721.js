@@ -5,8 +5,9 @@ const { loadFixture } = waffle;
 
 describe('UniverseERC721', () => {
   const deployContracts = async () => {
-    const AuctionFactory = await ethers.getContractFactory('AuctionFactory');
-    const auctionFactory = await AuctionFactory.deploy(2000, 100);
+    const [owner, addr1] = await ethers.getSigners();
+    const UniverseAuctionHouse = await ethers.getContractFactory('UniverseAuctionHouse');
+    const universeAuctionHouse = await UniverseAuctionHouse.deploy(2000, 100, 0, owner.address, []);
 
     const UniverseERC721 = await ethers.getContractFactory('UniverseERC721');
     const universeERC721 = await UniverseERC721.deploy("Non Fungible Universe", "NFU");
@@ -14,7 +15,7 @@ describe('UniverseERC721', () => {
     const UniverseERC721Core = await ethers.getContractFactory('UniverseERC721Core');
     const universeERC721Core = await UniverseERC721Core.deploy("Non Fungible Universe Core", "NFUC");
 
-    return { auctionFactory, universeERC721, universeERC721Core };
+    return { universeAuctionHouse, universeERC721, universeERC721Core };
   };
 
   it('should mint successfully', async () => {

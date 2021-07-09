@@ -1,5 +1,5 @@
 # Used to deploy to testnets
-export PRIVATE_KEY='0x5cb1395e3939abe159f7c96e4479c6c4cb18bad6d0b6d006ef71b1c670efdce5'
+export PRIVATE_KEY=''
 
 # Used to deploy to testnets
 export INFURA_API_KEY=''
@@ -12,6 +12,15 @@ export MAX_SLOT='10'
 
 # Max number of NFTs in slot
 export MAX_NFTS_PER_SLOT='100'
+
+# Royalty fee BPS
+export ROYALTY_FEE_BPS='0'
+
+# DAO address
+export DAO_ADDRESS=''
+
+# Supported bid ERC20 tokens
+export SUPPORTED_BID_TOKENS=''
 
 # On test reports gas if exist
 export REPORT_GAS='true'
