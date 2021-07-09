@@ -52,8 +52,8 @@ interface IUniverseAuctionHouse {
     }
 
     struct Fee {
-        uint remainingValue;
-        uint feeValue;
+        uint256 remainingValue;
+        uint256 feeValue;
     }
 
     struct AuctionConfig {
@@ -86,61 +86,29 @@ interface IUniverseAuctionHouse {
 
     /// @notice Deposit ERC721 assets to the specified Auction
     /// @param auctionId The auction id
-    /// @param slotIndex Index of the slot
-    /// @param tokens Array of ERC721 objects
-    function depositERC721(
-        uint256 auctionId,
-        uint256 slotIndex,
-        ERC721[] calldata tokens
-    ) external returns (uint256[] memory);
-
-    /// @notice Deposit ERC721 assets to the specified Auction
-    /// @param auctionId The auction id
     /// @param slotIndices Array of slot indexes
     /// @param tokens Array of ERC721 arrays
     function batchDepositToAuction(
         uint256 auctionId,
         uint256[] calldata slotIndices,
         ERC721[][] calldata tokens
-    )external returns (bool);
+    ) external returns (bool);
 
     /// @notice Sends a bid (ETH) to the specified auciton
     /// @param auctionId The auction id
     function ethBid(uint256 auctionId) external payable;
 
-    /// @notice Sends a bid (ERC20) to the specified auciton
-    /// @param auctionId The auction id
-    function erc20Bid(uint256 auctionId, uint256 amount) external;
-
-    /// @notice Calculates and sets the auction winners for all slots
-    /// @param auctionId The auction id
-    function finalizeAuction(uint256 auctionId)
-        external
-        returns (bool);
-
-    /// @notice Captures the auction revenue and deductible fees/royalties once the auction is finalized
-    /// @param auctionId The auction id
-    function captureAuctionRevenue(uint256 auctionId)
-        external
-        returns (bool);
-
-    /// @notice Withdraws the bid amount after auction is finialized and bid is non winning
-    /// @param auctionId The auction id
-    function withdrawERC20Bid(uint256 auctionId) external returns (bool);
-
     /// @notice Withdraws the eth bid amount after auction is finalized and bid is non winning
     /// @param auctionId The auction id
     function withdrawEthBid(uint256 auctionId) external returns (bool);
 
-    /// @notice Withdraws the deposited ERC721 before an auction has started
+    /// @notice Sends a bid (ERC20) to the specified auciton
     /// @param auctionId The auction id
-    /// @param slotIndex The slot index
-    /// @param nftSlotIndex The index of the NFT inside the particular slot - it is returned on depositERC721() call
-    function withdrawDepositedERC721(
-        uint256 auctionId,
-        uint256 slotIndex,
-        uint256 nftSlotIndex
-    ) external returns (bool);
+    function erc20Bid(uint256 auctionId, uint256 amount) external;
+
+    /// @notice Withdraws the bid amount after auction is finialized and bid is non winning
+    /// @param auctionId The auction id
+    function withdrawERC20Bid(uint256 auctionId) external returns (bool);
 
     /// @notice Withdraws the deposited ERC721s if the reserve price is not reached
     /// @param auctionId The auction id
@@ -152,9 +120,58 @@ interface IUniverseAuctionHouse {
         uint256 amount
     ) external returns (bool);
 
+    /// @notice Calculates and sets the auction winners for all slots
+    /// @param auctionId The auction id
+    function finalizeAuction(uint256 auctionId) external returns (bool);
+
+    /// @notice Captures the auction revenue and deductible fees/royalties once the auction is finalized
+    /// @param auctionId The auction id
+    function captureAuctionRevenue(uint256 auctionId) external returns (bool);
+
     /// @notice Cancels an auction which has not started yet
     /// @param auctionId The auction id
     function cancelAuction(uint256 auctionId) external returns (bool);
+
+    /// @notice Withdraws the generated revenue from the auction to the auction owner
+    /// @param auctionId The auction id
+    function distributeAuctionRevenue(uint256 auctionId) external returns (bool);
+
+    /// @notice Claims and distributes the NFTs from a winning slot
+    /// @param auctionId The auction id
+    /// @param slotIndex The slot index
+    /// @param amount The amount which should be withdrawn
+    function claimERC721Rewards(
+        uint256 auctionId,
+        uint256 slotIndex,
+        uint256 amount
+    ) external returns (bool);
+
+    /// @notice Gets the minimum reserve price for auciton slot
+    /// @param auctionId The auction id
+    /// @param slotIndex The slot index
+    /// @param nftSlotIndex The nft slot index
+    function distributeSecondarySaleFees(
+        uint256 auctionId,
+        uint256 slotIndex,
+        uint256 nftSlotIndex
+    ) external returns (bool);
+
+    /// @notice Withdraws the aggregated royalites amount of specific token to a specified address
+    /// @param token The address of the token to withdraw
+    function distributeRoyalties(address token) external returns (uint256);
+
+    /// @notice Sets the percentage of the royalty which wil be kept from each sale
+    /// @param royaltyFeeBps The royalty percentage in Basis points (1000 - 10%)
+    function setRoyaltyFeeBps(uint256 royaltyFeeBps) external returns (uint256);
+
+    /// @notice Sets the NFT slot limit for auction
+    /// @param nftSlotLimit The royalty percentage
+    function setNftSlotLimit(uint256 nftSlotLimit) external returns (uint256);
+
+    /// @notice Modifies whether a token is supported for bidding
+    /// @param erc20token The erc20 token
+    /// @param value True or false
+    function setSupportedBidToken(address erc20token, bool value) external returns (address, bool);
 
     /// @notice Gets deposited erc721s for slot
     /// @param auctionId The auction id
@@ -167,18 +184,12 @@ interface IUniverseAuctionHouse {
     /// @notice Gets slot winner for particular auction
     /// @param auctionId The auction id
     /// @param slotIndex The slot index
-    function getSlotWinner(uint256 auctionId, uint256 slotIndex)
-        external
-        view
-        returns (address);
+    function getSlotWinner(uint256 auctionId, uint256 slotIndex) external view returns (address);
 
     /// @notice Gets the bidder total bids in auction
     /// @param auctionId The auction id
     /// @param bidder The address of the bidder
-    function getBidderBalance(uint256 auctionId, address bidder)
-        external
-        view
-        returns (uint256);
+    function getBidderBalance(uint256 auctionId, address bidder) external view returns (uint256);
 
     /// @notice Checks id an address is whitelisted for specific auction
     /// @param auctionId The auction id
@@ -188,43 +199,6 @@ interface IUniverseAuctionHouse {
         view
         returns (bool);
 
-    /// @notice Withdraws the generated revenue from the auction to the auction owner
-    /// @param auctionId The auction id
-    function distributeAuctionRevenue(uint256 auctionId) external returns (bool);
-
-    /// @notice Claims and distributes the NFTs from a winning slot
-    /// @param auctionId The auction id
-    /// @param slotIndex The slot index
-    /// @param amount The amount which should be withdrawn
-    function claimERC721Rewards(uint256 auctionId, uint256 slotIndex, uint256 amount)
-        external
-        returns (bool);
-
-    /// @notice Sets the percentage of the royalty which wil be kept from each sale
-    /// @param royaltyFeeBps The royalty percentage in Basis points (1000 - 10%)
-    function setRoyaltyFeeBps(uint256 royaltyFeeBps)
-        external
-        returns (uint256);
-
-    /// @notice Sets the NFT slot limit for auction
-    /// @param nftSlotLimit The royalty percentage
-    function setNftSlotLimit(uint256 nftSlotLimit)
-        external
-        returns (uint256);
-
-    /// @notice Modifies whether a token is supported for bidding
-    /// @param erc20token The erc20 token
-    /// @param value True or false
-    function setSupportedBidToken(address erc20token, bool value)
-        external
-        returns (address, bool);
-
-    /// @notice Withdraws the aggregated royalites amount of specific token to a specified address
-    /// @param token The address of the token to withdraw
-    function distributeRoyalties(address token)
-        external
-        returns (uint256);
-
     /// @notice Gets the minimum reserve price for auciton slot
     /// @param auctionId The auction id
     /// @param slotIndex The slot index
@@ -233,11 +207,33 @@ interface IUniverseAuctionHouse {
         view
         returns (uint256);
 
-    /// @notice Gets the minimum reserve price for auciton slot
+    /// @notice Deposit ERC721 assets to the specified Auction
+    /// @param auctionId The auction id
+    /// @param slotIndex Index of the slot
+    /// @param tokens Array of ERC721 objects
+    function depositERC721(
+        uint256 auctionId,
+        uint256 slotIndex,
+        ERC721[] calldata tokens
+    ) external returns (uint256[] memory);
+
+    /// @notice Withdraws the deposited ERC721 before an auction has started
     /// @param auctionId The auction id
     /// @param slotIndex The slot index
-    /// @param nftSlotIndex The nft slot index
-    function distributeSecondarySaleFees(uint256 auctionId, uint256 slotIndex, uint256 nftSlotIndex)
-        external
-        returns (bool);
+    /// @param nftSlotIndex The index of the NFT inside the particular slot - it is returned on depositERC721() call
+    function withdrawDepositedERC721(
+        uint256 auctionId,
+        uint256 slotIndex,
+        uint256 nftSlotIndex
+    ) external returns (bool);
+
+    /// @notice Gets the top N bidders in auction
+    /// @param auctionId The auction id
+    /// @param n The top n bidders
+    function getTopBidders(uint256 auctionId, uint256 n) external view returns (address[] memory);
+
+    /// @notice Checks if bid amount is currently a winning bid in specific auciton
+    /// @param auctionId The auction id
+    /// @param bid The bid amount
+    function isWinningBid(uint256 auctionId, uint256 bid) external view returns (bool);
 }

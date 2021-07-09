@@ -23,6 +23,46 @@ contract UniverseERC721 is ERC721, Ownable, HasSecondarySaleFees {
         ERC721(_tokenName, _tokenSymbol)
     {}
 
+    function batchMint(
+        address receiver,
+        string[] calldata tokenURIs,
+        Fee[] memory fees
+    ) external virtual onlyOwner returns (uint256[] memory) {
+        require(tokenURIs.length <= 40, "Cannot mint more than 40 ERC721 tokens in a single call");
+
+        uint256[] memory mintedTokenIds = new uint256[](tokenURIs.length);
+
+        for (uint256 i = 0; i < tokenURIs.length; i++) {
+            uint256 tokenId = mint(receiver, tokenURIs[i], fees);
+            mintedTokenIds[i] = tokenId;
+        }
+
+        return mintedTokenIds;
+    }
+
+    function updateTokenURI(uint256 _tokenId, string memory _tokenURI)
+        external
+        virtual
+        onlyOwner
+        returns (string memory)
+    {
+        _setTokenURI(_tokenId, _tokenURI);
+
+        return _tokenURI;
+    }
+
+    function ownedTokens(address ownerAddress) external view returns (uint256[] memory) {
+        uint256 tokenBalance = balanceOf(ownerAddress);
+        uint256[] memory tokens = new uint256[](tokenBalance);
+
+        for (uint256 i = 0; i < tokenBalance; i++) {
+            uint256 tokenId = tokenOfOwnerByIndex(ownerAddress, i);
+            tokens[i] = tokenId;
+        }
+
+        return tokens;
+    }
+
     function mint(
         address receiver,
         string memory tokenURI,
@@ -38,65 +78,12 @@ contract UniverseERC721 is ERC721, Ownable, HasSecondarySaleFees {
         emit UniverseERC721TokenMinted(newItemId, tokenURI, receiver, block.timestamp);
     }
 
-    function updateTokenURI(uint256 _tokenId, string memory _tokenURI)
-        external
-        virtual
-        onlyOwner
-        returns (string memory)
-    {
-        _setTokenURI(_tokenId, _tokenURI);
-
-        return _tokenURI;
-    }
-
-    function batchMint(
-        address receiver,
-        string[] calldata tokenURIs,
-        Fee[] memory fees
-    ) external virtual onlyOwner returns (uint256[] memory) {
-        require(
-            tokenURIs.length <= 40,
-            "Cannot mint more than 40 ERC721 tokens in a single call"
-        );
-
-        uint256[] memory mintedTokenIds = new uint256[](tokenURIs.length);
-
-        for (uint256 i = 0; i < tokenURIs.length; i++) {
-            uint256 tokenId = mint(receiver, tokenURIs[i], fees);
-            mintedTokenIds[i] = tokenId;
-        }
-
-        return mintedTokenIds;
-    }
-
-    function ownedTokens(address ownerAddress)
-        external
-        view
-        returns (uint256[] memory)
-    {
-        uint256 tokenBalance = balanceOf(ownerAddress);
-        uint256[] memory tokens = new uint256[](tokenBalance);
-
-        for (uint256 i = 0; i < tokenBalance; i++) {
-            uint256 tokenId = tokenOfOwnerByIndex(ownerAddress, i);
-            tokens[i] = tokenId;
-        }
-
-        return tokens;
-    }
-
-    function _registerFees(uint256 _tokenId, Fee[] memory _fees)
-        internal
-        returns (bool)
-    {
+    function _registerFees(uint256 _tokenId, Fee[] memory _fees) internal returns (bool) {
         address[] memory recipients = new address[](_fees.length);
         uint256[] memory bps = new uint256[](_fees.length);
         uint256 sum = 0;
         for (uint256 i = 0; i < _fees.length; i++) {
-            require(
-                _fees[i].recipient != address(0x0),
-                "Recipient should be present"
-            );
+            require(_fees[i].recipient != address(0x0), "Recipient should be present");
             require(_fees[i].value != 0, "Fee value should be positive");
             sum += _fees[i].value;
             fees[_tokenId].push(_fees[i]);

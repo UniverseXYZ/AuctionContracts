@@ -14,19 +14,21 @@ contract UniverseERC721Core is UniverseERC721 {
         UniverseERC721(_tokenName, _tokenSymbol)
     {}
 
-    function mint(
+    function batchMint(
         address receiver,
-        string memory tokenURI,
+        string[] calldata tokenURIs,
         Fee[] memory fees
-    ) public override returns (uint256) {
-        _tokenIds.increment();
+    ) external override returns (uint256[] memory) {
+        require(tokenURIs.length <= 40, "Cannot mint more than 40 ERC721 tokens in a single call");
 
-        uint256 newItemId = _tokenIds.current();
-        _mint(receiver, newItemId);
-        _setTokenURI(newItemId, tokenURI);
-        _registerFees(newItemId, fees);
+        uint256[] memory mintedTokenIds = new uint256[](tokenURIs.length);
 
-        emit UniverseERC721TokenMinted(newItemId, tokenURI, receiver, block.timestamp);
+        for (uint256 i = 0; i < tokenURIs.length; i++) {
+            uint256 tokenId = mint(receiver, tokenURIs[i], fees);
+            mintedTokenIds[i] = tokenId;
+        }
+
+        return mintedTokenIds;
     }
 
     function updateTokenURI(uint256 _tokenId, string memory _tokenURI)
@@ -40,23 +42,18 @@ contract UniverseERC721Core is UniverseERC721 {
         return _tokenURI;
     }
 
-    function batchMint(
+    function mint(
         address receiver,
-        string[] calldata tokenURIs,
+        string memory tokenURI,
         Fee[] memory fees
-    ) external override returns (uint256[] memory) {
-        require(
-            tokenURIs.length <= 40,
-            "Cannot mint more than 40 ERC721 tokens in a single call"
-        );
+    ) public override returns (uint256) {
+        _tokenIds.increment();
 
-        uint256[] memory mintedTokenIds = new uint256[](tokenURIs.length);
+        uint256 newItemId = _tokenIds.current();
+        _mint(receiver, newItemId);
+        _setTokenURI(newItemId, tokenURI);
+        _registerFees(newItemId, fees);
 
-        for (uint256 i = 0; i < tokenURIs.length; i++) {
-            uint256 tokenId = mint(receiver, tokenURIs[i], fees);
-            mintedTokenIds[i] = tokenId;
-        }
-
-        return mintedTokenIds;
+        emit UniverseERC721TokenMinted(newItemId, tokenURI, receiver, block.timestamp);
     }
 }
