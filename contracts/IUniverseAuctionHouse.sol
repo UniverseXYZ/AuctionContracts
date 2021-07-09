@@ -221,7 +221,7 @@ interface IUniverseAuctionHouse {
 
     /// @notice Withdraws the aggregated royalites amount of specific token to a specified address
     /// @param token The address of the token to withdraw
-    function withdrawRoyalties(address token)
+    function distributeRoyalties(address token)
         external
         returns (uint256);
 

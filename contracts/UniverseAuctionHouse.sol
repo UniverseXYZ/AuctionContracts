@@ -998,7 +998,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
         }
     }
 
-    function withdrawRoyalties(address _token)
+    function distributeRoyalties(address _token)
         external
         override
         onlyDAO

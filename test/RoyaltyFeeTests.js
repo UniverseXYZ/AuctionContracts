@@ -77,7 +77,7 @@ describe('Test royalty fee functionality', () => {
 
     expect(await universeAuctionHouse.royaltiesReserve(ethAddress)).to.equal("500000000000000000");
 
-    await expect(universeAuctionHouse.withdrawRoyalties(ethAddress)).emit(
+    await expect(universeAuctionHouse.distributeRoyalties(ethAddress)).emit(
       universeAuctionHouse,
       'LogRoyaltiesWithdrawal'
     );
@@ -138,7 +138,7 @@ describe('Test royalty fee functionality', () => {
 
     expect(await universeAuctionHouse.royaltiesReserve(tokenAddress)).to.equal('500000000000000000');
 
-    await expect(universeAuctionHouse.withdrawRoyalties(tokenAddress)).emit(
+    await expect(universeAuctionHouse.distributeRoyalties(tokenAddress)).emit(
       universeAuctionHouse,
       'LogRoyaltiesWithdrawal'
     );
@@ -152,7 +152,7 @@ describe('Test royalty fee functionality', () => {
     const [signer] = await ethers.getSigners();
 
     await expect(
-      universeAuctionHouse.withdrawRoyalties('0x0000000000000000000000000000000000000000')
+      universeAuctionHouse.distributeRoyalties('0x0000000000000000000000000000000000000000')
     ).revertedWith('Amount is 0');
   });
 });
