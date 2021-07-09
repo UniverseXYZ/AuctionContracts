@@ -283,6 +283,8 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
         onlyAuctionNotCanceled(auctionId)
         onlyETH(auctionId)
         onlyValidBidAmount(msg.value)
+        nonReentrant
+        returns (bool)
     {
         Auction storage auction = auctions[auctionId];
 
@@ -337,6 +339,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
                 }
             }
         }
+        return true;
     }
 
     function withdrawEthBid(uint256 auctionId)
@@ -346,6 +349,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
         onlyAuctionStarted(auctionId)
         onlyAuctionNotCanceled(auctionId)
         onlyETH(auctionId)
+        nonReentrant
         returns (bool)
     {
         Auction storage auction = auctions[auctionId];
@@ -373,6 +377,8 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
         onlyAuctionNotCanceled(auctionId)
         onlyERC20(auctionId)
         onlyValidBidAmount(amount)
+        nonReentrant
+        returns (bool)
     {
         Auction storage auction = auctions[auctionId];
 
@@ -380,9 +386,6 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
         require(auction.totalDepositedERC721s > 0, "No deposited NFTs in auction");
 
         IERC20 bidToken = IERC20(auction.bidToken);
-        uint256 allowance = bidToken.allowance(msg.sender, address(this));
-
-        require(allowance >= amount, "Token allowance too small");
 
         uint256 bidderCurrentBalance = auction.bidBalance[msg.sender];
 
@@ -448,6 +451,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
                 }
             }
         }
+        return true;
     }
 
     function withdrawERC20Bid(uint256 auctionId)
@@ -457,6 +461,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
         onlyAuctionStarted(auctionId)
         onlyAuctionNotCanceled(auctionId)
         onlyERC20(auctionId)
+        nonReentrant
         returns (bool)
     {
         Auction storage auction = auctions[auctionId];
@@ -487,6 +492,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
         onlyExistingAuction(auctionId)
         onlyAuctionStarted(auctionId)
         onlyAuctionNotCanceled(auctionId)
+        nonReentrant
         returns (bool)
     {
         Auction storage auction = auctions[auctionId];
@@ -633,6 +639,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
         external
         override
         onlyExistingAuction(auctionId)
+        nonReentrant
         returns (bool)
     {
         Auction storage auction = auctions[auctionId];
@@ -702,7 +709,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
         uint256 auctionId,
         uint256 slotIndex,
         uint256 amount
-    ) external override returns (bool) {
+    ) external override nonReentrant returns (bool) {
         address claimer = msg.sender;
 
         Auction storage auction = auctions[auctionId];
@@ -745,7 +752,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
         uint256 auctionId,
         uint256 slotIndex,
         uint256 nftSlotIndex
-    ) external override returns (bool) {
+    ) external override nonReentrant returns (bool) {
         Auction storage auction = auctions[auctionId];
         Slot storage slot = auction.slots[slotIndex];
         DepositedERC721 storage nft = slot.depositedNfts[nftSlotIndex];
@@ -782,7 +789,13 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
         return true;
     }
 
-    function distributeRoyalties(address token) external override onlyDAO returns (uint256) {
+    function distributeRoyalties(address token)
+        external
+        override
+        onlyDAO
+        nonReentrant
+        returns (uint256)
+    {
         uint256 amountToWithdraw = royaltiesReserve[token];
         require(amountToWithdraw > 0, "Amount is 0");
 
@@ -959,7 +972,12 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
         return true;
     }
 
-    function getTopBidders(uint256 auctionId, uint256 n) public view override returns (address[] memory) {
+    function getTopBidders(uint256 auctionId, uint256 n)
+        public
+        view
+        override
+        returns (address[] memory)
+    {
         require(n <= auctions[auctionId].numberOfBids, "N should be lower");
         address[] memory biddersList = new address[](n);
         address currentAddress = auctions[auctionId].nextBidders[GUARD];

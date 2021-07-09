@@ -96,7 +96,7 @@ interface IUniverseAuctionHouse {
 
     /// @notice Sends a bid (ETH) to the specified auciton
     /// @param auctionId The auction id
-    function ethBid(uint256 auctionId) external payable;
+    function ethBid(uint256 auctionId) external payable returns (bool);
 
     /// @notice Withdraws the eth bid amount after auction is finalized and bid is non winning
     /// @param auctionId The auction id
@@ -104,7 +104,7 @@ interface IUniverseAuctionHouse {
 
     /// @notice Sends a bid (ERC20) to the specified auciton
     /// @param auctionId The auction id
-    function erc20Bid(uint256 auctionId, uint256 amount) external;
+    function erc20Bid(uint256 auctionId, uint256 amount) external returns (bool);
 
     /// @notice Withdraws the bid amount after auction is finialized and bid is non winning
     /// @param auctionId The auction id
