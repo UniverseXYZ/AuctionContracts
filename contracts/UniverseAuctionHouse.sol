@@ -189,7 +189,12 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
     function createAuction(AuctionConfig calldata config) external override returns (uint256) {
         uint256 currentTime = block.timestamp;
 
-        require(currentTime < config.startTime && config.startTime < config.endTime && config.resetTimer > 0 , "Wrong time config");
+        require(
+            currentTime < config.startTime &&
+                config.startTime < config.endTime &&
+                config.resetTimer > 0,
+            "Wrong time config"
+        );
         require(
             config.numberOfSlots > 0 && config.numberOfSlots <= maxNumberOfSlotsPerAuction,
             "Slots out of bound"
@@ -628,7 +633,10 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
         onlyAuctionNotCanceled(auctionId)
         returns (bool)
     {
-        require(startSlotIndex >=1 && endSlotIndex <= auctions[auctionId].numberOfSlots, "Slots out of bound");
+        require(
+            startSlotIndex >= 1 && endSlotIndex <= auctions[auctionId].numberOfSlots,
+            "Slots out of bound"
+        );
         for (uint256 i = startSlotIndex; i <= endSlotIndex; i += 1) {
             captureSlotRevenue(auctionId, i);
         }
@@ -684,9 +692,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
             paymentSplitsPaid = paymentSplitsPaid.add(interimFee.feeValue);
 
             if (auction.bidToken == address(0) && interimFee.feeValue > 0) {
-                (bool success, ) = auction.paymentSplits[i].recipient.call{
-                    value: interimFee.feeValue
-                }("");
+                (bool success, ) = auction.paymentSplits[i].recipient.call{value: interimFee.feeValue}("");
                 require(success, "Transfer failed");
             }
 
@@ -704,9 +710,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
 
         // Distribute the remaining revenue to the auction owner
         if (auction.bidToken == address(0)) {
-            (bool success, ) = payable(auction.auctionOwner).call{
-                value: amountToWithdraw.sub(paymentSplitsPaid)
-            }("");
+            (bool success, ) = payable(auction.auctionOwner).call{value: amountToWithdraw.sub(paymentSplitsPaid)}("");
             require(success, "Transfer failed");
         }
 
@@ -933,8 +937,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
         );
         require((tokens.length <= 40), "Cannot deposit more than 40");
         require(
-            (auctions[auctionId].slots[slotIndex].totalDepositedNfts + tokens.length <=
-                nftSlotLimit),
+            (auctions[auctionId].slots[slotIndex].totalDepositedNfts + tokens.length <= nftSlotLimit),
             "Nfts slot limit exceeded"
         );
 
