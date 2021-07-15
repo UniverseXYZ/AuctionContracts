@@ -73,7 +73,10 @@ describe('Test royalty fee functionality', () => {
     await ethers.provider.send('evm_mine');
 
     await universeAuctionHouse.finalizeAuction(1);
-    await universeAuctionHouse.captureAuctionRevenue(1);
+
+    for (let i = 0; i < numberOfSlots; i++) {
+      await universeAuctionHouse.captureSlotRevenue(1, (i + 1));
+    }
 
     expect(await universeAuctionHouse.royaltiesReserve(ethAddress)).to.equal("500000000000000000");
 
@@ -134,7 +137,10 @@ describe('Test royalty fee functionality', () => {
     await ethers.provider.send('evm_mine');
 
     await universeAuctionHouse.finalizeAuction(1);
-    await universeAuctionHouse.captureAuctionRevenue(1);
+
+    for (let i = 0; i < numberOfSlots; i++) {
+      await universeAuctionHouse.captureSlotRevenue(1, (i + 1));
+    }
 
     expect(await universeAuctionHouse.royaltiesReserve(tokenAddress)).to.equal('500000000000000000');
 

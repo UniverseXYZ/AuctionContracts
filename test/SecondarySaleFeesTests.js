@@ -70,7 +70,10 @@ describe('Secondary Sale Fees Tests', () => {
     await ethers.provider.send('evm_mine');
 
     await universeAuctionHouse.finalizeAuction(1);
-    await universeAuctionHouse.captureAuctionRevenue(1);
+
+    for (let i = 0; i < numberOfSlots; i++) {
+      await universeAuctionHouse.captureSlotRevenue(1, (i + 1));
+    }
 
     const auction = await universeAuctionHouse.auctions(1);
 
@@ -88,7 +91,7 @@ describe('Secondary Sale Fees Tests', () => {
     expect(Number(ethers.utils.formatEther(balance1).toString())).to.equal(0.2);
     expect(Number(ethers.utils.formatEther(balance2).toString())).to.equal(0.1);
 
-    await expect(universeAuctionHouse.distributeAuctionRevenue(1)).to.be.emit(universeAuctionHouse, 'LogAuctionRevenueWithdrawal');
+    await expect(universeAuctionHouse.distributeCapturedAuctionRevenue(1)).to.be.emit(universeAuctionHouse, 'LogAuctionRevenueWithdrawal');
 
     await expect(universeAuctionHouse.claimERC721Rewards(1, 1, 1)).to.be.emit(universeAuctionHouse, 'LogERC721RewardsClaim');
   });
@@ -148,7 +151,10 @@ describe('Secondary Sale Fees Tests', () => {
     await ethers.provider.send('evm_mine');
 
     await universeAuctionHouse.finalizeAuction(1);
-    await universeAuctionHouse.captureAuctionRevenue(1);
+
+    for (let i = 0; i < numberOfSlots; i++) {
+      await universeAuctionHouse.captureSlotRevenue(1, (i + 1));
+    }
 
     const auction = await universeAuctionHouse.auctions(1);
 
@@ -166,7 +172,7 @@ describe('Secondary Sale Fees Tests', () => {
     expect(Number(ethers.utils.formatEther(balance1).toString())).to.equal(0.9);
     expect(Number(ethers.utils.formatEther(balance2).toString())).to.equal(8.0991);
 
-    await expect(universeAuctionHouse.distributeAuctionRevenue(1)).to.be.emit(universeAuctionHouse, 'LogAuctionRevenueWithdrawal');
+    await expect(universeAuctionHouse.distributeCapturedAuctionRevenue(1)).to.be.emit(universeAuctionHouse, 'LogAuctionRevenueWithdrawal');
 
     await expect(universeAuctionHouse.claimERC721Rewards(1, 1, 1)).to.be.emit(universeAuctionHouse, 'LogERC721RewardsClaim');
   });

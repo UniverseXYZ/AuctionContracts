@@ -17,7 +17,6 @@ interface IUniverseAuctionHouse {
         bool isCanceled;
         address bidToken;
         bool isFinalized;
-        bool revenueCaptured;
         uint256 totalDepositedERC721s;
         uint256 totalWithdrawnERC721s;
         mapping(uint256 => Slot) slots;
@@ -34,6 +33,7 @@ interface IUniverseAuctionHouse {
         uint256 reservePrice;
         uint256 winningBidAmount;
         bool reservePriceReached;
+        bool revenueCaptured;
         address winner;
         mapping(uint256 => DepositedERC721) depositedNfts;
     }
@@ -124,17 +124,24 @@ interface IUniverseAuctionHouse {
     /// @param auctionId The auction id
     function finalizeAuction(uint256 auctionId) external returns (bool);
 
-    /// @notice Captures the auction revenue and deductible fees/royalties once the auction is finalized
+    /// @notice Captures the slot revenue and deductible fees/royalties once the auction is finalized
     /// @param auctionId The auction id
-    function captureAuctionRevenue(uint256 auctionId) external returns (bool);
+    /// @param slotIndex The slotIndex
+    function captureSlotRevenue(uint256 auctionId, uint256 slotIndex) external returns (bool);
+
+    /// @notice Captures a range of the slots revenue and deductible fees/royalties once the auction is finalized. Should be used for slots with lower amount of NFTs.
+    /// @param auctionId The auction id
+    /// @param startSlotIndex The start slotIndex
+    /// @param endSlotIndex The end slotIndex
+    function captureSlotRevenueRange(uint256 auctionId, uint256 startSlotIndex, uint256 endSlotIndex) external returns (bool);
 
     /// @notice Cancels an auction which has not started yet
     /// @param auctionId The auction id
     function cancelAuction(uint256 auctionId) external returns (bool);
 
-    /// @notice Withdraws the generated revenue from the auction to the auction owner
+    /// @notice Withdraws the captured revenue from the auction to the auction owner. Can be called multiple times after captureSlotRevenue has been called.
     /// @param auctionId The auction id
-    function distributeAuctionRevenue(uint256 auctionId) external returns (bool);
+    function distributeCapturedAuctionRevenue(uint256 auctionId) external returns (bool);
 
     /// @notice Claims and distributes the NFTs from a winning slot
     /// @param auctionId The auction id

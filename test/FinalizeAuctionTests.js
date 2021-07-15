@@ -108,7 +108,9 @@ describe('Finalize auction ERC721 Tests', () => {
     await ethers.provider.send('evm_mine');
 
     await universeAuctionHouse.finalizeAuction(1);
-    await universeAuctionHouse.captureAuctionRevenue(1);
+    for (let i = 0; i < numberOfSlots; i++) {
+      await universeAuctionHouse.captureSlotRevenue(1, (i + 1));
+    }
 
     const auction = await universeAuctionHouse.auctions(1);
 
@@ -124,7 +126,7 @@ describe('Finalize auction ERC721 Tests', () => {
 
     const balanceSignerBefore = await ethers.provider.getBalance(signer.address);
 
-    await expect(universeAuctionHouse.connect(signer2).distributeAuctionRevenue(1)).to.be.emit(universeAuctionHouse, "LogAuctionRevenueWithdrawal");
+    await expect(universeAuctionHouse.connect(signer2).distributeCapturedAuctionRevenue(1)).to.be.emit(universeAuctionHouse, "LogAuctionRevenueWithdrawal");
 
     const balance1 = await ethers.provider.getBalance(randomWallet1.address);
     const balance2 = await ethers.provider.getBalance(randomWallet2.address);
@@ -289,7 +291,7 @@ describe('Finalize auction ERC721 Tests', () => {
 
     await createAuction(universeAuctionHouse);
 
-    await expect(universeAuctionHouse.distributeAuctionRevenue(1)).to.be.reverted;
+    await expect(universeAuctionHouse.distributeCapturedAuctionRevenue(1)).to.be.reverted;
   });
 
   it("should transfer erc20 when it's supported by auction", async () => {
@@ -335,9 +337,12 @@ describe('Finalize auction ERC721 Tests', () => {
     await ethers.provider.send('evm_mine');
 
     await universeAuctionHouse.finalizeAuction(1);
-    await universeAuctionHouse.captureAuctionRevenue(1);
 
-    await universeAuctionHouse.distributeAuctionRevenue(1);
+    for (let i = 0; i < numberOfSlots; i++) {
+      await universeAuctionHouse.captureSlotRevenue(1, (i + 1));
+    }
+
+    await universeAuctionHouse.distributeCapturedAuctionRevenue(1);
   });
 
   it('should revert when is not finalized and user try to claim erc721', async () => {
@@ -391,7 +396,10 @@ describe('Finalize auction ERC721 Tests', () => {
     await ethers.provider.send('evm_mine');
 
     await universeAuctionHouse.finalizeAuction(1);
-    await universeAuctionHouse.captureAuctionRevenue(1);
+    
+    for (let i = 0; i < numberOfSlots; i++) {
+      await universeAuctionHouse.captureSlotRevenue(1, (i + 1));
+    }
 
     await expect(universeAuctionHouse.connect(signer2).claimERC721Rewards(1, 1)).to.be.reverted;
   });
@@ -451,7 +459,10 @@ describe('Finalize auction ERC721 Tests', () => {
     await ethers.provider.send('evm_mine');
 
     await universeAuctionHouse.finalizeAuction(1);
-    await universeAuctionHouse.captureAuctionRevenue(1);
+
+    for (let i = 0; i < numberOfSlots; i++) {
+      await universeAuctionHouse.captureSlotRevenue(1, (i + 1));
+    }
   });
 
   it('should have 0 id for nft', async () => {
@@ -501,7 +512,10 @@ describe('Finalize auction ERC721 Tests', () => {
     await ethers.provider.send('evm_mine');
 
     await universeAuctionHouse.finalizeAuction(1);
-    await universeAuctionHouse.captureAuctionRevenue(1);
+
+    for (let i = 0; i < numberOfSlots; i++) {
+      await universeAuctionHouse.captureSlotRevenue(1, (i + 1));
+    }
 
     await universeAuctionHouse.connect(signer).claimERC721Rewards(1, 1, 2);
   });

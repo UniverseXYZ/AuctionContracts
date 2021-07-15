@@ -109,7 +109,10 @@ describe('Withdraw functionalities', () => {
     await ethers.provider.send('evm_mine');
 
     await universeAuctionHouse.finalizeAuction(1);
-    await universeAuctionHouse.captureAuctionRevenue(1);
+
+    for (let i = 0; i < numberOfSlots; i++) {
+      await universeAuctionHouse.captureSlotRevenue(1, (i + 1));
+    }
 
     await expect(universeAuctionHouse.withdrawERC721FromNonWinningSlot(1, 1, 40)).emit(
       universeAuctionHouse,
@@ -185,7 +188,10 @@ describe('Withdraw functionalities', () => {
     await ethers.provider.send('evm_mine');
 
     await universeAuctionHouse.finalizeAuction(1);
-    await universeAuctionHouse.captureAuctionRevenue(1);
+
+    for (let i = 0; i < numberOfSlots; i++) {
+      await universeAuctionHouse.captureSlotRevenue(1, (i + 1));
+    }
 
     await expect(universeAuctionHouse.connect(signer2).withdrawERC721FromNonWinningSlot(1, 1, 1)).revertedWith(
       'Only depositor can withdraw'
@@ -298,7 +304,10 @@ describe('Withdraw functionalities', () => {
     await ethers.provider.send('evm_mine');
 
     await universeAuctionHouse.finalizeAuction(1);
-    await universeAuctionHouse.captureAuctionRevenue(1);
+
+    for (let i = 0; i < numberOfSlots; i++) {
+      await universeAuctionHouse.captureSlotRevenue(1, (i + 1));
+    }
 
     await expect(universeAuctionHouse.withdrawERC721FromNonWinningSlot(1, 1, 1)).revertedWith(
       'Reserve price met'
@@ -363,7 +372,10 @@ describe('Withdraw functionalities', () => {
     await ethers.provider.send('evm_mine');
 
     await universeAuctionHouse.finalizeAuction(1);
-    await universeAuctionHouse.captureAuctionRevenue(1);
+
+    for (let i = 0; i < numberOfSlots; i++) {
+      await universeAuctionHouse.captureSlotRevenue(1, (i + 1));
+    }
 
     await expect(universeAuctionHouse.connect(signer5).withdrawEthBid(1)).revertedWith('You have 0 deposited');
   });
@@ -485,7 +497,10 @@ describe('Withdraw functionalities', () => {
     await ethers.provider.send('evm_mine')
 
     await universeAuctionHouse.finalizeAuction(1);
-    await universeAuctionHouse.captureAuctionRevenue(1);
+
+    for (let i = 0; i < numberOfSlots; i++) {
+      await universeAuctionHouse.captureSlotRevenue(1, (i + 1));
+    }
 
     await expect(universeAuctionHouse.withdrawERC20Bid(1)).emit(universeAuctionHouse, 'LogBidWithdrawal');
 
@@ -554,7 +569,10 @@ describe('Withdraw functionalities', () => {
     await ethers.provider.send('evm_mine')
 
     await universeAuctionHouse.finalizeAuction(1);
-    await universeAuctionHouse.captureAuctionRevenue(1);
+
+    for (let i = 0; i < numberOfSlots; i++) {
+      await universeAuctionHouse.captureSlotRevenue(1, (i + 1));
+    }
 
     await expect(universeAuctionHouse.connect(signer4).withdrawERC20Bid(1)).revertedWith('You have 0 deposited');
   });
