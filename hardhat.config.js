@@ -50,6 +50,11 @@ module.exports = {
       url: `https://rinkeby.infura.io/v3/${process.env.INFURA_API_KEY}`,
       accounts: [process.env.PRIVATE_KEY],
     },
+    hardhat: {
+      accounts: {
+        count: 100,
+      },
+    }
   },
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY,

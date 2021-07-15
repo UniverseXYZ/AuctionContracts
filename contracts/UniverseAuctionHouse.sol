@@ -189,9 +189,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
     function createAuction(AuctionConfig calldata config) external override returns (uint256) {
         uint256 currentTime = block.timestamp;
 
-        require(currentTime < config.startTime, "Can't begin before current block");
-        require(config.startTime < config.endTime, "Can't end before it has launched");
-        require(config.resetTimer > 0, "Timer must be > 0 seconds");
+        require(currentTime < config.startTime && config.startTime < config.endTime && config.resetTimer > 0 , "Wrong time config");
         require(
             config.numberOfSlots > 0 && config.numberOfSlots <= maxNumberOfSlotsPerAuction,
             "Slots out of bound"
@@ -503,7 +501,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
 
         require(!auction.slots[slotIndex].reservePriceReached, "Reserve price met");
 
-        require(auction.isFinalized && auction.revenueCaptured, "Auction should be finalized");
+        require(auction.isFinalized, "Auction should be finalized");
         require(amount <= 40, "Can't withdraw more than 40");
         require(amount <= totalDeposited.sub(totalWithdrawn), "Not enough available");
 
@@ -555,6 +553,9 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
                         bidders[i]
                     ];
                     auction.slots[lastAwardedIndex + 1].winner = bidders[i];
+                    auction.winners[lastAwardedIndex + 1] = auction
+                    .slots[lastAwardedIndex + 1]
+                    .winner;
 
                     emit LogBidMatched(
                         auctionId,
@@ -577,8 +578,8 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
         return true;
     }
 
-    function captureAuctionRevenue(uint256 auctionId)
-        external
+    function captureSlotRevenue(uint256 auctionId, uint256 slotIndex)
+        public
         override
         onlyExistingAuction(auctionId)
         onlyAuctionNotCanceled(auctionId)
@@ -586,27 +587,24 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
     {
         Auction storage auction = auctions[auctionId];
 
-        require(auction.isFinalized, "Auction not finalized");
+        require(auction.isFinalized, "Not finalized");
 
         // Calculate the auction revenue from sold slots and reset bid balances
-        for (uint256 i = 0; i < auction.numberOfSlots; i += 1) {
-            if (auction.slots[i + 1].reservePriceReached) {
-                auction.winners[i + 1] = auction.slots[i + 1].winner;
-                auctionsRevenue[auctionId] = auctionsRevenue[auctionId].add(
-                    auction.bidBalance[auction.slots[i + 1].winner]
-                );
-                auction.bidBalance[auction.slots[i + 1].winner] = 0;
+        if (auction.slots[slotIndex].reservePriceReached) {
+            auctionsRevenue[auctionId] = auctionsRevenue[auctionId].add(
+                auction.bidBalance[auction.slots[slotIndex].winner]
+            );
+            auction.bidBalance[auction.slots[slotIndex].winner] = 0;
 
-                // Calculate the amount accounted for secondary sale fees
-                if (auction.slots[i + 1].totalDepositedNfts > 0) {
-                    uint256 _secondarySaleFeesForSlot = calculateSecondarySaleFees(
-                        auctionId,
-                        (i + 1)
-                    );
-                    auctionsRevenue[auctionId] = auctionsRevenue[auctionId].sub(
-                        _secondarySaleFeesForSlot
-                    );
-                }
+            // Calculate the amount accounted for secondary sale fees
+            if (auction.slots[slotIndex].totalDepositedNfts > 0) {
+                uint256 _secondarySaleFeesForSlot = calculateSecondarySaleFees(
+                    auctionId,
+                    (slotIndex)
+                );
+                auctionsRevenue[auctionId] = auctionsRevenue[auctionId].sub(
+                    _secondarySaleFeesForSlot
+                );
             }
         }
 
@@ -614,8 +612,26 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
         uint256 _royaltyFee = royaltyFeeBps.mul(auctionsRevenue[auctionId]).div(10000);
         auctionsRevenue[auctionId] = auctionsRevenue[auctionId].sub(_royaltyFee);
         royaltiesReserve[auction.bidToken] = royaltiesReserve[auction.bidToken].add(_royaltyFee);
-        auction.revenueCaptured = true;
+        auction.slots[slotIndex].revenueCaptured = true;
 
+        return true;
+    }
+
+    function captureSlotRevenueRange(
+        uint256 auctionId,
+        uint256 startSlotIndex,
+        uint256 endSlotIndex
+    )
+        external
+        override
+        onlyExistingAuction(auctionId)
+        onlyAuctionNotCanceled(auctionId)
+        returns (bool)
+    {
+        require(startSlotIndex >=1 && endSlotIndex <= auctions[auctionId].numberOfSlots, "Slots out of bound");
+        for (uint256 i = startSlotIndex; i <= endSlotIndex; i += 1) {
+            captureSlotRevenue(auctionId, i);
+        }
         return true;
     }
 
@@ -635,7 +651,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
         return true;
     }
 
-    function distributeAuctionRevenue(uint256 auctionId)
+    function distributeCapturedAuctionRevenue(uint256 auctionId)
         external
         override
         onlyExistingAuction(auctionId)
@@ -643,7 +659,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
         returns (bool)
     {
         Auction storage auction = auctions[auctionId];
-        require(auction.isFinalized && auction.revenueCaptured, "Auction should have ended");
+        require(auction.isFinalized, "Not finalized");
 
         uint256 amountToWithdraw = auctionsRevenue[auctionId];
         uint256 value = amountToWithdraw;
@@ -718,7 +734,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
         uint256 totalDeposited = winningSlot.totalDepositedNfts;
         uint256 totalWithdrawn = winningSlot.totalWithdrawnNfts;
 
-        require(auction.isFinalized && auction.revenueCaptured, "Auction should have ended");
+        require(auction.isFinalized && winningSlot.revenueCaptured, "Not finalized");
         require(auction.winners[slotIndex] == claimer, "Only winner can claim");
         require(winningSlot.reservePriceReached, "Reserve price not met");
 
@@ -758,13 +774,14 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
         DepositedERC721 storage nft = slot.depositedNfts[nftSlotIndex];
 
         require(nft.hasSecondarySaleFees && !nft.feesPaid, "Not supported/Fees already paid");
+        require(slot.revenueCaptured, "Slot revenue should be captured");
 
         uint256 averageERC721SalePrice = slot.winningBidAmount.div(slot.totalDepositedNfts);
 
         HasSecondarySaleFees withFees = HasSecondarySaleFees(nft.tokenAddress);
         address payable[] memory recipients = withFees.getFeeRecipients(nft.tokenId);
         uint256[] memory fees = withFees.getFeeBps(nft.tokenId);
-        require(fees.length == recipients.length, "Splits number should be equal");
+        require(fees.length == recipients.length, "Splits should be equal");
         uint256 value = averageERC721SalePrice;
         nft.feesPaid = true;
 
