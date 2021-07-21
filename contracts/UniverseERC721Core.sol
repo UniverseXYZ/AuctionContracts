@@ -31,6 +31,23 @@ contract UniverseERC721Core is UniverseERC721 {
         return mintedTokenIds;
     }
 
+    function batchMintWithDifferentFees(
+        address receiver,
+        string[] calldata tokenURIs,
+        Fee[][] memory fees
+    ) external override onlyOwner returns (uint256[] memory) {
+        require(tokenURIs.length <= 40, "Cannot mint more than 40 ERC721 tokens in a single call");
+
+        uint256[] memory mintedTokenIds = new uint256[](tokenURIs.length);
+
+        for (uint256 i = 0; i < tokenURIs.length; i++) {
+            uint256 tokenId = mint(receiver, tokenURIs[i], fees[i]);
+            mintedTokenIds[i] = tokenId;
+        }
+
+        return mintedTokenIds;
+    }
+
     function updateTokenURI(uint256 _tokenId, string memory _tokenURI)
         external
         override
