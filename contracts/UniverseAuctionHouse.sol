@@ -522,6 +522,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
         override
         onlyExistingAuction(auctionId)
         onlyAuctionNotCanceled(auctionId)
+        nonReentrant
         returns (bool)
     {
         Auction storage auction = auctions[auctionId];
@@ -922,6 +923,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
         onlyExistingAuction(auctionId)
         onlyAuctionNotStarted(auctionId)
         onlyAuctionNotCanceled(auctionId)
+        nonReentrant
         returns (uint256[] memory)
     {
         uint256[] memory nftSlotIndexes = new uint256[](tokens.length);
@@ -957,7 +959,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
         uint256 auctionId,
         uint256 slotIndex,
         uint256 nftSlotIndex
-    ) public override onlyExistingAuction(auctionId) onlyAuctionCanceled(auctionId) returns (bool) {
+    ) public override onlyExistingAuction(auctionId) onlyAuctionCanceled(auctionId) nonReentrant returns (bool) {
         Auction storage auction = auctions[auctionId];
         DepositedERC721 memory nftForWithdrawal = auction.slots[slotIndex].depositedNfts[
             nftSlotIndex
