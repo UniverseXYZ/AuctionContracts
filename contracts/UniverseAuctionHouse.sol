@@ -298,7 +298,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
 
         // Check if this is first time bidding
         if (bidderCurrentBalance == 0) {
-            // Add bid without checks if total bids are less than total slots
+            // If total bids are less than total slots, add bid without checking if the bid is within the winning slots (isWinningBid())
             if (auction.numberOfBids < auction.numberOfSlots) {
                 addBid(auctionId, msg.sender, msg.value);
 
@@ -323,7 +323,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
                 "Bid should be > next highest bid"
             );
 
-            // Update bid directly without additional checks if total bids are less than total slots
+            // If total bids are less than total slots update the bid directly
             if (auction.numberOfBids < auction.numberOfSlots) {
                 updateBid(auctionId, msg.sender, bidderCurrentBalance.add(msg.value));
 
@@ -394,7 +394,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
 
         // Check if this is first time bidding
         if (bidderCurrentBalance == 0) {
-            // Add bid without checks if total bids are less than total slots
+            // If total bids are less than total slots, add bid without checking if the bid is within the winning slots (isWinningBid())
             if (auction.numberOfBids < auction.numberOfSlots) {
                 addBid(auctionId, msg.sender, amount);
                 require(
@@ -427,7 +427,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
                 "Bid should be > next highest bid"
             );
 
-            // Update bid directly without additional checks if total bids are less than total slots
+            // If total bids are less than total slots update the bid directly
             if (auction.numberOfBids < auction.numberOfSlots) {
                 updateBid(auctionId, msg.sender, bidderCurrentBalance.add(amount));
                 require(
