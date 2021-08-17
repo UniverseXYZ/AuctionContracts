@@ -153,11 +153,6 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
         _;
     }
 
-    modifier onlyIfWhitelistSupported(uint256 auctionId) {
-        require(auctions[auctionId].supportsWhitelist, "Whitelisting should be supported");
-        _;
-    }
-
     modifier onlyAuctionOwner(uint256 auctionId) {
         require(auctions[auctionId].auctionOwner == msg.sender, "Only owner can whitelist");
         _;
@@ -265,9 +260,9 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
     {
         Auction storage auction = auctions[auctionId];
 
-        require(slotIndices.length <= auction.numberOfSlots, "Exceeding auction slots");
-        require(slotIndices.length <= 10, "Slots should be no more than 10");
-        require(slotIndices.length == tokens.length, "Slots should be equal to batches");
+        require(slotIndices.length <= auction.numberOfSlots && 
+                slotIndices.length <= 10 && 
+                slotIndices.length == tokens.length, "Incorrect auction slots");
 
         for (uint256 i = 0; i < slotIndices.length; i += 1) {
             require(tokens[i].length <= 5, "Max 5 NFTs could be transferred");
