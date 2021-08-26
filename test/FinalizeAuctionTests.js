@@ -56,7 +56,6 @@ describe('Finalize auction ERC721 Tests', () => {
     const resetTimer = 3;
     const numberOfSlots = 1;
     const ethAddress = '0x0000000000000000000000000000000000000000';
-    const whitelistAddresses = [];
     const minimumReserveValues = [];
     const paymentSplits = [[randomWallet1.address, "2000"], [randomWallet2.address, "1000"]];
   
@@ -66,7 +65,6 @@ describe('Finalize auction ERC721 Tests', () => {
       resetTimer,
       numberOfSlots,
       ethAddress,
-      whitelistAddresses,
       minimumReserveValues,
       paymentSplits
     ]);
@@ -161,7 +159,6 @@ describe('Finalize auction ERC721 Tests', () => {
     const resetTimer = 1;
     const numberOfSlots = 1;
     const tokenAddress = '0x0000000000000000000000000000000000000000';
-    const whitelistAddresses = [];
     const minimumReserveValues = [];
     const paymentSplits = [];
 
@@ -171,7 +168,6 @@ describe('Finalize auction ERC721 Tests', () => {
       resetTimer,
       numberOfSlots,
       tokenAddress,
-      whitelistAddresses,
       minimumReserveValues,
       paymentSplits
     ]);
@@ -208,7 +204,6 @@ describe('Finalize auction ERC721 Tests', () => {
     const resetTimer = 3;
     const numberOfSlots = 1;
     const ethAddress = '0x0000000000000000000000000000000000000000';
-    const whitelistAddresses = [];
     const minimumReserveValues = [];
     const paymentSplits = [];
 
@@ -218,7 +213,6 @@ describe('Finalize auction ERC721 Tests', () => {
       resetTimer,
       numberOfSlots,
       ethAddress,
-      whitelistAddresses,
       minimumReserveValues,
       paymentSplits
     ]);
@@ -250,7 +244,6 @@ describe('Finalize auction ERC721 Tests', () => {
     const resetTimer = 3;
     const numberOfSlots = 1;
     const ethAddress = '0x0000000000000000000000000000000000000000';
-    const whitelistAddresses = [];
     const minimumReserveValues = [];
     const paymentSplits = [];
   
@@ -260,7 +253,6 @@ describe('Finalize auction ERC721 Tests', () => {
       resetTimer,
       numberOfSlots,
       ethAddress,
-      whitelistAddresses,
       minimumReserveValues,
       paymentSplits
     ]);
@@ -304,7 +296,6 @@ describe('Finalize auction ERC721 Tests', () => {
     const resetTimer = 1;
     const numberOfSlots = 1;
     const tokenAddress = mockToken.address;
-    const whitelistAddresses = [];
     const minimumReserveValues = [];
     const paymentSplits = [];
 
@@ -314,7 +305,6 @@ describe('Finalize auction ERC721 Tests', () => {
       resetTimer,
       numberOfSlots,
       tokenAddress,
-      whitelistAddresses,
       minimumReserveValues,
       paymentSplits
     ]);
@@ -363,7 +353,6 @@ describe('Finalize auction ERC721 Tests', () => {
     const resetTimer = 1;
     const numberOfSlots = 1;
     const tokenAddress = '0x0000000000000000000000000000000000000000';
-    const whitelistAddresses = [];
     const minimumReserveValues = [];
     const paymentSplits = [];
 
@@ -373,7 +362,6 @@ describe('Finalize auction ERC721 Tests', () => {
       resetTimer,
       numberOfSlots,
       tokenAddress,
-      whitelistAddresses,
       minimumReserveValues,
       paymentSplits
     ]);
@@ -414,7 +402,6 @@ describe('Finalize auction ERC721 Tests', () => {
     const resetTimer = 1;
     const numberOfSlots = 4;
     const tokenAddress = '0x0000000000000000000000000000000000000000';
-    const whitelistAddresses = [];
     const minimumReserveValues = [];
     const paymentSplits = [];
 
@@ -424,7 +411,6 @@ describe('Finalize auction ERC721 Tests', () => {
       resetTimer,
       numberOfSlots,
       tokenAddress,
-      whitelistAddresses,
       minimumReserveValues,
       paymentSplits
     ]);
@@ -475,7 +461,6 @@ describe('Finalize auction ERC721 Tests', () => {
     const resetTimer = 1;
     const numberOfSlots = 1;
     const tokenAddress = '0x0000000000000000000000000000000000000000';
-    const whitelistAddresses = [];
     const minimumReserveValues = [];
     const paymentSplits = [];
 
@@ -485,7 +470,6 @@ describe('Finalize auction ERC721 Tests', () => {
       resetTimer,
       numberOfSlots,
       tokenAddress,
-      whitelistAddresses,
       minimumReserveValues,
       paymentSplits
     ]);
@@ -530,7 +514,6 @@ describe('Finalize auction ERC721 Tests', () => {
     const resetTimer = 6;
     const numberOfSlots = 2;
     const ethAddress = '0x0000000000000000000000000000000000000000';
-    const whitelistAddresses = [];
     const minimumReserveValues = [];
     const paymentSplits = [];
 
@@ -540,7 +523,6 @@ describe('Finalize auction ERC721 Tests', () => {
       resetTimer,
       numberOfSlots,
       ethAddress,
-      whitelistAddresses,
       minimumReserveValues,
       paymentSplits
     ]);
@@ -583,7 +565,6 @@ const createAuction = async (universeAuctionHouse) => {
   const resetTimer = 3;
   const numberOfSlots = 1;
   const ethAddress = '0x0000000000000000000000000000000000000000';
-  const whitelistAddresses = [];
   const minimumReserveValues = [];
   const paymentSplits = [];
 
@@ -593,7 +574,6 @@ const createAuction = async (universeAuctionHouse) => {
     resetTimer,
     numberOfSlots,
     ethAddress,
-    whitelistAddresses,
     minimumReserveValues,
     paymentSplits
   ]);

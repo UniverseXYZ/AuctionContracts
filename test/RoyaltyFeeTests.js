@@ -35,7 +35,6 @@ describe('Test royalty fee functionality', () => {
     const resetTimer = 3;
     const numberOfSlots = 1;
     const ethAddress = '0x0000000000000000000000000000000000000000';
-    const whitelistAddresses = [];
     const minimumReserveValues = [];
     const paymentSplits = [];
 
@@ -45,7 +44,6 @@ describe('Test royalty fee functionality', () => {
       resetTimer,
       numberOfSlots,
       ethAddress,
-      whitelistAddresses,
       minimumReserveValues,
       paymentSplits
     ]);
@@ -103,7 +101,6 @@ describe('Test royalty fee functionality', () => {
     const resetTimer = 1;
     const numberOfSlots = 1;
     const tokenAddress = mockToken.address;
-    const whitelistAddresses = [];
     const minimumReserveValues = [];
     const paymentSplits = [];
 
@@ -113,7 +110,6 @@ describe('Test royalty fee functionality', () => {
       resetTimer,
       numberOfSlots,
       tokenAddress,
-      whitelistAddresses,
       minimumReserveValues,
       paymentSplits
     ]);

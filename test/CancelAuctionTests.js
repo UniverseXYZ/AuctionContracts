@@ -50,13 +50,12 @@ describe('Test cancel functionality', () => {
     const resetTimer = 3;
     const numberOfSlots = 1;
     const ethAddress = '0x0000000000000000000000000000000000000000';
-    const whitelistAddresses = [];
     const minimumReserveValues = [];
     const paymentSplits = [];
 
     await universeAuctionHouse
       .connect(signer1)
-      .createAuction([startTime, endTime, resetTimer, numberOfSlots, ethAddress, whitelistAddresses, minimumReserveValues, paymentSplits]);
+      .createAuction([startTime, endTime, resetTimer, numberOfSlots, ethAddress, minimumReserveValues, paymentSplits]);
 
     await expect(universeAuctionHouse.connect(signer2).cancelAuction(1)).to.be.reverted;
   });
@@ -70,7 +69,6 @@ const createAuction = async (universeAuctionHouse) => {
   const resetTimer = 3;
   const numberOfSlots = 1;
   const ethAddress = '0x0000000000000000000000000000000000000000';
-  const whitelistAddresses = [];
   const minimumReserveValues = [];
   const paymentSplits = [];
 
@@ -80,7 +78,6 @@ const createAuction = async (universeAuctionHouse) => {
     resetTimer,
     numberOfSlots,
     ethAddress,
-    whitelistAddresses,
     minimumReserveValues,
     paymentSplits
   ]);

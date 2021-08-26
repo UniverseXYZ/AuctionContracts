@@ -27,7 +27,6 @@ describe('UniverseAuctionHouse', () => {
     const resetTimer = 3;
     const numberOfSlots = 1;
     const bidToken = mockToken.address;
-    const whitelistAddresses = [];
     const minimumReserveValues = [];
     const paymentSplits = [];
 
@@ -37,7 +36,6 @@ describe('UniverseAuctionHouse', () => {
       resetTimer,
       numberOfSlots,
       bidToken,
-      whitelistAddresses,
       minimumReserveValues,
       paymentSplits,
     ]);
@@ -112,7 +110,6 @@ describe('UniverseAuctionHouse', () => {
     const resetTimer = 3;
     const numberOfSlots = 1;
     const tokenAddress = mockToken.address;
-    const whitelistAddresses = [];
     const minimumReserveValues = [];
     const paymentSplits = [];
 
@@ -122,7 +119,6 @@ describe('UniverseAuctionHouse', () => {
       resetTimer,
       numberOfSlots,
       tokenAddress,
-      whitelistAddresses,
       minimumReserveValues,
       paymentSplits
     ]);
@@ -153,7 +149,6 @@ describe('UniverseAuctionHouse', () => {
     const resetTimer = 3;
     const numberOfSlots = 1;
     const tokenAddress = '0x0000000000000000000000000000000000000000';
-    const whitelistAddresses = [];
     const minimumReserveValues = [];
     const paymentSplits = [];
 
@@ -163,7 +158,6 @@ describe('UniverseAuctionHouse', () => {
       resetTimer,
       numberOfSlots,
       tokenAddress,
-      whitelistAddresses,
       minimumReserveValues,
       paymentSplits
     ]);

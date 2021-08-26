@@ -49,7 +49,6 @@ describe('Withdraw functionalities', () => {
     const resetTimer = 1;
     const numberOfSlots = 3;
     const ethAddress = '0x0000000000000000000000000000000000000000';
-    const whitelistAddresses = []
     const minimumReserveValues = ['100000000000000000000', '100000000000000000000', '100000000000000000000'];
     const paymentSplits = [];
 
@@ -59,7 +58,6 @@ describe('Withdraw functionalities', () => {
       resetTimer,
       numberOfSlots,
       ethAddress,
-      whitelistAddresses,
       minimumReserveValues,
       paymentSplits
     ]);
@@ -143,7 +141,6 @@ describe('Withdraw functionalities', () => {
     const resetTimer = 2;
     const numberOfSlots = 3;
     const ethAddress = '0x0000000000000000000000000000000000000000';
-    const whitelistAddresses = []
     const minimumReserveValues = ['100000000000000000000', '100000000000000000000', '100000000000000000000'];
     const paymentSplits = [];
   
@@ -153,7 +150,6 @@ describe('Withdraw functionalities', () => {
       resetTimer,
       numberOfSlots,
       ethAddress,
-      whitelistAddresses,
       minimumReserveValues,
       paymentSplits
     ]);
@@ -207,7 +203,6 @@ describe('Withdraw functionalities', () => {
     const resetTimer = 2;
     const numberOfSlots = 3;
     const ethAddress = '0x0000000000000000000000000000000000000000';
-    const whitelistAddresses = []
     const minimumReserveValues = ['100000000000000000000', '100000000000000000000', '100000000000000000000'];
     const paymentSplits = [];
   
@@ -217,7 +212,6 @@ describe('Withdraw functionalities', () => {
       resetTimer,
       numberOfSlots,
       ethAddress,
-      whitelistAddresses,
       minimumReserveValues,
       paymentSplits
     ]);
@@ -260,7 +254,6 @@ describe('Withdraw functionalities', () => {
     const resetTimer = 2;
     const numberOfSlots = 3;
     const ethAddress = '0x0000000000000000000000000000000000000000';
-    const whitelistAddresses = []
     const minimumReserveValues = ['1000000000000000000', '1000000000000000000', '1000000000000000000'];
     const paymentSplits = [];
   
@@ -270,7 +263,6 @@ describe('Withdraw functionalities', () => {
       resetTimer,
       numberOfSlots,
       ethAddress,
-      whitelistAddresses,
       minimumReserveValues,
       paymentSplits
     ]);
@@ -323,7 +315,6 @@ describe('Withdraw functionalities', () => {
     const resetTimer = 2;
     const numberOfSlots = 3;
     const ethAddress = '0x0000000000000000000000000000000000000000';
-    const whitelistAddresses = []
     const minimumReserveValues = ['100000000000000000000', '100000000000000000000', '100000000000000000000'];
     const paymentSplits = [];
   
@@ -333,7 +324,6 @@ describe('Withdraw functionalities', () => {
       resetTimer,
       numberOfSlots,
       ethAddress,
-      whitelistAddresses,
       minimumReserveValues,
       paymentSplits
     ]);
@@ -389,7 +379,6 @@ describe('Withdraw functionalities', () => {
     const resetTimer = 5;
     const numberOfSlots = 4;
     const ethAddress = '0x0000000000000000000000000000000000000000';
-    const whitelistAddresses = []
     const minimumReserveValues = ['100000000000000000000', '100000000000000000000', '100000000000000000000', '100000000000000000000'];
     const paymentSplits = [];
   
@@ -399,7 +388,6 @@ describe('Withdraw functionalities', () => {
       resetTimer,
       numberOfSlots,
       ethAddress,
-      whitelistAddresses,
       minimumReserveValues,
       paymentSplits
     ]);
@@ -445,7 +433,6 @@ describe('Withdraw functionalities', () => {
     const endTime = startTime + 500;
     const resetTimer = 1;
     const numberOfSlots = 2;
-    const whitelistAddresses = []
     const minimumReserveValues = ['200', '200']
     const paymentSplits = [];
   
@@ -455,7 +442,6 @@ describe('Withdraw functionalities', () => {
       resetTimer,
       numberOfSlots,
       mockToken.address,
-      whitelistAddresses,
       minimumReserveValues,
       paymentSplits
     ]);
@@ -517,7 +503,6 @@ describe('Withdraw functionalities', () => {
     const endTime = startTime + 500;
     const resetTimer = 1;
     const numberOfSlots = 3;
-    const whitelistAddresses = []
     const minimumReserveValues = ['200', '200', '200'];
     const paymentSplits = [];
   
@@ -527,7 +512,6 @@ describe('Withdraw functionalities', () => {
       resetTimer,
       numberOfSlots,
       mockToken.address,
-      whitelistAddresses,
       minimumReserveValues,
       paymentSplits
     ]);
@@ -585,7 +569,6 @@ describe('Withdraw functionalities', () => {
     const endTime = startTime + 500;
     const resetTimer = 1;
     const numberOfSlots = 3;
-    const whitelistAddresses = [];
     const minimumReserveValues = ['200', '200', '200'];
     const paymentSplits = [];
   
@@ -595,7 +578,6 @@ describe('Withdraw functionalities', () => {
       resetTimer,
       numberOfSlots,
       mockToken.address,
-      whitelistAddresses,
       minimumReserveValues,
       paymentSplits
     ]);
@@ -645,7 +627,6 @@ const createAuction = async (universeAuctionHouse) => {
   const resetTimer = 2;
   const numberOfSlots = 3;
   const ethAddress = '0x0000000000000000000000000000000000000000';
-  const whitelistAddresses = []
 
   await universeAuctionHouse.createAuction(
     startTime,
@@ -653,7 +634,6 @@ const createAuction = async (universeAuctionHouse) => {
     resetTimer,
     numberOfSlots,
     ethAddress,
-    whitelistAddresses
   );
 };
 
@@ -670,7 +650,6 @@ const createERC20Auction = async (universeAuctionHouse, tokenAddress) => {
     endTime,
     resetTimer,
     numberOfSlots,
-    supportsWhitelist,
     tokenAddress
   );
 };
