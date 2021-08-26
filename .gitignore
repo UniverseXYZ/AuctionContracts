@@ -6,6 +6,7 @@ coverage.json
 
 deployments/ganache
 deployments/rinkeby
+deployments/ropsten
 
 #Hardhat files
 cache

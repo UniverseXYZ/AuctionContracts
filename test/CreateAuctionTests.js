@@ -33,7 +33,6 @@ describe('Create Auction Tests', () => {
     const resetTimer = 3;
     const numberOfSlots = 1;
     const bidToken = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
-    const whitelistAddresses = [];
     const minimumReserveValues = [];
     const paymentSplits = [];
     auction = await universeAuctionHouse.createAuction([
@@ -42,7 +41,6 @@ describe('Create Auction Tests', () => {
       resetTimer,
       numberOfSlots,
       bidToken,
-      whitelistAddresses,
       minimumReserveValues,
       paymentSplits
     ]);
@@ -57,7 +55,6 @@ describe('Create Auction Tests', () => {
     const resetTimer = 3;
     const numberOfSlots = 1;
     const bidToken = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
-    const whitelistAddresses = [];
     const minimumReserveValues = [];
     const paymentSplits = [];
     await expect(
@@ -67,7 +64,6 @@ describe('Create Auction Tests', () => {
         resetTimer,
         numberOfSlots,
         bidToken,
-        whitelistAddresses,
         minimumReserveValues,
         paymentSplits
       ])
@@ -83,7 +79,6 @@ describe('Create Auction Tests', () => {
     const resetTimer = 3;
     const numberOfSlots = 1;
     const bidToken = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
-    const whitelistAddresses = [];
     const minimumReserveValues = [];
     const paymentSplits = [];
     await expect(
@@ -93,7 +88,6 @@ describe('Create Auction Tests', () => {
         resetTimer,
         numberOfSlots,
         bidToken,
-        whitelistAddresses,
         minimumReserveValues,
         paymentSplits
       ])
@@ -109,7 +103,6 @@ describe('Create Auction Tests', () => {
     const resetTimer = 0;
     const numberOfSlots = 1;
     const bidToken = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
-    const whitelistAddresses = [];
     const minimumReserveValues = [];
     const paymentSplits = [];
     await expect(
@@ -119,7 +112,6 @@ describe('Create Auction Tests', () => {
         resetTimer,
         numberOfSlots,
         bidToken,
-        whitelistAddresses,
         minimumReserveValues,
         paymentSplits
       ])
@@ -135,7 +127,6 @@ describe('Create Auction Tests', () => {
     const resetTimer = 3;
     const numberOfSlots = 0;
     const bidToken = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
-    const whitelistAddresses = [];
     const minimumReserveValues = [];
     const paymentSplits = [];
     await expect(
@@ -145,7 +136,6 @@ describe('Create Auction Tests', () => {
         resetTimer,
         numberOfSlots,
         bidToken,
-        whitelistAddresses,
         minimumReserveValues,
         paymentSplits
       ])
@@ -161,7 +151,6 @@ describe('Create Auction Tests', () => {
     const resetTimer = 3;
     const numberOfSlots = 2001;
     const bidToken = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
-    const whitelistAddresses = [];
     const minimumReserveValues = [];
     const paymentSplits = [];
     await expect(
@@ -171,7 +160,6 @@ describe('Create Auction Tests', () => {
         resetTimer,
         numberOfSlots,
         bidToken,
-        whitelistAddresses,
         minimumReserveValues,
         paymentSplits
       ])
@@ -187,7 +175,6 @@ describe('Create Auction Tests', () => {
     const resetTimer = 3;
     const numberOfSlots = 10;
     const bidToken = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
-    const whitelistAddresses = [];
     const minimumReserveValues = [];
     const paymentSplits = [];
 
@@ -197,7 +184,6 @@ describe('Create Auction Tests', () => {
       resetTimer,
       numberOfSlots,
       bidToken,
-      whitelistAddresses,
       minimumReserveValues,
       paymentSplits
     ]);

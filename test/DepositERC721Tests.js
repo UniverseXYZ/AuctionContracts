@@ -46,7 +46,6 @@ describe('DEPOSIT ERC721 Functionality', () => {
     const resetTimer = 3;
     const numberOfSlots = 10;
     const bidToken = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
-    const whitelistAddresses = [];
     const minimumReserveValues = [];
     const paymentSplits = [];
 
@@ -56,7 +55,6 @@ describe('DEPOSIT ERC721 Functionality', () => {
       resetTimer,
       numberOfSlots,
       bidToken,
-      whitelistAddresses,
       minimumReserveValues,
       paymentSplits
     ]);
@@ -175,9 +173,7 @@ describe('DEPOSIT ERC721 Functionality', () => {
     const endTime = startTime + 500;
     const resetTimer = 3;
     const numberOfSlots = 10;
-    const supportsWhitelist = true;
     const bidToken = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
-    const whitelistAddresses = [];
     const minimumReserveValues = [];
     const paymentSplits = [];
 
@@ -187,7 +183,6 @@ describe('DEPOSIT ERC721 Functionality', () => {
       resetTimer,
       numberOfSlots,
       bidToken,
-      whitelistAddresses,
       minimumReserveValues,
       paymentSplits
     ]);
@@ -233,7 +228,6 @@ describe('DEPOSIT ERC721 Functionality', () => {
     const resetTimer = 3;
     const numberOfSlots = 10;
     const bidToken = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
-    const whitelistAddresses = [];
     const minimumReserveValues = [];
     const paymentSplits = [];
 
@@ -243,7 +237,6 @@ describe('DEPOSIT ERC721 Functionality', () => {
       resetTimer,
       numberOfSlots,
       bidToken,
-      whitelistAddresses,
       minimumReserveValues,
       paymentSplits
     ]);
@@ -253,12 +246,12 @@ describe('DEPOSIT ERC721 Functionality', () => {
     const slotIdx = 1;
     const tokenId = 1;
 
-    await mockNFT.connect(signer2).mint(signer2.address, 'nftURI');
-    await mockNFT.connect(signer2).approve(universeAuctionHouse.address, tokenId);
+    await mockNFT.connect(signer1).mint(signer1.address, 'nftURI');
+    await mockNFT.connect(signer1).approve(universeAuctionHouse.address, tokenId);
 
-    await universeAuctionHouse.connect(signer2).depositERC721(auctionId, slotIdx, [[tokenId, mockNFT.address]]);
+    await universeAuctionHouse.connect(signer1).depositERC721(auctionId, slotIdx, [[tokenId, mockNFT.address]]);
 
-    await expect(universeAuctionHouse.connect(signer1).withdrawDepositedERC721(1, 0, 1)).to.be.reverted;
+    await expect(universeAuctionHouse.connect(signer2).withdrawDepositedERC721(1, 0, 1)).to.be.reverted;
   });
 });
 
@@ -271,7 +264,6 @@ const createAuction = async (deployedContracts) => {
   const resetTimer = 3;
   const numberOfSlots = 10;
   const bidToken = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
-  const whitelistAddresses = [];
   const minimumReserveValues = [];
   const paymentSplits = [];
 
@@ -281,7 +273,6 @@ const createAuction = async (deployedContracts) => {
     resetTimer,
     numberOfSlots,
     bidToken,
-    whitelistAddresses,
     minimumReserveValues,
     paymentSplits
   ]);

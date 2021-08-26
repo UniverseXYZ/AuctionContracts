@@ -104,9 +104,7 @@ describe('Deposit multiple ERC721 Tests', () => {
     const endTime = startTime + 500;
     const resetTimer = 3;
     const numberOfSlots = 1;
-    const supportsWhitelist = true;
     const ethAddress = '0x0000000000000000000000000000000000000000';
-    const whitelistAddresses = [signer2.address];
     const minimumReserveValues = [];
     const paymentSplits = [];
 
@@ -116,15 +114,14 @@ describe('Deposit multiple ERC721 Tests', () => {
       resetTimer,
       numberOfSlots,
       ethAddress,
-      whitelistAddresses,
       minimumReserveValues,
       paymentSplits
     ]);
 
-    await mockNFT.mint(signer.address, 1);
-    await mockNFT.approve(universeAuctionHouse.address, 1);
+    await mockNFT.mint(signer2.address, 1);
+    await mockNFT.connect(signer2).approve(universeAuctionHouse.address, 1);
 
-    await expect(universeAuctionHouse.depositERC721(1, 1, [[1, mockNFT.address]])).to.be.reverted;
+    await expect(universeAuctionHouse.connect(signer2).depositERC721(1, 1, [[1, mockNFT.address]])).to.be.reverted;
   });
 
   it('should deposit if user is part of the whitelist', async () => {
@@ -137,9 +134,7 @@ describe('Deposit multiple ERC721 Tests', () => {
     const endTime = startTime + 500;
     const resetTimer = 3;
     const numberOfSlots = 1;
-    const supportsWhitelist = true;
     const ethAddress = '0x0000000000000000000000000000000000000000';
-    const whitelistAddresses = [signer.address]
     const minimumReserveValues = [];
     const paymentSplits = [];
 
@@ -149,7 +144,6 @@ describe('Deposit multiple ERC721 Tests', () => {
       resetTimer,
       numberOfSlots,
       ethAddress,
-      whitelistAddresses,
       minimumReserveValues,
       paymentSplits
     ]);
@@ -182,7 +176,6 @@ const createAuction = async (universeAuctionHouse) => {
   const resetTimer = 3;
   const numberOfSlots = 1;
   const ethAddress = '0x0000000000000000000000000000000000000000';
-  const whitelistAddresses = [];
   const minimumReserveValues = [];
   const paymentSplits = [];
 
@@ -192,7 +185,6 @@ const createAuction = async (universeAuctionHouse) => {
     resetTimer,
     numberOfSlots,
     ethAddress,
-    whitelistAddresses,
     minimumReserveValues,
     paymentSplits
   ]);

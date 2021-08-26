@@ -4,11 +4,12 @@ module.exports = async function () {
   if (
     hardhatArguments.network === "ganache" ||
     hardhatArguments.network === "hardhat" ||
-    hardhatArguments.network === "rinkeby"
+    hardhatArguments.network === "rinkeby" ||
+    hardhatArguments.network === "ropsten"
   ) {
+    const { log } = deployments;
     const namedAccounts = await hre.getNamedAccounts();
     const Factory = await deployments.getOrNull("UniverseAuctionHouse");
-    const { log } = deployments;
     const UniverseERC721Core = await deployments.getOrNull('UniverseERC721Core');
 
     if (!Factory) {

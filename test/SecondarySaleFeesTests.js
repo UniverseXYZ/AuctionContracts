@@ -25,7 +25,6 @@ describe('Secondary Sale Fees Tests', () => {
     const resetTimer = 3;
     const numberOfSlots = 1;
     const ethAddress = '0x0000000000000000000000000000000000000000';
-    const whitelistAddresses = [];
     const minimumReserveValues = [];
     const paymentSplits = [];
   
@@ -35,7 +34,6 @@ describe('Secondary Sale Fees Tests', () => {
       resetTimer,
       numberOfSlots,
       ethAddress,
-      whitelistAddresses,
       minimumReserveValues,
       paymentSplits
     ]);
@@ -106,7 +104,6 @@ describe('Secondary Sale Fees Tests', () => {
     const resetTimer = 3;
     const numberOfSlots = 1;
     const ethAddress = '0x0000000000000000000000000000000000000000';
-    const whitelistAddresses = [];
     const minimumReserveValues = [];
     const paymentSplits = [];
   
@@ -116,7 +113,6 @@ describe('Secondary Sale Fees Tests', () => {
       resetTimer,
       numberOfSlots,
       ethAddress,
-      whitelistAddresses,
       minimumReserveValues,
       paymentSplits
     ]);

@@ -66,7 +66,6 @@ describe("End to End Auction Universe House Tests", () => {
     const resetTimer = 1;
     const numberOfSlots = 50;
     const ethAddress = "0x0000000000000000000000000000000000000000";
-    const whitelistAddresses = [];
     const minimumReserveValues = [];
 
     for (let i = 0; i < numberOfSlots; i++) {
@@ -87,7 +86,6 @@ describe("End to End Auction Universe House Tests", () => {
       resetTimer,
       numberOfSlots,
       ethAddress,
-      whitelistAddresses,
       minimumReserveValues,
       paymentSplits,
     ]);
@@ -220,7 +218,6 @@ describe("End to End Auction Universe House Tests", () => {
     const resetTimer = 1;
     const numberOfSlots = 100;
     const ethAddress = "0x0000000000000000000000000000000000000000";
-    const whitelistAddresses = [];
     const minimumReserveValues = [];
 
     for (let i = 0; i < numberOfSlots; i++) {
@@ -241,7 +238,6 @@ describe("End to End Auction Universe House Tests", () => {
       resetTimer,
       numberOfSlots,
       ethAddress,
-      whitelistAddresses,
       minimumReserveValues,
       paymentSplits,
     ]);

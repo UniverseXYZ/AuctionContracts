@@ -26,7 +26,6 @@ describe('Extend auction ERC721 Tests', () => {
     const resetTimer = 500;
     const numberOfSlots = 2;
     const ethAddress = '0x0000000000000000000000000000000000000000';
-    const whitelistAddresses = [];
     const minimumReserveValues = [];
     const paymentSplits = [];
   
@@ -36,7 +35,6 @@ describe('Extend auction ERC721 Tests', () => {
       resetTimer,
       numberOfSlots,
       ethAddress,
-      whitelistAddresses,
       minimumReserveValues,
       paymentSplits
     ]);
@@ -86,7 +84,6 @@ describe('Extend auction ERC721 Tests', () => {
     const resetTimer = 600;
     const numberOfSlots = 2;
     const tokenAddress = mockToken.address;
-    const whitelistAddresses = [];
     const minimumReserveValues = [];
     const paymentSplits = [];
 
@@ -96,7 +93,6 @@ describe('Extend auction ERC721 Tests', () => {
       resetTimer,
       numberOfSlots,
       tokenAddress,
-      whitelistAddresses,
       minimumReserveValues,
       paymentSplits
     ]);
@@ -143,7 +139,6 @@ describe('Extend auction ERC721 Tests', () => {
     const resetTimer = 30;
     const numberOfSlots = 3;
     const ethAddress = '0x0000000000000000000000000000000000000000';
-    const whitelistAddresses = [];
     const minimumReserveValues = [];
     const paymentSplits = [];
 
@@ -153,7 +148,6 @@ describe('Extend auction ERC721 Tests', () => {
       resetTimer,
       numberOfSlots,
       ethAddress,
-      whitelistAddresses,
       minimumReserveValues,
       paymentSplits
     ]);
@@ -193,7 +187,6 @@ const createAuction = async (universeAuctionHouse) => {
   const resetTimer = 30;
   const numberOfSlots = 2;
   const ethAddress = '0x0000000000000000000000000000000000000000';
-  const whitelistAddresses = [];
   const minimumReserveValues = [];
   const paymentSplits = [];
 
@@ -203,7 +196,6 @@ const createAuction = async (universeAuctionHouse) => {
     resetTimer,
     numberOfSlots,
     ethAddress,
-    whitelistAddresses,
     minimumReserveValues,
     paymentSplits
   ]);

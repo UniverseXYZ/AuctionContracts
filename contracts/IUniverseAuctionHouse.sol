@@ -13,14 +13,12 @@ interface IUniverseAuctionHouse {
         uint256 resetTimer;
         uint256 numberOfSlots;
         uint256 numberOfBids;
-        bool supportsWhitelist;
         bool isCanceled;
         address bidToken;
         bool isFinalized;
         uint256 totalDepositedERC721s;
         uint256 totalWithdrawnERC721s;
         mapping(uint256 => Slot) slots;
-        mapping(address => bool) whitelistAddresses;
         mapping(address => uint256) bidBalance;
         mapping(address => address) nextBidders;
         mapping(uint256 => address) winners;
@@ -62,7 +60,6 @@ interface IUniverseAuctionHouse {
         uint256 resetTimer;
         uint256 numberOfSlots;
         address bidToken;
-        address[] addressesToWhitelist;
         uint256[] minimumReserveValues;
         PaymentSplit[] paymentSplits;
     }
@@ -79,7 +76,6 @@ interface IUniverseAuctionHouse {
     /// @dev config.resetTimer Reset timer in seconds
     /// @dev config.numberOfSlots The number of slots which the auction will have
     /// @dev config.bidToken Address of the token used for bidding - can be address(0)
-    /// @dev config.addressesToWhitelist Address which should be whitelisted to participate in the auction
     /// @dev config.minimumReserveValues Minimum reserve values for each slot, starting from 1st. Leave empty if no minimum reserve
     /// @dev config.paymentSplits Array of payment splits which will be distributed after auction ends
     function createAuction(AuctionConfig calldata config) external returns (uint256);
@@ -197,14 +193,6 @@ interface IUniverseAuctionHouse {
     /// @param auctionId The auction id
     /// @param bidder The address of the bidder
     function getBidderBalance(uint256 auctionId, address bidder) external view returns (uint256);
-
-    /// @notice Checks id an address is whitelisted for specific auction
-    /// @param auctionId The auction id
-    /// @param addressToCheck The address to be checked
-    function isAddressWhitelisted(uint256 auctionId, address addressToCheck)
-        external
-        view
-        returns (bool);
 
     /// @notice Gets the minimum reserve price for auciton slot
     /// @param auctionId The auction id
