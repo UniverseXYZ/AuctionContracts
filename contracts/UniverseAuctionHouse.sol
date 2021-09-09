@@ -200,6 +200,10 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
                 config.numberOfSlots == config.minimumReserveValues.length,
             "Incorrect number of slots"
         );
+        // Ensure minimum reserve values are lower for descending slot numbers
+        for (uint256 i = 1; i < config.minimumReserveValues.length; i += 1) {
+            require(config.minimumReserveValues[i - 1] >= config.minimumReserveValues[i], "Invalid reserve value") ;
+        }
 
         uint256 auctionId = totalAuctions.add(1);
 
@@ -253,6 +257,10 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
         returns (bool)
     {
         Auction storage auction = auctions[auctionId];
+        // Ensure depositing into different slots
+        for (uint256 i = 1; i < slotIndices.length; i++) {
+            require(slotIndices[i - 1] != slotIndices[i], "Same slot deposit") ;
+        }
 
         require(slotIndices.length <= auction.numberOfSlots && 
                 slotIndices.length <= 10 && 
@@ -581,7 +589,8 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
     {
         Auction storage auction = auctions[auctionId];
 
-        require(auction.isFinalized, "Not finalized");
+        require(auction.isFinalized && !auction.slots[slotIndex].revenueCaptured, "Not finalized/Already captured");
+        require(auction.numberOfSlots >= slotIndex && slotIndex > 0, "Non-existing slot");
 
         // Calculate the auction revenue from sold slots and reset bid balances
         if (auction.slots[slotIndex].reservePriceReached) {
@@ -659,6 +668,8 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
         require(auction.isFinalized, "Not finalized");
 
         uint256 amountToWithdraw = auctionsRevenue[auctionId];
+        require(amountToWithdraw > 0, "No revenue to distribute");
+
         uint256 value = amountToWithdraw;
         uint256 paymentSplitsPaid;
 
@@ -944,6 +955,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
         delete auction.slots[slotIndex].depositedNfts[nftSlotIndex];
 
         auction.totalWithdrawnERC721s = auction.totalWithdrawnERC721s.add(1);
+        auction.totalDepositedERC721s = auction.totalDepositedERC721s.sub(1);
         auction.slots[slotIndex].totalWithdrawnNfts = auction
         .slots[slotIndex]
         .totalWithdrawnNfts
