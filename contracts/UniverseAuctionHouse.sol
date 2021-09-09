@@ -928,6 +928,11 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
             "Nfts slot limit exceeded"
         );
 
+        // Ensure previous slot has depoited NFTs, so there is no case where there is an empty slot between non-empty slots
+        if (slotIndex > 1) {
+            require(auctions[auctionId].slots[slotIndex - 1].totalDepositedNfts > 0, "Previous slot is empty");
+        }
+
         for (uint256 i = 0; i < tokens.length; i += 1) {
             nftSlotIndexes[i] = _depositERC721(
                 auctionId,

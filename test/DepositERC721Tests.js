@@ -218,6 +218,36 @@ describe('DEPOSIT ERC721 Functionality', () => {
     await expect(universeAuctionHouse.depositERC721(auctionId, slotIdx, [[tokenId, mockNFT.address]])).to.be.reverted;
   });
 
+  it('should revert if previous slot is empty', async () => {
+    const { universeAuctionHouse, mockNFT } = await loadFixture(deployedContracts);
+
+    await createAuction(deployedContracts);
+
+    expect(await universeAuctionHouse.totalAuctions()).to.equal(1);
+
+    const [owner] = await ethers.getSigners();
+
+    const auctionId = 1;
+    const slotIdx = 11;
+    const tokenId = 1;
+
+    await mockNFT.mint(owner.address, 'nftURI1');
+    await mockNFT.mint(owner.address, 'nftURI2');
+    await mockNFT.mint(owner.address, 'nftURI3');
+
+    await mockNFT.approve(universeAuctionHouse.address, 1);
+    await mockNFT.approve(universeAuctionHouse.address, 2);
+    await mockNFT.approve(universeAuctionHouse.address, 3);
+
+    await universeAuctionHouse.depositERC721(auctionId, 1, [[1, mockNFT.address]])
+
+    await expect(universeAuctionHouse.depositERC721(auctionId, 3, [[2, mockNFT.address]])).revertedWith("Previous slot is empty");
+
+    await universeAuctionHouse.depositERC721(auctionId, 2, [[2, mockNFT.address]])
+
+    await universeAuctionHouse.depositERC721(auctionId, 3, [[3, mockNFT.address]])
+  });
+
   it('should revert cuz Only depositor can withdraw', async () => {
     const { universeAuctionHouse, mockNFT } = await loadFixture(deployedContracts);
 
