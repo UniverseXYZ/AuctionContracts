@@ -948,39 +948,21 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
     function withdrawDepositedERC721(
         uint256 auctionId,
         uint256 slotIndex,
-        uint256 nftSlotIndex
+        uint256 amount
     ) public override onlyExistingAuction(auctionId) onlyAuctionCanceled(auctionId) nonReentrant returns (bool) {
+
         Auction storage auction = auctions[auctionId];
-        DepositedERC721 memory nftForWithdrawal = auction.slots[slotIndex].depositedNfts[
-            nftSlotIndex
-        ];
+        Slot storage slot = auction.slots[slotIndex];
 
-        require(msg.sender == nftForWithdrawal.depositor, "Only depositor can withdraw");
+        uint256 totalDeposited = slot.totalDepositedNfts;
+        uint256 totalWithdrawn = slot.totalWithdrawnNfts;
 
-        delete auction.slots[slotIndex].depositedNfts[nftSlotIndex];
+        require(amount <= 40, "Can't withdraw more than 40");
+        require(amount <= totalDeposited.sub(totalWithdrawn), "Not enough available");
 
-        auction.totalWithdrawnERC721s = auction.totalWithdrawnERC721s.add(1);
-        auction.totalDepositedERC721s = auction.totalDepositedERC721s.sub(1);
-        auction.slots[slotIndex].totalWithdrawnNfts = auction
-        .slots[slotIndex]
-        .totalWithdrawnNfts
-        .add(1);
-
-        emit LogERC721Withdrawal(
-            msg.sender,
-            nftForWithdrawal.tokenAddress,
-            nftForWithdrawal.tokenId,
-            auctionId,
-            slotIndex,
-            nftSlotIndex,
-            block.timestamp
-        );
-
-        IERC721(nftForWithdrawal.tokenAddress).safeTransferFrom(
-            address(this),
-            nftForWithdrawal.depositor,
-            nftForWithdrawal.tokenId
-        );
+        for (uint256 i = totalWithdrawn; i < amount.add(totalWithdrawn); i += 1) {
+            _withdrawDepositedERC721(auctionId, slotIndex, (i + 1));
+        }
 
         return true;
     }
@@ -1064,6 +1046,46 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
         require(msg.sender == nftForWithdrawal.depositor, "Only depositor can withdraw");
 
         auction.totalWithdrawnERC721s = auction.totalWithdrawnERC721s.add(1);
+        auction.slots[slotIndex].totalWithdrawnNfts = auction
+        .slots[slotIndex]
+        .totalWithdrawnNfts
+        .add(1);
+
+        emit LogERC721Withdrawal(
+            msg.sender,
+            nftForWithdrawal.tokenAddress,
+            nftForWithdrawal.tokenId,
+            auctionId,
+            slotIndex,
+            nftSlotIndex,
+            block.timestamp
+        );
+
+        IERC721(nftForWithdrawal.tokenAddress).safeTransferFrom(
+            address(this),
+            nftForWithdrawal.depositor,
+            nftForWithdrawal.tokenId
+        );
+
+        return true;
+    }
+
+    function _withdrawDepositedERC721(
+        uint256 auctionId,
+        uint256 slotIndex,
+        uint256 nftSlotIndex
+    ) internal returns (bool) {
+        Auction storage auction = auctions[auctionId];
+        DepositedERC721 memory nftForWithdrawal = auction.slots[slotIndex].depositedNfts[
+            nftSlotIndex
+        ];
+
+        require(msg.sender == nftForWithdrawal.depositor, "Only depositor can withdraw");
+
+        delete auction.slots[slotIndex].depositedNfts[nftSlotIndex];
+
+        auction.totalWithdrawnERC721s = auction.totalWithdrawnERC721s.add(1);
+        auction.totalDepositedERC721s = auction.totalDepositedERC721s.sub(1);
         auction.slots[slotIndex].totalWithdrawnNfts = auction
         .slots[slotIndex]
         .totalWithdrawnNfts

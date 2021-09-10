@@ -67,13 +67,45 @@ describe('DEPOSIT ERC721 Functionality', () => {
     const slotIdx = 1;
     const tokenId = 1;
 
-    await mockNFT.mint(owner.address, 'nftURI');
-    await mockNFT.approve(universeAuctionHouse.address, tokenId);
+    await mockNFT.mint(owner.address, 'nftURI1');
+    await mockNFT.mint(owner.address, 'nftURI2');
+    await mockNFT.mint(owner.address, 'nftURI3');
+    await mockNFT.mint(owner.address, 'nftURI4');
+    await mockNFT.mint(owner.address, 'nftURI5');
+    await mockNFT.mint(owner.address, 'nftURI6');
+    await mockNFT.mint(owner.address, 'nftURI7');
+    await mockNFT.mint(owner.address, 'nftURI8');
+    await mockNFT.mint(owner.address, 'nftURI9');
+    await mockNFT.mint(owner.address, 'nftURI10');
 
-    await universeAuctionHouse.depositERC721(auctionId, slotIdx, [[tokenId, mockNFT.address]]);
+    await mockNFT.approve(universeAuctionHouse.address, 1);
+    await mockNFT.approve(universeAuctionHouse.address, 2);
+    await mockNFT.approve(universeAuctionHouse.address, 3);
+    await mockNFT.approve(universeAuctionHouse.address, 4);
+    await mockNFT.approve(universeAuctionHouse.address, 5);
+    await mockNFT.approve(universeAuctionHouse.address, 6);
+    await mockNFT.approve(universeAuctionHouse.address, 7);
+    await mockNFT.approve(universeAuctionHouse.address, 8);
+    await mockNFT.approve(universeAuctionHouse.address, 9);
+    await mockNFT.approve(universeAuctionHouse.address, 10);
+
+    await universeAuctionHouse.depositERC721(auctionId, slotIdx, [[1, mockNFT.address],[2, mockNFT.address],[3, mockNFT.address],[4, mockNFT.address],[5, mockNFT.address],[6, mockNFT.address],[7, mockNFT.address],[8, mockNFT.address],[9, mockNFT.address],[10, mockNFT.address]]);
     await universeAuctionHouse.cancelAuction(auctionId);
 
-    await expect(universeAuctionHouse.withdrawDepositedERC721(1, 1, 1)).to.be.emit(universeAuctionHouse, 'LogERC721Withdrawal');
+    await expect(universeAuctionHouse.withdrawDepositedERC721(1, 1, 11)).revertedWith("Not enough available")
+    await expect(universeAuctionHouse.withdrawDepositedERC721(1, 1, 41)).revertedWith("Can't withdraw more than 40")
+    await expect(universeAuctionHouse.withdrawDepositedERC721(1, 1, 5)).to.be.emit(universeAuctionHouse, 'LogERC721Withdrawal');
+    await expect(universeAuctionHouse.withdrawDepositedERC721(1, 1, 6)).revertedWith("Not enough available")
+    await expect(universeAuctionHouse.withdrawDepositedERC721(1, 1, 5)).to.be.emit(universeAuctionHouse, 'LogERC721Withdrawal');
+    await expect(universeAuctionHouse.withdrawDepositedERC721(1, 1, 1)).revertedWith("Not enough available")
+
+    const ownerOfToken1 = await mockNFT.ownerOf(1);
+    const ownerOfToken5 = await mockNFT.ownerOf(5);
+    const ownerOfToken10 = await mockNFT.ownerOf(10);
+    
+    expect(ownerOfToken1).to.equal(owner.address)
+    expect(ownerOfToken5).to.equal(owner.address)
+    expect(ownerOfToken10).to.equal(owner.address)
   });
 
   it('should revert if auctionId do not exists', async () => {

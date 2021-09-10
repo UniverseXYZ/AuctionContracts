@@ -215,11 +215,11 @@ interface IUniverseAuctionHouse {
     /// @notice Withdraws the deposited ERC721 before an auction has started
     /// @param auctionId The auction id
     /// @param slotIndex The slot index
-    /// @param nftSlotIndex The index of the NFT inside the particular slot - it is returned on depositERC721() call
+    /// @param amount The amount which should be withdrawn
     function withdrawDepositedERC721(
         uint256 auctionId,
         uint256 slotIndex,
-        uint256 nftSlotIndex
+        uint256 amount
     ) external returns (bool);
 
     /// @notice Gets the top N bidders in auction
