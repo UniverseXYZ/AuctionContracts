@@ -65,6 +65,9 @@ $ yarn test
 ### Rinkeby deployments
 
 UniverseAuctionHouse - https://rinkeby.etherscan.io/address/0xB6d27AC9DB570a20dc20Cc6E2324AA3E3a3ceB45
+
 UniverseERC721Factory - https://rinkeby.etherscan.io/address/0xbD88C9084665762cbCa345004A41304d0D73fb75
+
 UniverseERC721 - https://rinkeby.etherscan.io/address/0x56de5DC625Ea8eE009969877040c2955C0b1080d
-UniverseERC721Core - https://rinkeby.etherscan.io/address/0xc773f3E76fd5d12471EeC0633C49d22b8C98642D
+
+UniverseERC721Core - https://rinkeby.etherscan.io/address/0xD3CCbB9F3E5B9678c5F4fef91055704Df81a104c
