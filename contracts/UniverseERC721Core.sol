@@ -10,6 +10,8 @@ contract UniverseERC721Core is UniverseERC721 {
 
     Counters.Counter private _tokenIds;
 
+    mapping(uint256 => address) public creatorOf;
+
     constructor(string memory _tokenName, string memory _tokenSymbol)
         UniverseERC721(_tokenName, _tokenSymbol)
     {}
@@ -70,6 +72,7 @@ contract UniverseERC721Core is UniverseERC721 {
         _mint(receiver, newItemId);
         _setTokenURI(newItemId, tokenURI);
         _registerFees(newItemId, fees);
+        creatorOf[newItemId] = msg.sender;
 
         emit UniverseERC721TokenMinted(newItemId, tokenURI, receiver, block.timestamp);
     }
