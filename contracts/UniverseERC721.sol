@@ -46,6 +46,7 @@ contract UniverseERC721 is ERC721, Ownable, HasSecondarySaleFees {
         Fee[][] memory fees
     ) external virtual onlyOwner returns (uint256[] memory) {
         require(tokenURIs.length <= 40, "Cannot mint more than 40 ERC721 tokens in a single call");
+        require(tokenURIs.length == fees.length, "Wrong fee config");
 
         uint256[] memory mintedTokenIds = new uint256[](tokenURIs.length);
 
@@ -96,6 +97,7 @@ contract UniverseERC721 is ERC721, Ownable, HasSecondarySaleFees {
     }
 
     function _registerFees(uint256 _tokenId, Fee[] memory _fees) internal returns (bool) {
+        require(_fees.length <= 5, "No more than 5 recipients");
         address[] memory recipients = new address[](_fees.length);
         uint256[] memory bps = new uint256[](_fees.length);
         uint256 sum = 0;
@@ -107,7 +109,7 @@ contract UniverseERC721 is ERC721, Ownable, HasSecondarySaleFees {
             recipients[i] = _fees[i].recipient;
             bps[i] = _fees[i].value;
         }
-        require(sum < 10000, "Fee should be less than 100%");
+        require(sum <= 2000, "Fee should be less than 20%");
         if (_fees.length > 0) {
             emit SecondarySaleFees(_tokenId, recipients, bps);
         }

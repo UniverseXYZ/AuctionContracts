@@ -73,11 +73,11 @@ describe("End to End Auction Universe House Tests", () => {
     }
 
     const paymentSplits = [
-      [randomWallet1.address, "1000"],
-      [randomWallet2.address, "1000"],
-      [randomWallet3.address, "1000"],
-      [randomWallet4.address, "1000"],
-      [randomWallet5.address, "1000"],
+      [randomWallet1.address, "400"],
+      [randomWallet2.address, "400"],
+      [randomWallet3.address, "400"],
+      [randomWallet4.address, "400"],
+      [randomWallet5.address, "400"],
     ];
 
     await universeAuctionHouse.createAuction([
@@ -94,11 +94,11 @@ describe("End to End Auction Universe House Tests", () => {
 
     for (let i = 0; i < numberOfSlots * NFT_TOKEN_COUNT; i++) {
       await universeERC721Core.mint(accounts[0].address, i + 1, [
-        [randomWallet1.address, "1000"],
-        [randomWallet2.address, "1000"],
-        [randomWallet3.address, "1000"],
-        [randomWallet4.address, "1000"],
-        [randomWallet5.address, "1000"],
+        [randomWallet1.address, "400"],
+        [randomWallet2.address, "400"],
+        [randomWallet3.address, "400"],
+        [randomWallet4.address, "400"],
+        [randomWallet5.address, "400"],
       ]);
       await universeERC721Core.approve(universeAuctionHouse.address, i + 1);
       multipleMockNFTs[i] = [i + 1, universeERC721Core.address];
@@ -164,11 +164,11 @@ describe("End to End Auction Universe House Tests", () => {
     const balance4 = await ethers.provider.getBalance(randomWallet4.address);
     const balance5 = await ethers.provider.getBalance(randomWallet5.address);
 
-    expect(Number(ethers.utils.formatEther(balance1).toString())).to.equal(7.5);
-    expect(Number(ethers.utils.formatEther(balance2).toString())).to.equal(7.5);
-    expect(Number(ethers.utils.formatEther(balance3).toString())).to.equal(7.5);
-    expect(Number(ethers.utils.formatEther(balance4).toString())).to.equal(7.5);
-    expect(Number(ethers.utils.formatEther(balance5).toString())).to.equal(7.5);
+    expect(Number(ethers.utils.formatEther(balance1).toString())).to.equal(3.6);
+    expect(Number(ethers.utils.formatEther(balance2).toString())).to.equal(3.6);
+    expect(Number(ethers.utils.formatEther(balance3).toString())).to.equal(3.6);
+    expect(Number(ethers.utils.formatEther(balance4).toString())).to.equal(3.6);
+    expect(Number(ethers.utils.formatEther(balance5).toString())).to.equal(3.6);
 
     await expect(universeAuctionHouse.connect(accounts[49]).claimERC721Rewards(1, 1, 40)).to.be.emit(
       universeAuctionHouse,
@@ -225,11 +225,11 @@ describe("End to End Auction Universe House Tests", () => {
     }
 
     const paymentSplits = [
-      [randomWallet1.address, "1000"],
-      [randomWallet2.address, "1000"],
-      [randomWallet3.address, "1000"],
-      [randomWallet4.address, "1000"],
-      [randomWallet5.address, "1000"],
+      [randomWallet1.address, "400"],
+      [randomWallet2.address, "400"],
+      [randomWallet3.address, "400"],
+      [randomWallet4.address, "400"],
+      [randomWallet5.address, "400"],
     ];
 
     await universeAuctionHouse.createAuction([
@@ -246,11 +246,11 @@ describe("End to End Auction Universe House Tests", () => {
 
     for (let i = 0; i < numberOfSlots * NFT_TOKEN_COUNT; i++) {
       await universeERC721Core.mint(accounts[0].address, i + 1, [
-        [randomWallet1.address, "1000"],
-        [randomWallet2.address, "1000"],
-        [randomWallet3.address, "1000"],
-        [randomWallet4.address, "1000"],
-        [randomWallet5.address, "1000"],
+        [randomWallet1.address, "400"],
+        [randomWallet2.address, "400"],
+        [randomWallet3.address, "400"],
+        [randomWallet4.address, "400"],
+        [randomWallet5.address, "400"],
       ]);
       await universeERC721Core.approve(universeAuctionHouse.address, i + 1);
       multipleMockNFTs[i] = [i + 1, universeERC721Core.address];
@@ -311,11 +311,11 @@ describe("End to End Auction Universe House Tests", () => {
     const balance4 = await ethers.provider.getBalance(randomWallet4.address);
     const balance5 = await ethers.provider.getBalance(randomWallet5.address);
 
-    expect(Number(ethers.utils.formatEther(balance1).toString())).to.equal(757.5);
-    expect(Number(ethers.utils.formatEther(balance2).toString())).to.equal(757.5);
-    expect(Number(ethers.utils.formatEther(balance3).toString())).to.equal(757.5);
-    expect(Number(ethers.utils.formatEther(balance4).toString())).to.equal(757.5);
-    expect(Number(ethers.utils.formatEther(balance5).toString())).to.equal(757.5);
+    expect(Number(ethers.utils.formatEther(balance1).toString())).to.equal(363.6);
+    expect(Number(ethers.utils.formatEther(balance2).toString())).to.equal(363.6);
+    expect(Number(ethers.utils.formatEther(balance3).toString())).to.equal(363.6);
+    expect(Number(ethers.utils.formatEther(balance4).toString())).to.equal(363.6);
+    expect(Number(ethers.utils.formatEther(balance5).toString())).to.equal(363.6);
 
     await expect(universeAuctionHouse.connect(accounts[99]).claimERC721Rewards(1, 1, 1)).to.be.emit(
       universeAuctionHouse,

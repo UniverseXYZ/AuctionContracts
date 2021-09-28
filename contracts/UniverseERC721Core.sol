@@ -39,6 +39,7 @@ contract UniverseERC721Core is UniverseERC721 {
         Fee[][] memory fees
     ) external override returns (uint256[] memory) {
         require(tokenURIs.length <= 40, "Cannot mint more than 40 ERC721 tokens in a single call");
+        require(tokenURIs.length == fees.length, "Wrong fee config");
 
         uint256[] memory mintedTokenIds = new uint256[](tokenURIs.length);
 
