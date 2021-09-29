@@ -109,7 +109,7 @@ contract UniverseERC721 is ERC721, Ownable, HasSecondarySaleFees {
             recipients[i] = _fees[i].recipient;
             bps[i] = _fees[i].value;
         }
-        require(sum <= 2000, "Fee should be less than 20%");
+        require(sum <= 3000, "Fee should be less than 30%");
         if (_fees.length > 0) {
             emit SecondarySaleFees(_tokenId, recipients, bps);
         }
