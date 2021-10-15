@@ -257,10 +257,6 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
         returns (bool)
     {
         Auction storage auction = auctions[auctionId];
-        // Ensure depositing into different slots
-        for (uint256 i = 1; i < slotIndices.length; i++) {
-            require(slotIndices[i - 1] != slotIndices[i], "Same slot deposit") ;
-        }
 
         require(slotIndices.length <= auction.numberOfSlots && 
                 slotIndices.length <= 10 && 
