@@ -36,6 +36,16 @@ interface IUniverseAuctionHouse {
         mapping(uint256 => DepositedERC721) depositedNfts;
     }
 
+    struct SlotInfo {
+        uint256 totalDepositedNfts;
+        uint256 totalWithdrawnNfts;
+        uint256 reservePrice;
+        uint256 winningBidAmount;
+        bool reservePriceReached;
+        bool revenueCaptured;
+        address winner;
+    }
+
     struct ERC721 {
         uint256 tokenId;
         address tokenAddress;
@@ -188,6 +198,11 @@ interface IUniverseAuctionHouse {
     /// @param auctionId The auction id
     /// @param slotIndex The slot index
     function getSlotWinner(uint256 auctionId, uint256 slotIndex) external view returns (address);
+
+    /// @notice Gets slot info for particular auction
+    /// @param auctionId The auction id
+    /// @param slotIndex The slot index
+    function getSlotInfo(uint256 auctionId, uint256 slotIndex) external view returns (SlotInfo memory);
 
     /// @notice Gets the bidder total bids in auction
     /// @param auctionId The auction id

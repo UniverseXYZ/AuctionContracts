@@ -857,7 +857,6 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
         external
         view
         override
-        onlyExistingAuction(auctionId)
         returns (DepositedERC721[] memory)
     {
         uint256 nftsInSlot = auctions[auctionId].slots[slotIndex].totalDepositedNfts;
@@ -868,6 +867,25 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
             nfts[i] = auctions[auctionId].slots[slotIndex].depositedNfts[i + 1];
         }
         return nfts;
+    }
+
+    function getSlotInfo(uint256 auctionId, uint256 slotIndex)
+        external
+        view
+        override
+        returns (SlotInfo memory)
+    {
+        Slot storage slot = auctions[auctionId].slots[slotIndex];
+        SlotInfo memory slotInfo = SlotInfo(
+            slot.totalDepositedNfts,
+            slot.totalWithdrawnNfts,
+            slot.reservePrice,
+            slot.winningBidAmount,
+            slot.reservePriceReached,
+            slot.revenueCaptured,
+            slot.winner
+        );
+        return slotInfo;
     }
 
     function getSlotWinner(uint256 auctionId, uint256 slotIndex)
@@ -883,7 +901,6 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
         external
         view
         override
-        onlyExistingAuction(auctionId)
         returns (uint256)
     {
         return auctions[auctionId].bidBalance[bidder];
