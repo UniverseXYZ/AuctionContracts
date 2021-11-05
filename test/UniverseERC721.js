@@ -1,5 +1,5 @@
 const { expect } = require('chai');
-const { waffle } = require('hardhat');
+const { waffle, upgrades } = require('hardhat');
 const { loadFixture } = waffle;
 
 
@@ -7,7 +7,11 @@ describe('UniverseERC721', () => {
   const deployContracts = async () => {
     const [owner, addr1] = await ethers.getSigners();
     const UniverseAuctionHouse = await ethers.getContractFactory('UniverseAuctionHouse');
-    const universeAuctionHouse = await UniverseAuctionHouse.deploy(2000, 100, 0, owner.address, []);
+
+    const MockRoyaltiesRegistry =  await ethers.getContractFactory('MockRoyaltiesRegistry');
+    const mockRoyaltiesRegistry = await MockRoyaltiesRegistry.deploy();
+
+    const universeAuctionHouse = await UniverseAuctionHouse.deploy(2000, 100, 0, owner.address, [], mockRoyaltiesRegistry.address);
 
     const UniverseERC721 = await ethers.getContractFactory('UniverseERC721');
     const universeERC721 = await UniverseERC721.deploy("Non Fungible Universe", "NFU");

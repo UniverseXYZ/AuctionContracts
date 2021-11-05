@@ -1,12 +1,15 @@
 const { expect } = require('chai');
-const { waffle } = require('hardhat');
+const { waffle, upgrades } = require('hardhat');
 const { loadFixture } = waffle;
 
 describe('Create Auction Tests', () => {
   async function deployContract() {
     const [owner, addr1] = await ethers.getSigners();
     const UniverseAuctionHouse = await ethers.getContractFactory('UniverseAuctionHouse');
-    const universeAuctionHouse = await UniverseAuctionHouse.deploy(2000, 100, 0, owner.address, ['0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2']);
+
+    const MockRoyaltiesRegistry =  await ethers.getContractFactory('MockRoyaltiesRegistry');
+    const mockRoyaltiesRegistry = await MockRoyaltiesRegistry.deploy();
+    const universeAuctionHouse = await UniverseAuctionHouse.deploy(2000, 100, 0, owner.address, ['0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'], mockRoyaltiesRegistry.address);
 
     return { universeAuctionHouse };
   }

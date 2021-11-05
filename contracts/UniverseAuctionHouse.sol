@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/token/ERC721/ERC721Holder.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "./IUniverseAuctionHouse.sol";
-import "./HasSecondarySaleFees.sol";
+import "./IRoyaltiesProvider.sol";
 
 contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, ReentrancyGuard {
     using SafeMath for uint256;
@@ -24,7 +24,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
     mapping(address => uint256) public royaltiesReserve;
     mapping(address => bool) public supportedBidTokens;
 
-    bytes4 private constant _INTERFACE_ID_FEES = 0xb7799584;
+    IRoyaltiesProvider public royaltiesRegistry;
     address private constant GUARD = address(1);
 
     event LogERC721Deposit(
@@ -168,12 +168,14 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
         uint256 _nftSlotLimit,
         uint256 _royaltyFeeBps,
         address payable _daoAddress,
-        address[] memory _supportedBidTokens
+        address[] memory _supportedBidTokens,
+        IRoyaltiesProvider _royaltiesRegistry
     ) {
         maxNumberOfSlotsPerAuction = _maxNumberOfSlotsPerAuction;
         nftSlotLimit = _nftSlotLimit;
         royaltyFeeBps = _royaltyFeeBps;
         daoAddress = _daoAddress;
+        royaltiesRegistry = _royaltiesRegistry;
 
         for (uint256 i = 0; i < _supportedBidTokens.length; i += 1) {
             supportedBidTokens[_supportedBidTokens[i]] = true;
@@ -778,26 +780,23 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
 
         uint256 averageERC721SalePrice = slot.winningBidAmount.div(slot.totalDepositedNfts);
 
-        HasSecondarySaleFees withFees = HasSecondarySaleFees(nft.tokenAddress);
-        address payable[] memory recipients = withFees.getFeeRecipients(nft.tokenId);
-        uint256[] memory fees = withFees.getFeeBps(nft.tokenId);
-        require(fees.length == recipients.length, "Splits should be equal");
+        IRoyaltiesProvider.Part[] memory fees = royaltiesRegistry.getRoyalties(nft.tokenAddress, nft.tokenId);
         uint256 value = averageERC721SalePrice;
         nft.feesPaid = true;
 
         for (uint256 i = 0; i < fees.length && i < 5; i += 1) {
-            Fee memory interimFee = subFee(value, averageERC721SalePrice.mul(fees[i]).div(10000));
+            Fee memory interimFee = subFee(value, averageERC721SalePrice.mul(fees[i].value).div(10000));
             value = interimFee.remainingValue;
 
             if (auction.bidToken == address(0) && interimFee.feeValue > 0) {
-                (bool success, ) = recipients[i].call{value: interimFee.feeValue}("");
+                (bool success, ) = (fees[i].account).call{value: interimFee.feeValue}("");
                 require(success, "Transfer failed");
             }
 
             if (auction.bidToken != address(0) && interimFee.feeValue > 0) {
                 IERC20 token = IERC20(auction.bidToken);
                 require(
-                    token.transfer(address(recipients[i]), interimFee.feeValue),
+                    token.transfer(address(fees[i].account), interimFee.feeValue),
                     "Transfer Failed"
                 );
             }
@@ -841,6 +840,11 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
     function setNftSlotLimit(uint256 _nftSlotLimit) external override onlyDAO returns (uint256) {
         nftSlotLimit = _nftSlotLimit;
         return nftSlotLimit;
+    }
+
+    function setRoyaltiesRegistry(IRoyaltiesProvider _royaltiesRegistry) external override onlyDAO returns (IRoyaltiesProvider) {
+        royaltiesRegistry = _royaltiesRegistry;
+        return royaltiesRegistry;
     }
 
     function setSupportedBidToken(address erc20token, bool value)
@@ -1019,7 +1023,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
             tokenId: tokenId,
             tokenAddress: tokenAddress,
             depositor: msg.sender,
-            hasSecondarySaleFees: IERC721(tokenAddress).supportsInterface(_INTERFACE_ID_FEES),
+            hasSecondarySaleFees: royaltiesRegistry.getRoyalties(tokenAddress, tokenId).length > 0,
             feesPaid: false
         });
 
@@ -1181,7 +1185,6 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
 
     function calculateSecondarySaleFees(uint256 auctionId, uint256 slotIndex)
         internal
-        view
         returns (uint256)
     {
         Slot storage slot = auctions[auctionId].slots[slotIndex];
@@ -1193,16 +1196,13 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
             DepositedERC721 memory nft = slot.depositedNfts[i + 1];
 
             if (nft.hasSecondarySaleFees) {
-                HasSecondarySaleFees withFees = HasSecondarySaleFees(nft.tokenAddress);
-                address payable[] memory recipients = withFees.getFeeRecipients(nft.tokenId);
-                uint256[] memory fees = withFees.getFeeBps(nft.tokenId);
-                require(fees.length == recipients.length, "Splits number should be equal");
+                IRoyaltiesProvider.Part[] memory fees = royaltiesRegistry.getRoyalties(nft.tokenAddress, nft.tokenId);
                 uint256 value = averageERC721SalePrice;
 
                 for (uint256 j = 0; j < fees.length && j < 5; j += 1) {
                     Fee memory interimFee = subFee(
                         value,
-                        averageERC721SalePrice.mul(fees[j]).div(10000)
+                        averageERC721SalePrice.mul(fees[j].value).div(10000)
                     );
                     value = interimFee.remainingValue;
                     totalFeesPayableForSlot = totalFeesPayableForSlot.add(interimFee.feeValue);

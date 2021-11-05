@@ -1,5 +1,5 @@
 const { expect } = require('chai');
-const { waffle, ethers, network } = require('hardhat');
+const { waffle, ethers, network, upgrades } = require('hardhat');
 const { loadFixture } = waffle;
 
 describe('Test royalty fee functionality', () => {
@@ -11,7 +11,10 @@ describe('Test royalty fee functionality', () => {
     const mockNFT = await MockNFT.deploy();
     const mockToken = await MockToken.deploy('1000000000000000000');
 
-    const universeAuctionHouse = await UniverseAuctionHouse.deploy(5, 100, 0, owner.address, [mockToken.address]);
+    const MockRoyaltiesRegistry =  await ethers.getContractFactory('MockRoyaltiesRegistry');
+    const mockRoyaltiesRegistry = await MockRoyaltiesRegistry.deploy();
+
+    const universeAuctionHouse = await UniverseAuctionHouse.deploy(5, 100, 0, owner.address, [mockToken.address], mockRoyaltiesRegistry.address);
 
     return { universeAuctionHouse, mockNFT, mockToken };
   };

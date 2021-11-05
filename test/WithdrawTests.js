@@ -1,4 +1,4 @@
-const { waffle, network } = require('hardhat');
+const { waffle, network, upgrades } = require('hardhat');
 const { loadFixture } = waffle;
 const { expect } = require('chai');
 
@@ -31,7 +31,10 @@ describe('Withdraw functionalities', () => {
     const mockNFT = await MockNFT.deploy();
     const mockToken = await MockToken.deploy(1000);
 
-    const universeAuctionHouse = await UniverseAuctionHouse.deploy(2000, 100, 0, owner.address, [mockToken.address]);
+    const MockRoyaltiesRegistry =  await ethers.getContractFactory('MockRoyaltiesRegistry');
+    const mockRoyaltiesRegistry = await MockRoyaltiesRegistry.deploy();
+
+    const universeAuctionHouse = await UniverseAuctionHouse.deploy(2000, 100, 0, owner.address, [mockToken.address], mockRoyaltiesRegistry.address);
 
     return { universeAuctionHouse, mockNFT, mockToken };
   }

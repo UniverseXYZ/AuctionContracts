@@ -1,6 +1,6 @@
 const { expect } = require("chai");
 
-const { waffle, ethers, network } = require("hardhat");
+const { waffle, ethers, network, upgrades } = require("hardhat");
 const { loadFixture } = waffle;
 
 function chunkifyArray(nftsArr, chunkSize) {
@@ -22,12 +22,17 @@ describe("End to End Auction Universe House Tests", () => {
   const deployedContracts = async () => {
     const [owner, signer] = await ethers.getSigners();
     const UniverseAuctionHouse = await ethers.getContractFactory("UniverseAuctionHouse");
+
+    const MockRoyaltiesRegistry =  await ethers.getContractFactory('MockRoyaltiesRegistry');
+    const mockRoyaltiesRegistry = await MockRoyaltiesRegistry.deploy();
+
     const universeAuctionHouse = await UniverseAuctionHouse.deploy(
       100,
       100,
       0,
       owner.address,
-      []
+      [],
+      mockRoyaltiesRegistry.address
     );
 
     const UniverseERC721 = await ethers.getContractFactory("UniverseERC721");
