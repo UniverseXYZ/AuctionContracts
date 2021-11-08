@@ -113,6 +113,14 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
         uint256 time
     );
 
+    event LogSlotRevenueCaptured(
+        uint256 auctionId,
+        uint256 slotIndex,
+        uint256 amount,
+        address bidToken,
+        uint256 time
+    );
+
     modifier onlyExistingAuction(uint256 auctionId) {
         require(auctionId > 0 && auctionId <= totalAuctions, "Auction doesn't exist");
         _;
@@ -590,16 +598,17 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
         require(auction.isFinalized && !auction.slots[slotIndex].revenueCaptured, "Not finalized/Already captured");
         require(auction.numberOfSlots >= slotIndex && slotIndex > 0, "Non-existing slot");
 
+        uint256 slotRevenue = auction.bidBalance[auction.slots[slotIndex].winner];
+        uint256 _secondarySaleFeesForSlot;
+
         // Calculate the auction revenue from sold slots and reset bid balances
         if (auction.slots[slotIndex].reservePriceReached) {
-            auctionsRevenue[auctionId] = auctionsRevenue[auctionId].add(
-                auction.bidBalance[auction.slots[slotIndex].winner]
-            );
+            auctionsRevenue[auctionId] = auctionsRevenue[auctionId].add(slotRevenue);
             auction.bidBalance[auction.slots[slotIndex].winner] = 0;
 
             // Calculate the amount accounted for secondary sale fees
             if (auction.slots[slotIndex].totalDepositedNfts > 0 && auction.slots[slotIndex].winningBidAmount > 0) {
-                uint256 _secondarySaleFeesForSlot = calculateSecondarySaleFees(
+                _secondarySaleFeesForSlot = calculateSecondarySaleFees(
                     auctionId,
                     (slotIndex)
                 );
@@ -610,10 +619,18 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
         }
 
         // Calculate DAO fee and deduct from auction revenue
-        uint256 _royaltyFee = royaltyFeeBps.mul(auctionsRevenue[auctionId]).div(10000);
+        uint256 _royaltyFee = royaltyFeeBps.mul(slotRevenue).div(10000);
         auctionsRevenue[auctionId] = auctionsRevenue[auctionId].sub(_royaltyFee);
         royaltiesReserve[auction.bidToken] = royaltiesReserve[auction.bidToken].add(_royaltyFee);
         auction.slots[slotIndex].revenueCaptured = true;
+
+        emit LogSlotRevenueCaptured(
+            auctionId,
+            slotIndex,
+            slotRevenue.sub(_secondarySaleFeesForSlot).sub(_royaltyFee),
+            auction.bidToken,
+            block.timestamp
+        );
 
         return true;
     }
