@@ -71,3 +71,7 @@ UniverseERC721Factory - https://rinkeby.etherscan.io/address/0xbD88C9084665762cb
 UniverseERC721 - https://rinkeby.etherscan.io/address/0x56de5DC625Ea8eE009969877040c2955C0b1080d
 
 UniverseERC721Core - https://rinkeby.etherscan.io/address/0xD3CCbB9F3E5B9678c5F4fef91055704Df81a104c
+
+### Ropsten deployments
+
+UniverseAuctionHouse - https://ropsten.etherscan.io/address/0xc88E91BddA7d91017Ff4cA182B983a57233f8785

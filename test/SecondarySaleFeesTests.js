@@ -10,9 +10,15 @@ describe('Secondary Sale Fees Tests', () => {
     const UniverseERC721 = await ethers.getContractFactory('UniverseERC721');
 
     const MockRoyaltiesRegistry =  await ethers.getContractFactory('MockRoyaltiesRegistry');
-    const mockRoyaltiesRegistry = await MockRoyaltiesRegistry.deploy();
-
-    const universeAuctionHouse = await UniverseAuctionHouse.deploy(10, 100, 0, owner.address, [], mockRoyaltiesRegistry.address);
+    const mockRoyaltiesRegistry = await upgrades.deployProxy(MockRoyaltiesRegistry, [], {initializer: "__RoyaltiesRegistry_init"});
+    
+    const universeAuctionHouse = await upgrades.deployProxy(UniverseAuctionHouse,
+      [
+        10, 100, 0, owner.address, [], mockRoyaltiesRegistry.address
+      ], 
+      {
+        initializer: "__UniverseAuctionHouse_init",
+    });
     const universeERC721 = await UniverseERC721.deploy("Non Fungible Universe", "NFU");
 
     return { universeAuctionHouse, universeERC721 };

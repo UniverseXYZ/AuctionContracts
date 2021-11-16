@@ -11,9 +11,20 @@ describe('Test cancel functionality', () => {
     ]);
 
     const MockRoyaltiesRegistry =  await ethers.getContractFactory('MockRoyaltiesRegistry');
-    const mockRoyaltiesRegistry = await MockRoyaltiesRegistry.deploy();
+    const mockRoyaltiesRegistry = await upgrades.deployProxy(MockRoyaltiesRegistry, [], {initializer: "__RoyaltiesRegistry_init"});
 
-    const [universeAuctionHouse, mockNft] = await Promise.all([UniverseAuctionHouse.deploy(2000, 100, 0, owner.address, [], mockRoyaltiesRegistry.address), MockNFT.deploy()]);
+    const [universeAuctionHouse, mockNft] = await Promise.all([upgrades.deployProxy(UniverseAuctionHouse,
+      [
+        2000, 
+        100, 
+        0, 
+        owner.address, 
+        [], 
+        mockRoyaltiesRegistry.address
+      ], 
+      {
+        initializer: "__UniverseAuctionHouse_init",
+      }), MockNFT.deploy()]);
 
     return {
       universeAuctionHouse,

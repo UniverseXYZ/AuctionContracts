@@ -2,27 +2,28 @@
 pragma solidity ^0.7.0;
 pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC721/ERC721Holder.sol";
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721HolderUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol";
+import "@universe/marketplace/contracts/interfaces/IRoyaltiesProvider.sol";
+import "@universe/marketplace/contracts/lib/LibPart.sol";
 import "./IUniverseAuctionHouse.sol";
-import "./IRoyaltiesProvider.sol";
 
-contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, ReentrancyGuard {
-    using SafeMath for uint256;
+contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable, ReentrancyGuardUpgradeable {
+    using SafeMathUpgradeable for uint256;
 
     uint256 public totalAuctions;
-    uint256 public maxNumberOfSlotsPerAuction;
+    uint256 private maxNumberOfSlotsPerAuction;
     uint256 public royaltyFeeBps;
     uint256 public nftSlotLimit;
-    address payable public daoAddress;
+    address payable private daoAddress;
 
     mapping(uint256 => Auction) public auctions;
-    mapping(uint256 => uint256) public auctionsRevenue;
+    mapping(uint256 => uint256) private auctionsRevenue;
     mapping(address => uint256) public royaltiesReserve;
-    mapping(address => bool) public supportedBidTokens;
+    mapping(address => bool) private supportedBidTokens;
 
     IRoyaltiesProvider public royaltiesRegistry;
     address private constant GUARD = address(1);
@@ -146,21 +147,6 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
         _;
     }
 
-    modifier onlyValidBidAmount(uint256 bid) {
-        require(bid > 0, "Bid amount must be higher than 0");
-        _;
-    }
-
-    modifier onlyETH(uint256 auctionId) {
-        require(auctions[auctionId].bidToken == address(0), "Token address provided");
-        _;
-    }
-
-    modifier onlyERC20(uint256 auctionId) {
-        require(auctions[auctionId].bidToken != address(0), "No token address provided");
-        _;
-    }
-
     modifier onlyAuctionOwner(uint256 auctionId) {
         require(auctions[auctionId].auctionOwner == msg.sender, "Only auction owner");
         _;
@@ -171,14 +157,17 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
         _;
     }
 
-    constructor(
+    function __UniverseAuctionHouse_init(
         uint256 _maxNumberOfSlotsPerAuction,
         uint256 _nftSlotLimit,
         uint256 _royaltyFeeBps,
         address payable _daoAddress,
         address[] memory _supportedBidTokens,
         IRoyaltiesProvider _royaltiesRegistry
-    ) {
+    ) external initializer {
+        __ERC721Holder_init();
+        __ReentrancyGuard_init();
+        
         maxNumberOfSlotsPerAuction = _maxNumberOfSlotsPerAuction;
         nftSlotLimit = _nftSlotLimit;
         royaltyFeeBps = _royaltyFeeBps;
@@ -287,8 +276,6 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
         onlyExistingAuction(auctionId)
         onlyAuctionStarted(auctionId)
         onlyAuctionNotCanceled(auctionId)
-        onlyETH(auctionId)
-        onlyValidBidAmount(msg.value)
         nonReentrant
         returns (bool)
     {
@@ -353,8 +340,6 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
         override
         onlyExistingAuction(auctionId)
         onlyAuctionStarted(auctionId)
-        onlyAuctionNotCanceled(auctionId)
-        onlyETH(auctionId)
         nonReentrant
         returns (bool)
     {
@@ -362,9 +347,8 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
         address payable recipient = msg.sender;
         uint256 amount = auction.bidBalance[recipient];
 
-        require(amount > 0, "You have 0 deposited");
-        require(auction.numberOfBids > auction.numberOfSlots, "Can't withdraw winning bid");
-        require(!isWinningBid(auctionId, amount), "Can't withdraw winning bid");
+        require(auction.numberOfBids > auction.numberOfSlots, "Can't withdraw bid");
+        require(!isWinningBid(auctionId, amount), "Can't withdraw bid");
 
         removeBid(auctionId, recipient);
         emit LogBidWithdrawal(recipient, auctionId, amount, block.timestamp);
@@ -381,8 +365,6 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
         onlyExistingAuction(auctionId)
         onlyAuctionStarted(auctionId)
         onlyAuctionNotCanceled(auctionId)
-        onlyERC20(auctionId)
-        onlyValidBidAmount(amount)
         nonReentrant
         returns (bool)
     {
@@ -391,7 +373,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
         require(block.timestamp < auction.endTime, "Auction has ended");
         require(auction.totalDepositedERC721s > 0, "No deposited NFTs in auction");
 
-        IERC20 bidToken = IERC20(auction.bidToken);
+        IERC20Upgradeable bidToken = IERC20Upgradeable(auction.bidToken);
 
         uint256 bidderCurrentBalance = auction.bidBalance[msg.sender];
 
@@ -466,8 +448,6 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
         override
         onlyExistingAuction(auctionId)
         onlyAuctionStarted(auctionId)
-        onlyAuctionNotCanceled(auctionId)
-        onlyERC20(auctionId)
         nonReentrant
         returns (bool)
     {
@@ -475,12 +455,11 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
         address sender = msg.sender;
         uint256 amount = auction.bidBalance[sender];
 
-        require(amount > 0, "You have 0 deposited");
-        require(auction.numberOfBids > auction.numberOfSlots, "Can't withdraw winning bid");
-        require(!isWinningBid(auctionId, amount), "Can't withdraw winning bid");
+        require(auction.numberOfBids > auction.numberOfSlots, "Can't withdraw bid");
+        require(!isWinningBid(auctionId, amount), "Can't withdraw bid");
 
         removeBid(auctionId, sender);
-        IERC20 bidToken = IERC20(auction.bidToken);
+        IERC20Upgradeable bidToken = IERC20Upgradeable(auction.bidToken);
 
         emit LogBidWithdrawal(sender, auctionId, amount, block.timestamp);
 
@@ -498,7 +477,6 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
         override
         onlyExistingAuction(auctionId)
         onlyAuctionStarted(auctionId)
-        onlyAuctionNotCanceled(auctionId)
         nonReentrant
         returns (bool)
     {
@@ -712,7 +690,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
             }
 
             if (auction.bidToken != address(0) && interimFee.feeValue > 0) {
-                IERC20 token = IERC20(auction.bidToken);
+                IERC20Upgradeable token = IERC20Upgradeable(auction.bidToken);
                 require(
                     token.transfer(
                         address(auction.paymentSplits[i].recipient),
@@ -730,7 +708,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
         }
 
         if (auction.bidToken != address(0)) {
-            IERC20 bidToken = IERC20(auction.bidToken);
+            IERC20Upgradeable bidToken = IERC20Upgradeable(auction.bidToken);
             require(
                 bidToken.transfer(auction.auctionOwner, amountToWithdraw.sub(paymentSplitsPaid)),
                 "Transfer Failed"
@@ -772,7 +750,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
             .add(1);
 
             if (nftForWithdrawal.tokenId != 0) {
-                IERC721(nftForWithdrawal.tokenAddress).safeTransferFrom(
+                IERC721Upgradeable(nftForWithdrawal.tokenAddress).safeTransferFrom(
                     address(this),
                     claimer,
                     nftForWithdrawal.tokenId
@@ -797,7 +775,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
 
         uint256 averageERC721SalePrice = slot.winningBidAmount.div(slot.totalDepositedNfts);
 
-        IRoyaltiesProvider.Part[] memory fees = royaltiesRegistry.getRoyalties(nft.tokenAddress, nft.tokenId);
+        LibPart.Part[] memory fees = royaltiesRegistry.getRoyalties(nft.tokenAddress, nft.tokenId);
         uint256 value = averageERC721SalePrice;
         nft.feesPaid = true;
 
@@ -811,7 +789,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
             }
 
             if (auction.bidToken != address(0) && interimFee.feeValue > 0) {
-                IERC20 token = IERC20(auction.bidToken);
+                IERC20Upgradeable token = IERC20Upgradeable(auction.bidToken);
                 require(
                     token.transfer(address(fees[i].account), interimFee.feeValue),
                     "Transfer Failed"
@@ -842,7 +820,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
         }
 
         if (token != address(0)) {
-            IERC20 erc20token = IERC20(token);
+            IERC20Upgradeable erc20token = IERC20Upgradeable(token);
             require(erc20token.transfer(daoAddress, amountToWithdraw), "Transfer Failed");
         }
 
@@ -1034,7 +1012,6 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
         uint256 tokenId,
         address tokenAddress
     ) internal returns (uint256) {
-        require(tokenAddress != address(0), "Zero address was provided");
 
         DepositedERC721 memory item = DepositedERC721({
             tokenId: tokenId,
@@ -1044,7 +1021,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
             feesPaid: false
         });
 
-        IERC721(tokenAddress).safeTransferFrom(msg.sender, address(this), tokenId);
+        IERC721Upgradeable(tokenAddress).safeTransferFrom(msg.sender, address(this), tokenId);
 
         uint256 nftSlotIndex = auctions[auctionId].slots[slotIndex].totalDepositedNfts.add(1);
 
@@ -1095,7 +1072,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
             block.timestamp
         );
 
-        IERC721(nftForWithdrawal.tokenAddress).safeTransferFrom(
+        IERC721Upgradeable(nftForWithdrawal.tokenAddress).safeTransferFrom(
             address(this),
             nftForWithdrawal.depositor,
             nftForWithdrawal.tokenId
@@ -1135,7 +1112,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
             block.timestamp
         );
 
-        IERC721(nftForWithdrawal.tokenAddress).safeTransferFrom(
+        IERC721Upgradeable(nftForWithdrawal.tokenAddress).safeTransferFrom(
             address(this),
             nftForWithdrawal.depositor,
             nftForWithdrawal.tokenId
@@ -1213,7 +1190,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721Holder, Reentrancy
             DepositedERC721 memory nft = slot.depositedNfts[i + 1];
 
             if (nft.hasSecondarySaleFees) {
-                IRoyaltiesProvider.Part[] memory fees = royaltiesRegistry.getRoyalties(nft.tokenAddress, nft.tokenId);
+                LibPart.Part[] memory fees = royaltiesRegistry.getRoyalties(nft.tokenAddress, nft.tokenId);
                 uint256 value = averageERC721SalePrice;
 
                 for (uint256 j = 0; j < fees.length && j < 5; j += 1) {

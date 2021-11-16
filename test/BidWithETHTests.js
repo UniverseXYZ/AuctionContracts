@@ -8,9 +8,15 @@ describe('Test bidding with ETH', () => {
     const UniverseAuctionHouse = await ethers.getContractFactory('UniverseAuctionHouse');
     const MockNFT = await ethers.getContractFactory('MockNFT');
     const MockRoyaltiesRegistry =  await ethers.getContractFactory('MockRoyaltiesRegistry');
-    const mockRoyaltiesRegistry = await MockRoyaltiesRegistry.deploy();
+    const mockRoyaltiesRegistry = await upgrades.deployProxy(MockRoyaltiesRegistry, [], {initializer: "__RoyaltiesRegistry_init"});
 
-    const universeAuctionHouse = await UniverseAuctionHouse.deploy(2000, 100, 0, owner.address, ['0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'], mockRoyaltiesRegistry.address);
+    const universeAuctionHouse = await upgrades.deployProxy(UniverseAuctionHouse,
+      [
+        2000, 100, 0, owner.address, ['0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'], mockRoyaltiesRegistry.address
+      ], 
+      {
+        initializer: "__UniverseAuctionHouse_init",
+      });
     const mockNFT = await MockNFT.deploy();
 
     return { universeAuctionHouse, mockNFT };

@@ -32,9 +32,15 @@ describe('Withdraw functionalities', () => {
     const mockToken = await MockToken.deploy(1000);
 
     const MockRoyaltiesRegistry =  await ethers.getContractFactory('MockRoyaltiesRegistry');
-    const mockRoyaltiesRegistry = await MockRoyaltiesRegistry.deploy();
+    const mockRoyaltiesRegistry = await upgrades.deployProxy(MockRoyaltiesRegistry, [], {initializer: "__RoyaltiesRegistry_init"});
 
-    const universeAuctionHouse = await UniverseAuctionHouse.deploy(2000, 100, 0, owner.address, [mockToken.address], mockRoyaltiesRegistry.address);
+    const universeAuctionHouse = await upgrades.deployProxy(UniverseAuctionHouse,
+      [
+        2000, 100, 0, owner.address, [mockToken.address], mockRoyaltiesRegistry.address
+      ], 
+      {
+        initializer: "__UniverseAuctionHouse_init",
+    });
 
     return { universeAuctionHouse, mockNFT, mockToken };
   }
@@ -370,7 +376,7 @@ describe('Withdraw functionalities', () => {
       await universeAuctionHouse.captureSlotRevenue(1, (i + 1));
     }
 
-    await expect(universeAuctionHouse.connect(signer5).withdrawEthBid(1)).revertedWith('You have 0 deposited');
+    await expect(universeAuctionHouse.connect(signer5).withdrawEthBid(1)).revertedWith("Can't withdraw bid");
   });
 
   it('should revert with Auction should be finalized', async () => {
@@ -425,7 +431,7 @@ describe('Withdraw functionalities', () => {
       value: '500000000000000000000'
     });
 
-    await expect(universeAuctionHouse.withdrawEthBid(1)).revertedWith("Can't withdraw winning bid");
+    await expect(universeAuctionHouse.withdrawEthBid(1)).revertedWith("Can't withdraw bid");
   });
 
   it('should withdraw erc20', async () => {
@@ -561,7 +567,7 @@ describe('Withdraw functionalities', () => {
       await universeAuctionHouse.captureSlotRevenue(1, (i + 1));
     }
 
-    await expect(universeAuctionHouse.connect(signer4).withdrawERC20Bid(1)).revertedWith('You have 0 deposited');
+    await expect(universeAuctionHouse.connect(signer4).withdrawERC20Bid(1)).revertedWith("Can't withdraw bid");
   });
 
   it('should revert with Auction should be finalized', async () => {
@@ -618,7 +624,7 @@ describe('Withdraw functionalities', () => {
 
     await universeAuctionHouse.connect(signer3).functions['erc20Bid(uint256,uint256)'](1, 120);
 
-    await expect(universeAuctionHouse.withdrawERC20Bid(1)).revertedWith("Can't withdraw winning bid");
+    await expect(universeAuctionHouse.withdrawERC20Bid(1)).revertedWith("Can't withdraw bid");
   });
 });
 

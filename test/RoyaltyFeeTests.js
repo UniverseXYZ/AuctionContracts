@@ -12,9 +12,15 @@ describe('Test royalty fee functionality', () => {
     const mockToken = await MockToken.deploy('1000000000000000000');
 
     const MockRoyaltiesRegistry =  await ethers.getContractFactory('MockRoyaltiesRegistry');
-    const mockRoyaltiesRegistry = await MockRoyaltiesRegistry.deploy();
+    const mockRoyaltiesRegistry = await upgrades.deployProxy(MockRoyaltiesRegistry, [], {initializer: "__RoyaltiesRegistry_init"});
 
-    const universeAuctionHouse = await UniverseAuctionHouse.deploy(5, 100, 0, owner.address, [mockToken.address], mockRoyaltiesRegistry.address);
+    const universeAuctionHouse = await upgrades.deployProxy(UniverseAuctionHouse,
+      [
+        5, 100, 0, owner.address, [mockToken.address], mockRoyaltiesRegistry.address
+      ], 
+      {
+        initializer: "__UniverseAuctionHouse_init",
+    });
 
     return { universeAuctionHouse, mockNFT, mockToken };
   };

@@ -22,6 +22,9 @@
   },
   "dependencies": {
     "@openzeppelin/contracts": "^3.4.1",
+    "@openzeppelin/contracts-upgradeable": "^3.4.1",
+    "@openzeppelin/hardhat-upgrades": "^1.10.0",
+    "@universe/marketplace": "https://github.com/UniverseXYZ/Universe-Marketplace.git",
     "chai": "^4.3.4",
     "ganache-cli": "^6.12.2",
     "prettier": "^2.3.2",
