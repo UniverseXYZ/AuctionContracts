@@ -1,5 +1,5 @@
 const { expect } = require('chai');
-const { waffle } = require('hardhat');
+const { waffle, upgrades } = require('hardhat');
 const { loadFixture } = waffle;
 
 describe('Test cancel functionality', () => {
@@ -10,7 +10,21 @@ describe('Test cancel functionality', () => {
       ethers.getContractFactory('MockNFT')
     ]);
 
-    const [universeAuctionHouse, mockNft] = await Promise.all([UniverseAuctionHouse.deploy(2000, 100, 0, owner.address, []), MockNFT.deploy()]);
+    const MockRoyaltiesRegistry =  await ethers.getContractFactory('MockRoyaltiesRegistry');
+    const mockRoyaltiesRegistry = await upgrades.deployProxy(MockRoyaltiesRegistry, [], {initializer: "__RoyaltiesRegistry_init"});
+
+    const [universeAuctionHouse, mockNft] = await Promise.all([upgrades.deployProxy(UniverseAuctionHouse,
+      [
+        2000, 
+        100, 
+        0, 
+        owner.address, 
+        [], 
+        mockRoyaltiesRegistry.address
+      ], 
+      {
+        initializer: "__UniverseAuctionHouse_init",
+      }), MockNFT.deploy()]);
 
     return {
       universeAuctionHouse,

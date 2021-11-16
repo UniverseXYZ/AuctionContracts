@@ -22,6 +22,9 @@ export DAO_ADDRESS=''
 # Supported bid ERC20 tokens
 export SUPPORTED_BID_TOKENS=''
 
+# Royalties registry address
+export ROYALTIES_REGISTRY=''
+
 # On test reports gas if exist
 export REPORT_GAS='true'
 

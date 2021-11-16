@@ -1,11 +1,14 @@
-const { deployments, hardhatArguments } = require("hardhat");
+//const { deployments, hardhatArguments } = require("hardhat");
 
-module.exports = async function () {
+module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
+  const { deploy, execute } = deployments;
+  const { deployer, proxyAdmin } = await getNamedAccounts();
   if (
     hardhatArguments.network === "ganache" ||
     hardhatArguments.network === "hardhat" ||
     hardhatArguments.network === "rinkeby" ||
-    hardhatArguments.network === "ropsten"
+    hardhatArguments.network === "ropsten" ||
+    hardhatArguments.network === "mainnet"
   ) {
     const { log } = deployments;
     const namedAccounts = await hre.getNamedAccounts();
@@ -18,10 +21,19 @@ module.exports = async function () {
       const ROYALTY_FEE_BPS = process.env.ROYALTY_FEE_BPS;
       const DAO_ADDRESS = process.env.DAO_ADDRESS;
       const SUPPORTED_BID_TOKENS = process.env.SUPPORTED_BID_TOKENS.split(",");
-      // We get the contract to deploy
-      const universeAuctionHouseDeployment = await deployments.deploy("UniverseAuctionHouse", {
-        from: namedAccounts.deployer,
-        args: [MAX_SLOT, MAX_NFTS_PER_SLOT, ROYALTY_FEE_BPS, DAO_ADDRESS, SUPPORTED_BID_TOKENS],
+      const ROYALTIES_REGISTRY = process.env.ROYALTIES_REGISTRY;
+
+      const universeAuctionHouseDeployment = await deploy("UniverseAuctionHouse", {
+        from: deployer,
+        log: true,
+        proxy: {
+          owner: proxyAdmin,
+          proxyContract: "OpenZeppelinTransparentProxy",
+          execute: {
+            methodName: "__UniverseAuctionHouse_init",
+            args: [MAX_SLOT, MAX_NFTS_PER_SLOT, ROYALTY_FEE_BPS, DAO_ADDRESS, SUPPORTED_BID_TOKENS, ROYALTIES_REGISTRY],
+          },
+        },
       });
       console.log("UniverseAuctionHouse deployed to:", universeAuctionHouseDeployment.address);
 
@@ -43,7 +55,7 @@ module.exports = async function () {
     if (!UniverseERC721Core) {
       const universeERC721CoreDeployment = await deployments.deploy("UniverseERC721Core", {
         from: namedAccounts.deployer,
-        args: ["Non Fungible Universe Core", "NFUC"],
+        args: ["Universe Singularity Collection", "USC"],
       });
       console.log("UniverseERC721Core deployed to:", universeERC721CoreDeployment.address);
     } else {

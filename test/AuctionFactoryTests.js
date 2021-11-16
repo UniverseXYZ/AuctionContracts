@@ -1,5 +1,5 @@
 const { expect } = require('chai');
-const { waffle, ethers } = require('hardhat');
+const { waffle, ethers, upgrades } = require('hardhat');
 const { loadFixture } = waffle;
 
 describe('UniverseAuctionHouse', () => {
@@ -8,11 +8,24 @@ describe('UniverseAuctionHouse', () => {
     const UniverseAuctionHouse = await ethers.getContractFactory('UniverseAuctionHouse');
     const MockNFT = await ethers.getContractFactory('MockNFT');
     const MockToken = await ethers.getContractFactory('MockToken');
+    const MockRoyaltiesRegistry =  await ethers.getContractFactory('MockRoyaltiesRegistry');
+    const mockRoyaltiesRegistry = await upgrades.deployProxy(MockRoyaltiesRegistry, [], {initializer: "__RoyaltiesRegistry_init"});
     const mockNFT = await MockNFT.deploy();
     const mockToken = await MockToken.deploy(1000);
     await mockToken.transfer(addr1.address, 600);
 
-    const universeAuctionHouse = await UniverseAuctionHouse.deploy(2000, 100, 0, owner.address, [mockToken.address]);
+    const universeAuctionHouse = await upgrades.deployProxy(UniverseAuctionHouse,
+      [
+        2000, 
+        100, 
+        0, 
+        owner.address, 
+        [mockToken.address], 
+        mockRoyaltiesRegistry.address
+      ], 
+      {
+        initializer: "__UniverseAuctionHouse_init",
+      });
 
     return { universeAuctionHouse, mockNFT, mockToken };
   }

@@ -2,6 +2,8 @@
 pragma solidity ^0.7.0;
 pragma experimental ABIEncoderV2;
 
+import "@universe/marketplace/contracts/interfaces/IRoyaltiesProvider.sol";
+
 /// @title Users bid to this contract in order to win a slot with deposited ERC721 tokens.
 /// @notice This interface should be implemented by the Auction contract
 /// @dev This interface should be implemented by the Auction contract
@@ -180,6 +182,10 @@ interface IUniverseAuctionHouse {
     /// @notice Sets the NFT slot limit for auction
     /// @param nftSlotLimit The royalty percentage
     function setNftSlotLimit(uint256 nftSlotLimit) external returns (uint256);
+
+    /// @notice Sets the RoyaltiesRegistry
+    /// @param royaltiesRegistry The royalties registry address
+    function setRoyaltiesRegistry(IRoyaltiesProvider royaltiesRegistry) external returns (IRoyaltiesProvider);
 
     /// @notice Modifies whether a token is supported for bidding
     /// @param erc20token The erc20 token

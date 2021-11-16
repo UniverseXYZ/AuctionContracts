@@ -1,5 +1,5 @@
 const { expect } = require('chai');
-const { waffle, ethers } = require('hardhat');
+const { waffle, ethers, upgrades } = require('hardhat');
 const { loadFixture } = waffle;
 
 function chunkifyArray(
@@ -28,7 +28,16 @@ describe('Deposit multiple ERC721 Tests', () => {
     const UniverseAuctionHouse = await ethers.getContractFactory('UniverseAuctionHouse');
     const MockNFT = await ethers.getContractFactory('MockNFT');
 
-    const universeAuctionHouse = await UniverseAuctionHouse.deploy(2000, 100, 0, owner.address, []);
+    const MockRoyaltiesRegistry =  await ethers.getContractFactory('MockRoyaltiesRegistry');
+    const mockRoyaltiesRegistry = await upgrades.deployProxy(MockRoyaltiesRegistry, [], {initializer: "__RoyaltiesRegistry_init"});
+
+    const universeAuctionHouse = await upgrades.deployProxy(UniverseAuctionHouse,
+      [
+        2000, 100, 0, owner.address, [], mockRoyaltiesRegistry.address
+      ], 
+      {
+        initializer: "__UniverseAuctionHouse_init",
+      });
     const mockNFT = await MockNFT.deploy();
 
     return { universeAuctionHouse, mockNFT };
