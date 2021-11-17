@@ -15,15 +15,15 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
     using SafeMathUpgradeable for uint256;
 
     uint256 public totalAuctions;
-    uint256 private maxNumberOfSlotsPerAuction;
+    uint256 public maxNumberOfSlotsPerAuction;
     uint256 public royaltyFeeBps;
     uint256 public nftSlotLimit;
-    address payable private daoAddress;
+    address payable public daoAddress;
 
     mapping(uint256 => Auction) public auctions;
-    mapping(uint256 => uint256) private auctionsRevenue;
+    mapping(uint256 => uint256) public auctionsRevenue;
     mapping(address => uint256) public royaltiesReserve;
-    mapping(address => bool) private supportedBidTokens;
+    mapping(address => bool) public supportedBidTokens;
 
     IRoyaltiesProvider public royaltiesRegistry;
     address private constant GUARD = address(1);
@@ -143,7 +143,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
     }
 
     modifier onlyAuctionCanceled(uint256 auctionId) {
-        require(auctions[auctionId].isCanceled, "Auction is not canceled");
+        require(auctions[auctionId].isCanceled, "Auction not canceled");
         _;
     }
 
@@ -193,7 +193,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
             config.numberOfSlots > 0 && config.numberOfSlots <= maxNumberOfSlotsPerAuction,
             "Slots out of bound"
         );
-        require(supportedBidTokens[config.bidToken], "Bid token is not supported");
+        require(supportedBidTokens[config.bidToken], "Bid token not supported");
         require(
             config.minimumReserveValues.length == 0 ||
                 config.numberOfSlots == config.minimumReserveValues.length,
@@ -354,7 +354,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
         emit LogBidWithdrawal(recipient, auctionId, amount, block.timestamp);
 
         (bool success, ) = recipient.call{value: amount}("");
-        require(success, "Transfer failed");
+        require(success, "Failed");
 
         return true;
     }
@@ -383,7 +383,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
             if (auction.numberOfBids < auction.numberOfSlots) {
                 require(
                     bidToken.transferFrom(msg.sender, address(this), amount),
-                    "Transfer failed"
+                    "Failed"
                 );
                 addBid(auctionId, msg.sender, amount);
 
@@ -393,7 +393,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
                 require(isWinningBid(auctionId, amount), "Bid should be winnning");
                 require(
                     bidToken.transferFrom(msg.sender, address(this), amount),
-                    "Transfer failed"
+                    "Failed"
                 );
 
                 // Add bid only if it is within the winning slots
@@ -417,7 +417,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
             if (auction.numberOfBids < auction.numberOfSlots) {
                 require(
                     bidToken.transferFrom(msg.sender, address(this), amount),
-                    "Transfer failed"
+                    "Failed"
                 );
                 updateBid(auctionId, msg.sender, bidderCurrentBalance.add(amount));
 
@@ -429,7 +429,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
                 );
                 require(
                     bidToken.transferFrom(msg.sender, address(this), amount),
-                    "Transfer failed"
+                    "Failed"
                 );
                 // Update the bid if the new incremented balance falls within the winning slots
                 updateBid(auctionId, msg.sender, bidderCurrentBalance.add(amount));
@@ -463,7 +463,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
 
         emit LogBidWithdrawal(sender, auctionId, amount, block.timestamp);
 
-        require(bidToken.transfer(sender, amount), "Transfer Failed");
+        require(bidToken.transfer(sender, amount), "Failed");
 
         return true;
     }
@@ -511,7 +511,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
 
         require(
             block.timestamp > auction.endTime && !auction.isFinalized,
-            "Auction has not finished"
+            "Auction not finished"
         );
 
         address[] memory bidders;
@@ -661,7 +661,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
         require(auction.isFinalized, "Not finalized");
 
         uint256 amountToWithdraw = auctionsRevenue[auctionId];
-        require(amountToWithdraw > 0, "No revenue to distribute");
+        require(amountToWithdraw > 0, "Amount is 0");
 
         uint256 value = amountToWithdraw;
         uint256 paymentSplitsPaid;
@@ -686,7 +686,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
 
             if (auction.bidToken == address(0) && interimFee.feeValue > 0) {
                 (bool success, ) = auction.paymentSplits[i].recipient.call{value: interimFee.feeValue}("");
-                require(success, "Transfer failed");
+                require(success, "Failed");
             }
 
             if (auction.bidToken != address(0) && interimFee.feeValue > 0) {
@@ -696,7 +696,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
                         address(auction.paymentSplits[i].recipient),
                         interimFee.feeValue
                     ),
-                    "Transfer Failed"
+                    "Failed"
                 );
             }
         }
@@ -704,14 +704,14 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
         // Distribute the remaining revenue to the auction owner
         if (auction.bidToken == address(0)) {
             (bool success, ) = payable(auction.auctionOwner).call{value: amountToWithdraw.sub(paymentSplitsPaid)}("");
-            require(success, "Transfer failed");
+            require(success, "Failed");
         }
 
         if (auction.bidToken != address(0)) {
             IERC20Upgradeable bidToken = IERC20Upgradeable(auction.bidToken);
             require(
                 bidToken.transfer(auction.auctionOwner, amountToWithdraw.sub(paymentSplitsPaid)),
-                "Transfer Failed"
+                "Failed"
             );
         }
 
@@ -771,7 +771,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
         DepositedERC721 storage nft = slot.depositedNfts[nftSlotIndex];
 
         require(nft.hasSecondarySaleFees && !nft.feesPaid, "Not supported/Fees already paid");
-        require(slot.revenueCaptured, "Slot revenue should be captured");
+        require(slot.revenueCaptured, "Slot revenue not captured");
 
         uint256 averageERC721SalePrice = slot.winningBidAmount.div(slot.totalDepositedNfts);
 
@@ -785,14 +785,14 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
 
             if (auction.bidToken == address(0) && interimFee.feeValue > 0) {
                 (bool success, ) = (fees[i].account).call{value: interimFee.feeValue}("");
-                require(success, "Transfer failed");
+                require(success, "Failed");
             }
 
             if (auction.bidToken != address(0) && interimFee.feeValue > 0) {
                 IERC20Upgradeable token = IERC20Upgradeable(auction.bidToken);
                 require(
                     token.transfer(address(fees[i].account), interimFee.feeValue),
-                    "Transfer Failed"
+                    "Failed"
                 );
             }
         }
@@ -816,12 +816,12 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
 
         if (token == address(0)) {
             (bool success, ) = payable(daoAddress).call{value: amountToWithdraw}("");
-            require(success, "Transfer failed");
+            require(success, "Failed");
         }
 
         if (token != address(0)) {
             IERC20Upgradeable erc20token = IERC20Upgradeable(token);
-            require(erc20token.transfer(daoAddress, amountToWithdraw), "Transfer Failed");
+            require(erc20token.transfer(daoAddress, amountToWithdraw), "Failed");
         }
 
         return amountToWithdraw;
@@ -929,15 +929,15 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
     {
         uint256[] memory nftSlotIndexes = new uint256[](tokens.length);
 
-        require(msg.sender == auctions[auctionId].auctionOwner, "You are not allowed to deposit");
+        require(msg.sender == auctions[auctionId].auctionOwner, "Not allowed to deposit");
         require(
             auctions[auctionId].numberOfSlots >= slotIndex && slotIndex > 0,
             "Deposit into a non-existing slot"
         );
-        require((tokens.length <= 40), "Cannot deposit more than 40");
+        require((tokens.length <= 40), "Can't deposit more than 40");
         require(
             (auctions[auctionId].slots[slotIndex].totalDepositedNfts + tokens.length <= nftSlotLimit),
-            "Nfts slot limit exceeded"
+            "Slot limit exceeded"
         );
 
         // Ensure previous slot has depoited NFTs, so there is no case where there is an empty slot between non-empty slots
@@ -1123,8 +1123,6 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
 
     function extendAuction(uint256 auctionId) internal returns (bool) {
         Auction storage auction = auctions[auctionId];
-
-        require(block.timestamp < auction.endTime, "Can't extend auction if ended");
 
         uint256 resetTimer = auction.resetTimer;
         auction.endTime = auction.endTime.add(resetTimer);
