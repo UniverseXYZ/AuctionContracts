@@ -376,7 +376,7 @@ describe('Withdraw functionalities', () => {
       await universeAuctionHouse.captureSlotRevenue(1, (i + 1));
     }
 
-    await expect(universeAuctionHouse.connect(signer5).withdrawEthBid(1)).revertedWith("Can't withdraw bid");
+    await expect(universeAuctionHouse.connect(signer5).withdrawEthBid(1)).revertedWith("Address 0 provided");
   });
 
   it('should revert with Auction should be finalized', async () => {

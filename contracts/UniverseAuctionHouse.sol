@@ -34,8 +34,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
         uint256 tokenId,
         uint256 auctionId,
         uint256 slotIndex,
-        uint256 nftSlotIndex,
-        uint256 time
+        uint256 nftSlotIndex
     );
 
     event LogERC721Withdrawal(
@@ -44,8 +43,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
         uint256 tokenId,
         uint256 auctionId,
         uint256 slotIndex,
-        uint256 nftSlotIndex,
-        uint256 time
+        uint256 nftSlotIndex
     );
 
     event LogAuctionCreated(
@@ -54,23 +52,20 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
         uint256 numberOfSlots,
         uint256 startTime,
         uint256 endTime,
-        uint256 resetTimer,
-        uint256 time
+        uint256 resetTimer
     );
 
     event LogBidSubmitted(
         address sender,
         uint256 auctionId,
         uint256 currentBid,
-        uint256 totalBid,
-        uint256 time
+        uint256 totalBid
     );
 
     event LogBidWithdrawal(
         address recipient, 
         uint256 auctionId, 
-        uint256 amount, 
-        uint256 time
+        uint256 amount
     );
 
     event LogBidMatched(
@@ -78,48 +73,45 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
         uint256 slotIndex,
         uint256 slotReservePrice,
         uint256 winningBidAmount,
-        address winner,
-        uint256 time
+        address winner
     );
 
     event LogAuctionExtended(
         uint256 auctionId, 
-        uint256 endTime, 
-        uint256 time
+        uint256 endTime
     );
 
     event LogAuctionCanceled(
-        uint256 auctionId, 
-        uint256 time
+        uint256 auctionId
     );
 
     event LogAuctionRevenueWithdrawal(
         address recipient,
         uint256 auctionId,
-        uint256 amount,
-        uint256 time
+        uint256 amount
     );
 
     event LogERC721RewardsClaim(
         address claimer,
         uint256 auctionId,
-        uint256 slotIndex,
-        uint256 time
+        uint256 slotIndex
     );
 
     event LogRoyaltiesWithdrawal(
         uint256 amount, 
         address to, 
-        address token, 
-        uint256 time
+        address token
     );
 
     event LogSlotRevenueCaptured(
         uint256 auctionId,
         uint256 slotIndex,
         uint256 amount,
-        address bidToken,
-        uint256 time
+        address bidToken
+    );
+
+    event LogAuctionFinalized(
+        uint256 auctionId
     );
 
     modifier onlyExistingAuction(uint256 auctionId) {
@@ -236,8 +228,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
             config.numberOfSlots,
             config.startTime,
             config.endTime,
-            config.resetTimer,
-            block.timestamp
+            config.resetTimer
         );
 
         return auctionId;
@@ -253,7 +244,6 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
         onlyExistingAuction(auctionId)
         onlyAuctionNotStarted(auctionId)
         onlyAuctionNotCanceled(auctionId)
-        returns (bool)
     {
         Auction storage auction = auctions[auctionId];
 
@@ -266,7 +256,6 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
             depositERC721(auctionId, slotIndices[i], tokens[i]);
         }
 
-        return true;
     }
 
     function ethBid(uint256 auctionId)
@@ -277,12 +266,11 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
         onlyAuctionStarted(auctionId)
         onlyAuctionNotCanceled(auctionId)
         nonReentrant
-        returns (bool)
     {
         Auction storage auction = auctions[auctionId];
 
         require(block.timestamp < auction.endTime, "Auction has ended");
-        require(auction.totalDepositedERC721s > 0, "No deposited NFTs in auction");
+        require(auction.totalDepositedERC721s > 0 && msg.value > 0, "Invalid bid");
 
         uint256 bidderCurrentBalance = auction.bidBalance[msg.sender];
 
@@ -332,7 +320,6 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
                 }
             }
         }
-        return true;
     }
 
     function withdrawEthBid(uint256 auctionId)
@@ -341,22 +328,20 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
         onlyExistingAuction(auctionId)
         onlyAuctionStarted(auctionId)
         nonReentrant
-        returns (bool)
     {
         Auction storage auction = auctions[auctionId];
         address payable recipient = msg.sender;
         uint256 amount = auction.bidBalance[recipient];
 
         require(auction.numberOfBids > auction.numberOfSlots, "Can't withdraw bid");
-        require(!isWinningBid(auctionId, amount), "Can't withdraw bid");
+        require(canWithdrawBid(auctionId, recipient), "Can't withdraw bid");
 
         removeBid(auctionId, recipient);
-        emit LogBidWithdrawal(recipient, auctionId, amount, block.timestamp);
+        emit LogBidWithdrawal(recipient, auctionId, amount);
 
         (bool success, ) = recipient.call{value: amount}("");
         require(success, "Failed");
 
-        return true;
     }
 
     function erc20Bid(uint256 auctionId, uint256 amount)
@@ -366,12 +351,11 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
         onlyAuctionStarted(auctionId)
         onlyAuctionNotCanceled(auctionId)
         nonReentrant
-        returns (bool)
     {
         Auction storage auction = auctions[auctionId];
 
         require(block.timestamp < auction.endTime, "Auction has ended");
-        require(auction.totalDepositedERC721s > 0, "No deposited NFTs in auction");
+        require(auction.totalDepositedERC721s > 0 && amount > 0, "Invalid bid");
 
         IERC20Upgradeable bidToken = IERC20Upgradeable(auction.bidToken);
 
@@ -440,7 +424,6 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
                 }
             }
         }
-        return true;
     }
 
     function withdrawERC20Bid(uint256 auctionId)
@@ -449,23 +432,21 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
         onlyExistingAuction(auctionId)
         onlyAuctionStarted(auctionId)
         nonReentrant
-        returns (bool)
     {
         Auction storage auction = auctions[auctionId];
         address sender = msg.sender;
         uint256 amount = auction.bidBalance[sender];
 
         require(auction.numberOfBids > auction.numberOfSlots, "Can't withdraw bid");
-        require(!isWinningBid(auctionId, amount), "Can't withdraw bid");
+        require(canWithdrawBid(auctionId, sender), "Can't withdraw bid");
 
         removeBid(auctionId, sender);
         IERC20Upgradeable bidToken = IERC20Upgradeable(auction.bidToken);
 
-        emit LogBidWithdrawal(sender, auctionId, amount, block.timestamp);
+        emit LogBidWithdrawal(sender, auctionId, amount);
 
         require(bidToken.transfer(sender, amount), "Failed");
 
-        return true;
     }
 
     function withdrawERC721FromNonWinningSlot(
@@ -478,7 +459,6 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
         onlyExistingAuction(auctionId)
         onlyAuctionStarted(auctionId)
         nonReentrant
-        returns (bool)
     {
         Auction storage auction = auctions[auctionId];
         Slot storage nonWinningSlot = auction.slots[slotIndex];
@@ -496,7 +476,6 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
             _withdrawERC721FromNonWinningSlot(auctionId, slotIndex, (i + 1));
         }
 
-        return true;
     }
 
     function finalizeAuction(uint256 auctionId)
@@ -505,7 +484,6 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
         onlyExistingAuction(auctionId)
         onlyAuctionNotCanceled(auctionId)
         nonReentrant
-        returns (bool)
     {
         Auction storage auction = auctions[auctionId];
 
@@ -548,8 +526,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
                         lastAwardedIndex + 1,
                         auction.slots[lastAwardedIndex + 1].reservePrice,
                         auction.slots[lastAwardedIndex + 1].winningBidAmount,
-                        auction.slots[lastAwardedIndex + 1].winner,
-                        block.timestamp
+                        auction.slots[lastAwardedIndex + 1].winner
                     );
 
                     lastAwardedIndex += 1;
@@ -561,7 +538,8 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
 
         auction.isFinalized = true;
 
-        return true;
+        emit LogAuctionFinalized(auctionId);
+
     }
 
     function captureSlotRevenue(uint256 auctionId, uint256 slotIndex)
@@ -569,7 +547,6 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
         override
         onlyExistingAuction(auctionId)
         onlyAuctionNotCanceled(auctionId)
-        returns (bool)
     {
         Auction storage auction = auctions[auctionId];
 
@@ -606,11 +583,9 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
             auctionId,
             slotIndex,
             slotRevenue.sub(_secondarySaleFeesForSlot).sub(_royaltyFee),
-            auction.bidToken,
-            block.timestamp
+            auction.bidToken
         );
 
-        return true;
     }
 
     function captureSlotRevenueRange(
@@ -622,7 +597,6 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
         override
         onlyExistingAuction(auctionId)
         onlyAuctionNotCanceled(auctionId)
-        returns (bool)
     {
         require(
             startSlotIndex >= 1 && endSlotIndex <= auctions[auctionId].numberOfSlots,
@@ -631,7 +605,6 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
         for (uint256 i = startSlotIndex; i <= endSlotIndex; i += 1) {
             captureSlotRevenue(auctionId, i);
         }
-        return true;
     }
 
     function cancelAuction(uint256 auctionId)
@@ -641,13 +614,11 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
         onlyAuctionNotStarted(auctionId)
         onlyAuctionNotCanceled(auctionId)
         onlyAuctionOwner(auctionId)
-        returns (bool)
     {
         auctions[auctionId].isCanceled = true;
 
-        emit LogAuctionCanceled(auctionId, block.timestamp);
+        emit LogAuctionCanceled(auctionId);
 
-        return true;
     }
 
     function distributeCapturedAuctionRevenue(uint256 auctionId)
@@ -655,7 +626,6 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
         override
         onlyExistingAuction(auctionId)
         nonReentrant
-        returns (bool)
     {
         Auction storage auction = auctions[auctionId];
         require(auction.isFinalized, "Not finalized");
@@ -671,8 +641,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
         emit LogAuctionRevenueWithdrawal(
             auction.auctionOwner,
             auctionId,
-            amountToWithdraw,
-            block.timestamp
+            amountToWithdraw
         );
 
         // Distribute the payment splits to the respective recipients
@@ -715,14 +684,13 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
             );
         }
 
-        return true;
     }
 
     function claimERC721Rewards(
         uint256 auctionId,
         uint256 slotIndex,
         uint256 amount
-    ) external override nonReentrant returns (bool) {
+    ) external override nonReentrant {
         address claimer = msg.sender;
 
         Auction storage auction = auctions[auctionId];
@@ -738,7 +706,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
         require(amount <= 40, "More than 40 NFTs");
         require(amount <= totalDeposited.sub(totalWithdrawn), "Can't claim more than available");
 
-        emit LogERC721RewardsClaim(claimer, auctionId, slotIndex, block.timestamp);
+        emit LogERC721RewardsClaim(claimer, auctionId, slotIndex);
 
         for (uint256 i = totalWithdrawn; i < amount.add(totalWithdrawn); i += 1) {
             DepositedERC721 memory nftForWithdrawal = winningSlot.depositedNfts[i + 1];
@@ -758,14 +726,13 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
             }
         }
 
-        return true;
     }
 
     function distributeSecondarySaleFees(
         uint256 auctionId,
         uint256 slotIndex,
         uint256 nftSlotIndex
-    ) external override nonReentrant returns (bool) {
+    ) external override nonReentrant {
         Auction storage auction = auctions[auctionId];
         Slot storage slot = auction.slots[slotIndex];
         DepositedERC721 storage nft = slot.depositedNfts[nftSlotIndex];
@@ -797,7 +764,6 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
             }
         }
 
-        return true;
     }
 
     function distributeRoyalties(address token)
@@ -812,7 +778,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
 
         royaltiesReserve[token] = 0;
 
-        emit LogRoyaltiesWithdrawal(amountToWithdraw, daoAddress, token, block.timestamp);
+        emit LogRoyaltiesWithdrawal(amountToWithdraw, daoAddress, token);
 
         if (token == address(0)) {
             (bool success, ) = payable(daoAddress).call{value: amountToWithdraw}("");
@@ -932,7 +898,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
         require(msg.sender == auctions[auctionId].auctionOwner, "Not allowed to deposit");
         require(
             auctions[auctionId].numberOfSlots >= slotIndex && slotIndex > 0,
-            "Deposit into a non-existing slot"
+            "Non-existing slot"
         );
         require((tokens.length <= 40), "Can't deposit more than 40");
         require(
@@ -961,7 +927,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
         uint256 auctionId,
         uint256 slotIndex,
         uint256 amount
-    ) public override onlyExistingAuction(auctionId) onlyAuctionCanceled(auctionId) nonReentrant returns (bool) {
+    ) public override onlyExistingAuction(auctionId) onlyAuctionCanceled(auctionId) nonReentrant {
 
         Auction storage auction = auctions[auctionId];
         Slot storage slot = auction.slots[slotIndex];
@@ -976,7 +942,6 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
             _withdrawDepositedERC721(auctionId, slotIndex, (i + 1));
         }
 
-        return true;
     }
 
     function getTopBidders(uint256 auctionId, uint256 n)
@@ -996,14 +961,23 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
         return biddersList;
     }
 
-    function isWinningBid(uint256 auctionId, uint256 bid) public view override returns (bool) {
+    function isWinningBid(uint256 auctionId, uint256 bid) public view override onlyExistingAuction(auctionId) returns (bool) {
         address[] memory bidders = getTopBidders(auctionId, auctions[auctionId].numberOfSlots);
         uint256 lowestEligibleBid = auctions[auctionId].bidBalance[bidders[bidders.length - 1]];
-        if (bid >= lowestEligibleBid) {
-            return true;
-        } else {
-            return false;
+        return (bid > lowestEligibleBid);
+    }
+
+    function canWithdrawBid(uint256 auctionId, address bidder) public view override onlyExistingAuction(auctionId) returns (bool) {
+        address[] memory bidders = getTopBidders(auctionId, auctions[auctionId].numberOfSlots);
+        bool canWithdraw = true;
+
+        for (uint256 i = 0; i < bidders.length; i+=1) {
+            if (bidders[i] == bidder) {
+                canWithdraw = false;
+            }
         }
+
+        return canWithdraw;
     }
 
     function _depositERC721(
@@ -1037,8 +1011,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
             tokenId,
             auctionId,
             slotIndex,
-            nftSlotIndex,
-            block.timestamp
+            nftSlotIndex
         );
 
         return nftSlotIndex;
@@ -1048,7 +1021,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
         uint256 auctionId,
         uint256 slotIndex,
         uint256 nftSlotIndex
-    ) internal returns (bool) {
+    ) internal {
         Auction storage auction = auctions[auctionId];
         DepositedERC721 memory nftForWithdrawal = auction.slots[slotIndex].depositedNfts[
             nftSlotIndex
@@ -1068,8 +1041,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
             nftForWithdrawal.tokenId,
             auctionId,
             slotIndex,
-            nftSlotIndex,
-            block.timestamp
+            nftSlotIndex
         );
 
         IERC721Upgradeable(nftForWithdrawal.tokenAddress).safeTransferFrom(
@@ -1078,14 +1050,13 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
             nftForWithdrawal.tokenId
         );
 
-        return true;
     }
 
     function _withdrawDepositedERC721(
         uint256 auctionId,
         uint256 slotIndex,
         uint256 nftSlotIndex
-    ) internal returns (bool) {
+    ) internal {
         Auction storage auction = auctions[auctionId];
         DepositedERC721 memory nftForWithdrawal = auction.slots[slotIndex].depositedNfts[
             nftSlotIndex
@@ -1108,8 +1079,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
             nftForWithdrawal.tokenId,
             auctionId,
             slotIndex,
-            nftSlotIndex,
-            block.timestamp
+            nftSlotIndex
         );
 
         IERC721Upgradeable(nftForWithdrawal.tokenAddress).safeTransferFrom(
@@ -1118,18 +1088,16 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
             nftForWithdrawal.tokenId
         );
 
-        return true;
     }
 
-    function extendAuction(uint256 auctionId) internal returns (bool) {
+    function extendAuction(uint256 auctionId) internal {
         Auction storage auction = auctions[auctionId];
 
         uint256 resetTimer = auction.resetTimer;
         auction.endTime = auction.endTime.add(resetTimer);
 
-        emit LogAuctionExtended(auctionId, auction.endTime, block.timestamp);
+        emit LogAuctionExtended(auctionId, auction.endTime);
 
-        return true;
     }
 
     function addBid(
@@ -1151,8 +1119,7 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
             bidder,
             auctionId,
             bid,
-            auctions[auctionId].bidBalance[bidder],
-            block.timestamp
+            auctions[auctionId].bidBalance[bidder]
         );
     }
 
