@@ -287,10 +287,6 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
 
                 // Add bid only if it is within the winning slots
                 addBid(auctionId, msg.sender, msg.value);
-                if (auction.endTime.sub(block.timestamp) < auction.resetTimer) {
-                    // Extend the auction if the remaining time is less than the reset timer
-                    extendAuction(auctionId);
-                }
             }
             // Check if the user has previously submitted bids
         } else if (bidderCurrentBalance > 0) {
@@ -314,11 +310,12 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
 
                 // Update the bid if the new incremented balance falls within the winning slots
                 updateBid(auctionId, msg.sender, bidderCurrentBalance.add(msg.value));
-                if (auction.endTime.sub(block.timestamp) < auction.resetTimer) {
-                    // Extend the auction if the remaining time is less than the reset timer
-                    extendAuction(auctionId);
-                }
             }
+        }
+
+        if (auction.endTime.sub(block.timestamp) < auction.resetTimer) {
+            // Extend the auction if the remaining time is less than the reset timer
+            extendAuction(auctionId);
         }
     }
 
@@ -382,11 +379,6 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
 
                 // Add bid only if it is within the winning slots
                 addBid(auctionId, msg.sender, amount);
-
-                if (auction.endTime.sub(block.timestamp) < auction.resetTimer) {
-                    // Extend the auction if the remaining time is less than the reset timer
-                    extendAuction(auctionId);
-                }
             }
             // Check if the user has previously submitted bids
         } else if (bidderCurrentBalance > 0) {
@@ -417,12 +409,12 @@ contract UniverseAuctionHouse is IUniverseAuctionHouse, ERC721HolderUpgradeable,
                 );
                 // Update the bid if the new incremented balance falls within the winning slots
                 updateBid(auctionId, msg.sender, bidderCurrentBalance.add(amount));
-
-                if (auction.endTime.sub(block.timestamp) < auction.resetTimer) {
-                    // Extend the auction if the remaining time is less than the reset timer
-                    extendAuction(auctionId);
-                }
             }
+        }
+
+        if (auction.endTime.sub(block.timestamp) < auction.resetTimer) {
+            // Extend the auction if the remaining time is less than the reset timer
+            extendAuction(auctionId);
         }
     }
 

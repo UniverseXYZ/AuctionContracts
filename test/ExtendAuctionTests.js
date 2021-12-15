@@ -62,7 +62,7 @@ describe('Extend auction ERC721 Tests', () => {
       universeAuctionHouse.functions['ethBid(uint256)'](1, {
         value: '100000000000000000000'
       })
-    ).to.be.emit(universeAuctionHouse, 'LogBidSubmitted');
+    ).to.be.emit(universeAuctionHouse, 'LogAuctionExtended');
 
     await expect(
       universeAuctionHouse.connect(signer2).functions['ethBid(uint256)'](1, {
@@ -74,7 +74,7 @@ describe('Extend auction ERC721 Tests', () => {
       universeAuctionHouse.functions['ethBid(uint256)'](1, {
         value: '300000000000000000000'
       })
-    ).to.be.emit(universeAuctionHouse, 'LogAuctionExtended');
+    ).to.be.emit(universeAuctionHouse, 'LogBidSubmitted');
 
     await expect(
       universeAuctionHouse.connect(signer2).functions['ethBid(uint256)'](1, {
@@ -121,7 +121,7 @@ describe('Extend auction ERC721 Tests', () => {
     await ethers.provider.send('evm_setNextBlockTimestamp', [startTime + 100]); 
     await ethers.provider.send('evm_mine');
 
-    await expect(universeAuctionHouse.functions['erc20Bid(uint256,uint256)'](1, 1)).to.be.emit(universeAuctionHouse, 'LogBidSubmitted');
+    await expect(universeAuctionHouse.functions['erc20Bid(uint256,uint256)'](1, 1)).to.be.emit(universeAuctionHouse, 'LogAuctionExtended');
 
     await expect(universeAuctionHouse.connect(signer2).functions['erc20Bid(uint256,uint256)'](1, 2)).to.be.emit(
       universeAuctionHouse,
@@ -133,7 +133,7 @@ describe('Extend auction ERC721 Tests', () => {
 
     await expect(universeAuctionHouse.functions['erc20Bid(uint256,uint256)'](1, 10)).to.be.emit(
       universeAuctionHouse,
-      'LogAuctionExtended'
+      'LogBidSubmitted'
     );
 
   });
