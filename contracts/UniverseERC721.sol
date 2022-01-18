@@ -5,12 +5,21 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/math/SafeMath.sol";
 import "./HasSecondarySaleFees.sol";
+import "./ERC2981Royalties.sol";
 
-contract UniverseERC721 is ERC721, Ownable, HasSecondarySaleFees {
+contract UniverseERC721 is ERC721, Ownable, HasSecondarySaleFees, ERC2981Royalties {
+    using SafeMath for uint256;
     using Counters for Counters.Counter;
 
     Counters.Counter private _tokenIds;
+
+    // Mapping from token ID to creator address;
+    mapping(uint256 => address) public creatorOf;
+
+    // Mapping from token ID to torrent magnet links
+    mapping (uint256 => string) public torrentMagnetLinkOf;
 
     event UniverseERC721TokenMinted(
         uint256 tokenId,
@@ -18,6 +27,11 @@ contract UniverseERC721 is ERC721, Ownable, HasSecondarySaleFees {
         address receiver,
         uint256 time
     );
+
+    modifier onlyCreator(uint256 tokenId) {
+        require(msg.sender == creatorOf[tokenId], "Not called from the creator");
+        _;
+    }
 
     constructor(string memory _tokenName, string memory _tokenSymbol)
         ERC721(_tokenName, _tokenSymbol)
@@ -28,7 +42,7 @@ contract UniverseERC721 is ERC721, Ownable, HasSecondarySaleFees {
         string[] calldata tokenURIs,
         Fee[] memory fees
     ) external virtual onlyOwner returns (uint256[] memory) {
-        require(tokenURIs.length <= 40, "Cannot mint more than 40 ERC721 tokens in a single call");
+        require(tokenURIs.length <= 40, "Cannot mint more than 40");
 
         uint256[] memory mintedTokenIds = new uint256[](tokenURIs.length);
 
@@ -40,12 +54,30 @@ contract UniverseERC721 is ERC721, Ownable, HasSecondarySaleFees {
         return mintedTokenIds;
     }
 
+    function batchMintMultipleReceivers(
+        address[] calldata receivers,
+        string[] calldata tokenURIs,
+        Fee[] memory fees
+    ) external virtual onlyOwner returns (uint256[] memory) {
+        require(tokenURIs.length <= 40, "Cannot mint more than 40");
+        require(receivers.length == tokenURIs.length, "Wrong config");
+
+        uint256[] memory mintedTokenIds = new uint256[](tokenURIs.length);
+
+        for (uint256 i = 0; i < tokenURIs.length; i++) {
+            uint256 tokenId = mint(receivers[i], tokenURIs[i], fees);
+            mintedTokenIds[i] = tokenId;
+        }
+
+        return mintedTokenIds;
+    }
+
     function batchMintWithDifferentFees(
         address receiver,
         string[] calldata tokenURIs,
         Fee[][] memory fees
     ) external virtual onlyOwner returns (uint256[] memory) {
-        require(tokenURIs.length <= 40, "Cannot mint more than 40 ERC721 tokens in a single call");
+        require(tokenURIs.length <= 40, "Cannot mint more than 40");
         require(tokenURIs.length == fees.length, "Wrong fee config");
 
         uint256[] memory mintedTokenIds = new uint256[](tokenURIs.length);
@@ -67,6 +99,17 @@ contract UniverseERC721 is ERC721, Ownable, HasSecondarySaleFees {
         _setTokenURI(_tokenId, _tokenURI);
 
         return _tokenURI;
+    }
+
+    function updateTorrentMagnetLink(uint256 _tokenId, string memory _torrentMagnetLink)
+        external
+        virtual
+        onlyCreator(_tokenId)
+        returns (string memory)
+    {
+        torrentMagnetLinkOf[_tokenId] = _torrentMagnetLink;
+
+        return _torrentMagnetLink;
     }
 
     function ownedTokens(address ownerAddress) external view returns (uint256[] memory) {
@@ -92,6 +135,10 @@ contract UniverseERC721 is ERC721, Ownable, HasSecondarySaleFees {
         _mint(receiver, newItemId);
         _setTokenURI(newItemId, tokenURI);
         _registerFees(newItemId, fees);
+        // The ERC2981 standard supports only one split, so we set the first value
+        _setTokenRoyalty(newItemId, fees[0].recipient, fees[0].value);
+        // We use tx.origin to set the creator, as there are cases when a contract can call this funciton
+        creatorOf[newItemId] = tx.origin;
 
         emit UniverseERC721TokenMinted(newItemId, tokenURI, receiver, block.timestamp);
     }
@@ -104,7 +151,7 @@ contract UniverseERC721 is ERC721, Ownable, HasSecondarySaleFees {
         for (uint256 i = 0; i < _fees.length; i++) {
             require(_fees[i].recipient != address(0x0), "Recipient should be present");
             require(_fees[i].value != 0, "Fee value should be positive");
-            sum += _fees[i].value;
+            sum = sum.add(_fees[i].value);
             fees[_tokenId].push(_fees[i]);
             recipients[i] = _fees[i].recipient;
             bps[i] = _fees[i].value;

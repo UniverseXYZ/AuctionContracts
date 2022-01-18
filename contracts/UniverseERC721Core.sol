@@ -10,8 +10,6 @@ contract UniverseERC721Core is UniverseERC721 {
 
     Counters.Counter private _tokenIds;
 
-    mapping(uint256 => address) public creatorOf;
-
     constructor(string memory _tokenName, string memory _tokenSymbol)
         UniverseERC721(_tokenName, _tokenSymbol)
     {}
@@ -21,7 +19,7 @@ contract UniverseERC721Core is UniverseERC721 {
         string[] calldata tokenURIs,
         Fee[] memory fees
     ) external override returns (uint256[] memory) {
-        require(tokenURIs.length <= 40, "Cannot mint more than 40 ERC721 tokens in a single call");
+        require(tokenURIs.length <= 40, "Cannot mint more than 40");
 
         uint256[] memory mintedTokenIds = new uint256[](tokenURIs.length);
 
@@ -33,12 +31,30 @@ contract UniverseERC721Core is UniverseERC721 {
         return mintedTokenIds;
     }
 
+    function batchMintMultipleReceivers(
+        address[] calldata receivers,
+        string[] calldata tokenURIs,
+        Fee[] memory fees
+    ) external override returns (uint256[] memory) {
+        require(tokenURIs.length <= 40, "Cannot mint more than 40");
+        require(receivers.length == tokenURIs.length, "Wrong config");
+
+        uint256[] memory mintedTokenIds = new uint256[](tokenURIs.length);
+
+        for (uint256 i = 0; i < tokenURIs.length; i++) {
+            uint256 tokenId = mint(receivers[i], tokenURIs[i], fees);
+            mintedTokenIds[i] = tokenId;
+        }
+
+        return mintedTokenIds;
+    }
+
     function batchMintWithDifferentFees(
         address receiver,
         string[] calldata tokenURIs,
         Fee[][] memory fees
     ) external override returns (uint256[] memory) {
-        require(tokenURIs.length <= 40, "Cannot mint more than 40 ERC721 tokens in a single call");
+        require(tokenURIs.length <= 40, "Cannot mint more than 40");
         require(tokenURIs.length == fees.length, "Wrong fee config");
 
         uint256[] memory mintedTokenIds = new uint256[](tokenURIs.length);
@@ -49,17 +65,6 @@ contract UniverseERC721Core is UniverseERC721 {
         }
 
         return mintedTokenIds;
-    }
-
-    function updateTokenURI(uint256 _tokenId, string memory _tokenURI)
-        external
-        override
-        returns (string memory)
-    {
-        require(ownerOf(_tokenId) == msg.sender, "Owner: Caller is not the owner of the Token");
-        _setTokenURI(_tokenId, _tokenURI);
-
-        return _tokenURI;
     }
 
     function mint(
@@ -73,7 +78,10 @@ contract UniverseERC721Core is UniverseERC721 {
         _mint(receiver, newItemId);
         _setTokenURI(newItemId, tokenURI);
         _registerFees(newItemId, fees);
-        creatorOf[newItemId] = msg.sender;
+        // The ERC2981 standard supports only one split, so we set the first value
+        _setTokenRoyalty(newItemId, fees[0].recipient, fees[0].value);
+        // We use tx.origin to set the creator, as there are cases when a contract can call this funciton
+        creatorOf[newItemId] = tx.origin;
 
         emit UniverseERC721TokenMinted(newItemId, tokenURI, receiver, block.timestamp);
     }
