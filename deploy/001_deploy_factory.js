@@ -1,4 +1,5 @@
 //const { deployments, hardhatArguments } = require("hardhat");
+require('dotenv').config()
 
 module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   const { deploy, execute } = deployments;

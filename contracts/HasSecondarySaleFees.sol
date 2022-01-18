@@ -21,7 +21,7 @@ contract HasSecondarySaleFees is ERC165 {
      * => 0x0ebd4c7f ^ 0xb9c4d9fb == 0xb7799584
      */
     bytes4 private constant _INTERFACE_ID_FEES = 0xb7799584;
-    constructor() public {
+    constructor() {
         _registerInterface(_INTERFACE_ID_FEES);
     }
 
