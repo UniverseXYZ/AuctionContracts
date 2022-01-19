@@ -77,9 +77,11 @@ contract UniverseERC721Core is UniverseERC721 {
         uint256 newItemId = _tokenIds.current();
         _mint(receiver, newItemId);
         _setTokenURI(newItemId, tokenURI);
-        _registerFees(newItemId, fees);
-        // The ERC2981 standard supports only one split, so we set the first value
-        _setTokenRoyalty(newItemId, fees[0].recipient, fees[0].value);
+        if (fees.length > 0) {
+            _registerFees(newItemId, fees);
+            // The ERC2981 standard supports only one split, so we set the first value
+            _setTokenRoyalty(newItemId, fees[0].recipient, fees[0].value);
+        }
         // We use tx.origin to set the creator, as there are cases when a contract can call this funciton
         creatorOf[newItemId] = tx.origin;
 
