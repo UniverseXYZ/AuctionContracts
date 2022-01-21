@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/introspection/ERC165.sol";
 contract HasSecondarySaleFees is ERC165 {
     struct Fee {
         address payable recipient;
-        uint256 value;
+        uint96 value;
     }
 
     // id => fees
