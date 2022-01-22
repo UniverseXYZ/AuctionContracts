@@ -31,7 +31,7 @@ describe('Test royalty fee functionality', () => {
     const [signer, signer2] = await ethers.getSigners();
 
     await expect(universeAuctionHouse.connect(signer2).setRoyaltyFeeBps('9000')).revertedWith(
-      'Not called from the dao'
+      'E07'
     );
   });
 
@@ -164,6 +164,6 @@ describe('Test royalty fee functionality', () => {
 
     await expect(
       universeAuctionHouse.distributeRoyalties('0x0000000000000000000000000000000000000000')
-    ).revertedWith('Amount is 0');
+    ).revertedWith('E30');
   });
 });

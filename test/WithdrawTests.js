@@ -130,10 +130,10 @@ describe('Withdraw functionalities', () => {
       "LogERC721Withdrawal"
     );
     await expect(universeAuctionHouse.withdrawERC721FromNonWinningSlot(1, 1, 30)).revertedWith(
-      "Not enough available"
+      "E26"
     );
     await expect(universeAuctionHouse.withdrawERC721FromNonWinningSlot(1, 1, 41)).revertedWith(
-      "Can't withdraw more than 40"
+      "E25"
     );
     await expect(universeAuctionHouse.withdrawERC721FromNonWinningSlot(1, 1, 20)).emit(
       universeAuctionHouse,
@@ -141,7 +141,7 @@ describe('Withdraw functionalities', () => {
     );
   });
 
-  it('should revert with Only depositor can withdraw', async () => {
+  it('should revert with E41', async () => {
     const { universeAuctionHouse, mockNFT } = await loadFixture(deployContract);
     const currentTime = Math.round((new Date()).getTime() / 1000);
   
@@ -199,11 +199,11 @@ describe('Withdraw functionalities', () => {
     }
 
     await expect(universeAuctionHouse.connect(signer2).withdrawERC721FromNonWinningSlot(1, 1, 1)).revertedWith(
-      'Only depositor can withdraw'
+      'E41'
     );
   });
 
-  it('should revert with Auction should be finalized', async () => {
+  it('should revert with E24', async () => {
     const { universeAuctionHouse, mockNFT } = await loadFixture(deployContract);
     const currentTime = Math.round((new Date()).getTime() / 1000);
   
@@ -251,7 +251,7 @@ describe('Withdraw functionalities', () => {
       value: '10000000000000000000'
     });
 
-    await expect(universeAuctionHouse.withdrawERC721FromNonWinningSlot(1, 1, 1)).revertedWith('Auction should be finalized');
+    await expect(universeAuctionHouse.withdrawERC721FromNonWinningSlot(1, 1, 1)).revertedWith('E24');
   });
 
   it('should revert with Can withdraw only if reserve price is not met', async () => {
@@ -311,7 +311,7 @@ describe('Withdraw functionalities', () => {
     }
 
     await expect(universeAuctionHouse.withdrawERC721FromNonWinningSlot(1, 1, 1)).revertedWith(
-      'Reserve price met'
+      'E23'
     );
   });
 
@@ -376,10 +376,10 @@ describe('Withdraw functionalities', () => {
       await universeAuctionHouse.captureSlotRevenue(1, (i + 1));
     }
 
-    await expect(universeAuctionHouse.connect(signer5).withdrawEthBid(1)).revertedWith("Address 0 provided");
+    await expect(universeAuctionHouse.connect(signer5).withdrawEthBid(1)).revertedWith("E43");
   });
 
-  it('should revert with Auction should be finalized', async () => {
+  it('should revert with E24', async () => {
     const { universeAuctionHouse, mockNFT } = await loadFixture(deployContract);
     const currentTime = Math.round((new Date()).getTime() / 1000);
   
@@ -431,7 +431,7 @@ describe('Withdraw functionalities', () => {
       value: '500000000000000000000'
     });
 
-    await expect(universeAuctionHouse.withdrawEthBid(1)).revertedWith("Can't withdraw bid");
+    await expect(universeAuctionHouse.withdrawEthBid(1)).revertedWith("E22");
   });
 
   it('should withdraw erc20', async () => {
@@ -567,10 +567,10 @@ describe('Withdraw functionalities', () => {
       await universeAuctionHouse.captureSlotRevenue(1, (i + 1));
     }
 
-    await expect(universeAuctionHouse.connect(signer4).withdrawERC20Bid(1)).revertedWith("Can't withdraw bid");
+    await expect(universeAuctionHouse.connect(signer4).withdrawERC20Bid(1)).revertedWith("E22");
   });
 
-  it('should revert with Auction should be finalized', async () => {
+  it('should revert with E24', async () => {
     const { universeAuctionHouse, mockNFT, mockToken } = await loadFixture(deployContract);
     const currentTime = Math.round((new Date()).getTime() / 1000);
 
@@ -624,7 +624,7 @@ describe('Withdraw functionalities', () => {
 
     await universeAuctionHouse.connect(signer3).functions['erc20Bid(uint256,uint256)'](1, 120);
 
-    await expect(universeAuctionHouse.withdrawERC20Bid(1)).revertedWith("Can't withdraw bid");
+    await expect(universeAuctionHouse.withdrawERC20Bid(1)).revertedWith("E22");
   });
 });
 

@@ -30,7 +30,7 @@ module.exports = {
     },
   },
   solidity: {
-    version: "0.7.3",
+    version: "0.8.11",
     settings: {
       optimizer: {
         enabled: true
@@ -73,7 +73,7 @@ module.exports = {
   },
   gasReporter: {
     currency: "USD",
-    gasPrice: 47,
+    gasPrice: 100,
     enabled: process.env.REPORT_GAS == "true" ? true : false,
     coinmarketcap: process.env.CMC_API_KEY,
   },

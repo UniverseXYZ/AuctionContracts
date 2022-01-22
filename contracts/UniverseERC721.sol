@@ -1,16 +1,14 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.7.0;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.11;
 
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/math/SafeMath.sol";
 import "./HasSecondarySaleFees.sol";
 import "./ERC2981Royalties.sol";
 
-contract UniverseERC721 is ERC721, Ownable, HasSecondarySaleFees, ERC2981Royalties {
-    using SafeMath for uint256;
+contract UniverseERC721 is ERC721Enumerable, ERC721URIStorage, Ownable, HasSecondarySaleFees, ERC2981Royalties {
     using Counters for Counters.Counter;
 
     Counters.Counter private _tokenIds;
@@ -143,9 +141,10 @@ contract UniverseERC721 is ERC721, Ownable, HasSecondarySaleFees, ERC2981Royalti
         creatorOf[newItemId] = tx.origin;
 
         emit UniverseERC721TokenMinted(newItemId, tokenURI, receiver, block.timestamp);
+        return newItemId;
     }
 
-    function _registerFees(uint256 _tokenId, Fee[] memory _fees) internal returns (bool) {
+    function _registerFees(uint256 _tokenId, Fee[] memory _fees) internal {
         require(_fees.length <= 5, "No more than 5 recipients");
         address[] memory recipients = new address[](_fees.length);
         uint256[] memory bps = new uint256[](_fees.length);
@@ -153,7 +152,7 @@ contract UniverseERC721 is ERC721, Ownable, HasSecondarySaleFees, ERC2981Royalti
         for (uint256 i = 0; i < _fees.length; i++) {
             require(_fees[i].recipient != address(0x0), "Recipient should be present");
             require(_fees[i].value != 0, "Fee value should be positive");
-            sum = sum.add(_fees[i].value);
+            sum = sum + _fees[i].value;
             fees[_tokenId].push(_fees[i]);
             recipients[i] = _fees[i].recipient;
             bps[i] = _fees[i].value;
@@ -162,5 +161,21 @@ contract UniverseERC721 is ERC721, Ownable, HasSecondarySaleFees, ERC2981Royalti
         if (_fees.length > 0) {
             emit SecondarySaleFees(_tokenId, recipients, bps);
         }
+    }
+
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165Storage, ERC721, ERC721Enumerable) returns (bool) {
+        return super.supportsInterface(interfaceId);
+    }
+
+    function tokenURI(uint256 tokenId) public view virtual override(ERC721URIStorage, ERC721) returns (string memory) {
+        return super.tokenURI(tokenId);
+    }
+
+    function _burn(uint256 tokenId) internal virtual override(ERC721URIStorage, ERC721) {
+        return super._burn(tokenId);
+    }
+    
+    function _beforeTokenTransfer(address from, address to, uint256 tokenId) internal virtual override(ERC721Enumerable, ERC721) {
+        return super._beforeTokenTransfer(from, to, tokenId);
     }
 }

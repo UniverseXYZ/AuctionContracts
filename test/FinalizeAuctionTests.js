@@ -148,11 +148,11 @@ describe('Finalize auction ERC721 Tests', () => {
     await expect(universeAuctionHouse.claimERC721Rewards(1, 1, 40)).to.be.emit(universeAuctionHouse, "LogERC721RewardsClaim");
 
     await expect(universeAuctionHouse.claimERC721Rewards(1, 1, 30)).revertedWith(
-      "Can't claim more than available"
+      "E33"
     );
 
     await expect(universeAuctionHouse.claimERC721Rewards(1, 1, 41)).revertedWith(
-      "More than 40 NFTs"
+      "E25"
     );
 
     await expect(universeAuctionHouse.claimERC721Rewards(1, 1, 20)).to.be.emit(universeAuctionHouse, "LogERC721RewardsClaim");

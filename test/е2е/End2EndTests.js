@@ -190,11 +190,11 @@ describe("End to End Auction Universe House Tests", () => {
     );
 
     await expect(universeAuctionHouse.connect(accounts[49]).claimERC721Rewards(1, 1, 30)).revertedWith(
-      "Can't claim more than available"
+      "E33"
     );
 
     await expect(universeAuctionHouse.connect(accounts[49]).claimERC721Rewards(1, 1, 41)).revertedWith(
-      "More than 40 NFTs"
+      "E25"
     );
 
     await expect(universeAuctionHouse.connect(accounts[49]).claimERC721Rewards(1, 1, 20)).to.be.emit(
@@ -332,11 +332,11 @@ describe("End to End Auction Universe House Tests", () => {
     );
 
     await expect(universeAuctionHouse.connect(accounts[99]).claimERC721Rewards(1, 1, 30)).revertedWith(
-      "Can't claim more than available"
+      "E33"
     );
 
     await expect(universeAuctionHouse.connect(accounts[99]).claimERC721Rewards(1, 1, 41)).revertedWith(
-      "More than 40 NFTs"
+      "E25"
     );
 
   }).timeout(720000);

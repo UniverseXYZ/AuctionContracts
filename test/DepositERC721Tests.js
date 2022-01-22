@@ -101,12 +101,12 @@ describe('DEPOSIT ERC721 Functionality', () => {
     await universeAuctionHouse.depositERC721(auctionId, slotIdx, [[1, mockNFT.address],[2, mockNFT.address],[3, mockNFT.address],[4, mockNFT.address],[5, mockNFT.address],[6, mockNFT.address],[7, mockNFT.address],[8, mockNFT.address],[9, mockNFT.address],[10, mockNFT.address]]);
     await universeAuctionHouse.cancelAuction(auctionId);
 
-    await expect(universeAuctionHouse.withdrawDepositedERC721(1, 1, 11)).revertedWith("Not enough available")
-    await expect(universeAuctionHouse.withdrawDepositedERC721(1, 1, 41)).revertedWith("Can't withdraw more than 40")
+    await expect(universeAuctionHouse.withdrawDepositedERC721(1, 1, 11)).revertedWith("E26")
+    await expect(universeAuctionHouse.withdrawDepositedERC721(1, 1, 41)).revertedWith("E25")
     await expect(universeAuctionHouse.withdrawDepositedERC721(1, 1, 5)).to.be.emit(universeAuctionHouse, 'LogERC721Withdrawal');
-    await expect(universeAuctionHouse.withdrawDepositedERC721(1, 1, 6)).revertedWith("Not enough available")
+    await expect(universeAuctionHouse.withdrawDepositedERC721(1, 1, 6)).revertedWith("E26")
     await expect(universeAuctionHouse.withdrawDepositedERC721(1, 1, 5)).to.be.emit(universeAuctionHouse, 'LogERC721Withdrawal');
-    await expect(universeAuctionHouse.withdrawDepositedERC721(1, 1, 1)).revertedWith("Not enough available")
+    await expect(universeAuctionHouse.withdrawDepositedERC721(1, 1, 1)).revertedWith("E26")
 
     const ownerOfToken1 = await mockNFT.ownerOf(1);
     const ownerOfToken5 = await mockNFT.ownerOf(5);
@@ -282,14 +282,14 @@ describe('DEPOSIT ERC721 Functionality', () => {
 
     await universeAuctionHouse.depositERC721(auctionId, 1, [[1, mockNFT.address]])
 
-    await expect(universeAuctionHouse.depositERC721(auctionId, 3, [[2, mockNFT.address]])).revertedWith("Previous slot is empty");
+    await expect(universeAuctionHouse.depositERC721(auctionId, 3, [[2, mockNFT.address]])).revertedWith("E39");
 
     await universeAuctionHouse.depositERC721(auctionId, 2, [[2, mockNFT.address]])
 
     await universeAuctionHouse.depositERC721(auctionId, 3, [[3, mockNFT.address]])
   });
 
-  it('should revert cuz Only depositor can withdraw', async () => {
+  it('should revert cuz E41', async () => {
     const { universeAuctionHouse, mockNFT } = await loadFixture(deployedContracts);
 
     const currentTime = Math.round((new Date()).getTime() / 1000);

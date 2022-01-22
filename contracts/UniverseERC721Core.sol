@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.7.0;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.11;
 
 import "./UniverseERC721.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
@@ -86,5 +85,6 @@ contract UniverseERC721Core is UniverseERC721 {
         creatorOf[newItemId] = tx.origin;
 
         emit UniverseERC721TokenMinted(newItemId, tokenURI, receiver, block.timestamp);
+        return newItemId;
     }
 }

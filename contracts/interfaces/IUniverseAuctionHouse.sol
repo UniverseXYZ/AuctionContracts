@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.7.0;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.11;
 
-import "@universe/marketplace/contracts/interfaces/IRoyaltiesProvider.sol";
+import "./IRoyaltiesProvider.sol";
 
 /// @title Users bid to this contract in order to win a slot with deposited ERC721 tokens.
 /// @notice This interface should be implemented by the Auction contract
@@ -59,11 +58,6 @@ interface IUniverseAuctionHouse {
         address depositor;
         bool hasSecondarySaleFees;
         bool feesPaid;
-    }
-
-    struct Fee {
-        uint256 remainingValue;
-        uint256 feeValue;
     }
 
     struct AuctionConfig {
