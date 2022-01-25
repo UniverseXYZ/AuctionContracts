@@ -82,6 +82,15 @@ describe('UniverseERC721', () => {
     await universeERC721Core.batchMint(signer.address, ['TestURI', 'TestURI2'], [["0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", 1000]]);
   });
 
+  it('should batchMint differentFees successfully', async () => {
+    const { universeERC721, universeERC721Core } = await loadFixture(deployContracts);
+
+    const [signer] = await ethers.getSigners();
+
+    await universeERC721.batchMintWithDifferentFees(signer.address, ['TestURI', 'TestURI2'], [[["0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", 1000]],[["0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", 1000]]]);
+    await universeERC721Core.batchMintWithDifferentFees(signer.address, ['TestURI', 'TestURI2'], [[["0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", 1000]],[["0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", 1000]]]);
+  });
+
   it('should revert with Cannot mint more than 40 ERC721 tokens in a single call', async () => {
     const { universeERC721, universeERC721Core } = await loadFixture(deployContracts);
 
