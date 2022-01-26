@@ -5,10 +5,11 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "./ERC721Consumable.sol";
 import "./HasSecondarySaleFees.sol";
 import "./ERC2981Royalties.sol";
 
-contract UniverseERC721 is ERC721Enumerable, ERC721URIStorage, Ownable, HasSecondarySaleFees, ERC2981Royalties {
+contract UniverseERC721 is ERC721Enumerable, ERC721URIStorage, ERC721Consumable, Ownable, HasSecondarySaleFees, ERC2981Royalties {
     using Counters for Counters.Counter;
 
     Counters.Counter private _tokenIds;
@@ -163,7 +164,7 @@ contract UniverseERC721 is ERC721Enumerable, ERC721URIStorage, Ownable, HasSecon
         }
     }
 
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165Storage, ERC721, ERC721Enumerable) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165Storage, ERC721, ERC721Enumerable, ERC721Consumable) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
 
@@ -175,7 +176,7 @@ contract UniverseERC721 is ERC721Enumerable, ERC721URIStorage, Ownable, HasSecon
         return super._burn(tokenId);
     }
     
-    function _beforeTokenTransfer(address from, address to, uint256 tokenId) internal virtual override(ERC721Enumerable, ERC721) {
+    function _beforeTokenTransfer(address from, address to, uint256 tokenId) internal virtual override(ERC721Enumerable, ERC721, ERC721Consumable) {
         return super._beforeTokenTransfer(from, to, tokenId);
     }
 }

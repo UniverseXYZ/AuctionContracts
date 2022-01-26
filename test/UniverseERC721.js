@@ -126,4 +126,15 @@ describe('UniverseERC721', () => {
     await universeERC721Core.updateTorrentMagnetLink(1, "TestMagnetLink");
     await expect(universeERC721Core.connect(signer1).updateTorrentMagnetLink(1, "TestMagnetLink2")).revertedWith("Not called from the creator");
   });
+
+  it('should set and update consumer successfully', async () => {
+    const { universeERC721, universeERC721Core } = await loadFixture(deployContracts);
+
+    const [signer, signer1] = await ethers.getSigners();
+
+    await universeERC721Core.batchMintMultipleReceivers([signer.address, signer1.address], ['TestURI', 'TestURI2'], [["0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", 1000]]);
+    await universeERC721Core.connect(signer).changeConsumer(signer1.address, 1);
+    await expect(universeERC721Core.connect(signer1).changeConsumer(signer1.address, 1)).revertedWith("ERC721Consumable: changeConsumer caller is not owner nor approved");
+    await universeERC721Core.connect(signer1).changeConsumer(signer1.address, 2);
+  });
 });
