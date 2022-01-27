@@ -37,42 +37,6 @@ describe('UniverseERC721', () => {
     await universeERC721Core.mint(signer.address, 'TestURI', [["0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", 1000]]);
   });
 
-  it('should update tokenURI', async () => {
-    const { universeERC721, universeERC721Core } = await loadFixture(deployContracts);
-
-    const [signer] = await ethers.getSigners();
-
-    await universeERC721.mint(signer.address, 'TestURI', [["0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", 1000]]);
-    await universeERC721Core.mint(signer.address, 'TestURI', [["0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", 1000]]);
-
-    await universeERC721.updateTokenURI(1, 'TestURI2');
-    await universeERC721Core.updateTokenURI(1, 'TestURI2');
-  });
-
-  it('should revert with Ownable: caller is not the owner', async () => {
-    const { universeERC721 } = await loadFixture(deployContracts);
-
-    const [signer, signer2] = await ethers.getSigners();
-
-    await universeERC721.mint(signer.address, 'TestURI', [["0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", 1000]]);
-
-    await expect(universeERC721.connect(signer2).updateTokenURI(1, 'TestURI2')).revertedWith(
-      'Ownable: caller is not the owner'
-    );
-  });
-
-  it('should revert with Ownable: caller is not the owner CORE', async () => {
-    const { universeERC721Core } = await loadFixture(deployContracts);
-
-    const [signer, signer2] = await ethers.getSigners();
-
-    await universeERC721Core.mint(signer.address, 'TestURI', [["0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", 1000]]);
-
-    await expect(universeERC721Core.connect(signer2).updateTokenURI(1, 'TestURI2')).revertedWith(
-      'Ownable: caller is not the owner'
-    );
-  });
-
   it('should batchMint successfully', async () => {
     const { universeERC721, universeERC721Core } = await loadFixture(deployContracts);
 

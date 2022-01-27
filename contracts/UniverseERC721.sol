@@ -114,14 +114,14 @@ contract UniverseERC721 is ERC721Enumerable, ERC721URIStorage, ERC721Consumable,
 
     function mint(
         address receiver,
-        string memory tokenURI,
+        string memory newTokenURI,
         Fee[] memory fees
     ) public virtual onlyOwner returns (uint256) {
         _tokenIds.increment();
 
         uint256 newItemId = _tokenIds.current();
         _mint(receiver, newItemId);
-        _setTokenURI(newItemId, tokenURI);
+        _setTokenURI(newItemId, newTokenURI);
         if (fees.length > 0) {
             _registerFees(newItemId, fees);
             // The ERC2981 standard supports only one split, so we set the first value
@@ -130,7 +130,7 @@ contract UniverseERC721 is ERC721Enumerable, ERC721URIStorage, ERC721Consumable,
         // We use tx.origin to set the creator, as there are cases when a contract can call this funciton
         creatorOf[newItemId] = tx.origin;
 
-        emit UniverseERC721TokenMinted(newItemId, tokenURI, receiver, block.timestamp);
+        emit UniverseERC721TokenMinted(newItemId, newTokenURI, receiver, block.timestamp);
         return newItemId;
     }
 

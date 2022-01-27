@@ -3,7 +3,7 @@ pragma solidity 0.8.11;
 
 /// @title ERC-721 Consumer Role extension
 ///  Note: the ERC-165 identifier for this interface is 0x953c8dfa
-interface IERC721Consumable /* is ERC721 */ {
+interface IERC721Consumable { /* is ERC721 */ 
 
     /// @notice Emitted when `owner` changes the `consumer` of an NFT
     /// The zero address for consumer indicates that there is no consumer address
@@ -16,7 +16,7 @@ interface IERC721Consumable /* is ERC721 */ {
     /// Throws if `_tokenId` is not a valid NFT
     /// @param _tokenId The NFT to get the consumer address for
     /// @return The consumer address for this NFT, or the zero address if there is none
-    function consumerOf(uint256 _tokenId) view external returns (address);
+    function consumerOf(uint256 _tokenId) external view returns (address);
 
     /// @notice Change or reaffirm the consumer address for an NFT
     /// @dev The zero address indicates there is no consumer address
