@@ -89,18 +89,6 @@ contract UniverseERC721 is ERC721Enumerable, ERC721URIStorage, ERC721Consumable,
         return mintedTokenIds;
     }
 
-    function updateTokenURI(uint256 _tokenId, string memory _tokenURI)
-        external
-        virtual
-        onlyOwner
-        returns (string memory)
-    {
-        require(super.ownerOf(_tokenId) == creatorOf[_tokenId], "Not owned by creator");
-        _setTokenURI(_tokenId, _tokenURI);
-
-        return _tokenURI;
-    }
-
     function updateTorrentMagnetLink(uint256 _tokenId, string memory _torrentMagnetLink)
         external
         virtual
