@@ -503,16 +503,12 @@ contract UniverseAuctionHouse is
             }
         }
 
-        // Calculate DAO fee and deduct from auction revenue
-        uint256 _royaltyFee = (royaltyFeeBps * slotRevenue) / 10000;
-        auctionsRevenue[auctionId] = auctionsRevenue[auctionId] - _royaltyFee;
-        royaltiesReserve[auction.bidToken] = royaltiesReserve[auction.bidToken] + _royaltyFee;
         auction.slots[slotIndex].revenueCaptured = true;
 
         emit LogSlotRevenueCaptured(
             auctionId,
             slotIndex,
-            (slotRevenue - _secondarySaleFeesForSlot - _royaltyFee),
+            (slotRevenue - _secondarySaleFeesForSlot),
             auction.bidToken
         );
     }
@@ -587,10 +583,15 @@ contract UniverseAuctionHouse is
             }
         }
 
+        // Calculate DAO fee and deduct from auction revenue
+        uint256 _totalRevenueAfterSplits = amountToWithdraw - paymentSplitsPaid;
+        uint256 _royaltyFee = (royaltyFeeBps * _totalRevenueAfterSplits) / 10000;
+        royaltiesReserve[auction.bidToken] = royaltiesReserve[auction.bidToken] + _royaltyFee;
+
         // Distribute the remaining revenue to the auction owner
         if (auction.bidToken == address(0)) {
             (bool success, ) = payable(auction.auctionOwner).call{
-                value: amountToWithdraw - paymentSplitsPaid
+                value: _totalRevenueAfterSplits - _royaltyFee
             }("");
             require(success, "TX FAILED");
         }
@@ -598,7 +599,7 @@ contract UniverseAuctionHouse is
         if (auction.bidToken != address(0)) {
             IERC20Upgradeable bidToken = IERC20Upgradeable(auction.bidToken);
             require(
-                bidToken.transfer(auction.auctionOwner, amountToWithdraw - paymentSplitsPaid),
+                bidToken.transfer(auction.auctionOwner, _totalRevenueAfterSplits - _royaltyFee),
                 "TX FAILED"
             );
         }

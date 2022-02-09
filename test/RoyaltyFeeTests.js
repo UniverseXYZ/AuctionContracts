@@ -85,6 +85,8 @@ describe('Test royalty fee functionality', () => {
       await universeAuctionHouse.captureSlotRevenue(1, (i + 1));
     }
 
+    await universeAuctionHouse.distributeCapturedAuctionRevenue(1);
+
     expect(await universeAuctionHouse.royaltiesReserve(ethAddress)).to.equal("500000000000000000");
 
     await expect(universeAuctionHouse.distributeRoyalties(ethAddress)).emit(
@@ -146,6 +148,8 @@ describe('Test royalty fee functionality', () => {
     for (let i = 0; i < numberOfSlots; i++) {
       await universeAuctionHouse.captureSlotRevenue(1, (i + 1));
     }
+
+    await universeAuctionHouse.distributeCapturedAuctionRevenue(1);
 
     expect(await universeAuctionHouse.royaltiesReserve(tokenAddress)).to.equal('500000000000000000');
 
