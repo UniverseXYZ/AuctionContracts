@@ -1083,55 +1083,40 @@ contract UniverseAuctionHouse is
 
         uint256 averageERC721SalePrice = slot.winningBidAmount / slot.totalDepositedNfts;
         uint256 totalNFTFeesPayableForSlot = 0;
+        uint256 totalCollectionFeesPercentageForSlot = 0;
 
         for (uint256 i = 0; i < slot.totalDepositedNfts; i += 1) {
             DepositedERC721 memory nft = slot.depositedNfts[i + 1];
 
             if (nft.hasSecondarySaleFees) {
-                (LibPart.Part[] memory nftRoyalties,) = royaltiesRegistry.getRoyalties(
+                (LibPart.Part[] memory nftRoyalties, LibPart.Part[] memory collectionRoyalties) = royaltiesRegistry.getRoyalties(
                     nft.tokenAddress,
                     nft.tokenId
                 );
                 uint256 value = averageERC721SalePrice;
 
-                for (uint256 j = 0; j < nftRoyalties.length && j < 5; j += 1) {
-                    FeeCalculate.Fee memory interimFee = value.subFee(
-                        (averageERC721SalePrice * (nftRoyalties[j].value)) / (10000)
-                    );
-                    // TODO:: do we need this value ? Everytime the returned amount is based on the calcs passed into subFee
-                    value = interimFee.remainingValue;
-                    totalNFTFeesPayableForSlot = totalNFTFeesPayableForSlot + (interimFee.feeValue);
+                for (uint256 j = 0; (j < nftRoyalties.length || j < collectionRoyalties.length) && j < 5; j += 1) {
+
+                    if (nftRoyalties.length > j) {
+                        FeeCalculate.Fee memory interimNFTFee = value.subFee(
+                            (averageERC721SalePrice * (nftRoyalties[j].value)) / (10000)
+                        );
+                        totalNFTFeesPayableForSlot = totalNFTFeesPayableForSlot + (interimNFTFee.feeValue);
+                    }
+
+                    if (collectionRoyalties.length > j) {
+                        totalCollectionFeesPercentageForSlot = totalCollectionFeesPercentageForSlot + collectionRoyalties[j].value;
+                    }
                 }
             }
         }
 
-        // We have to make a second loop to deduct the Collection Fees, cus we need the update value
-        // This method could become too expensive, that's why we may need to limit the number of totalDepositedNfts
-        uint256 totalCollectionFeesPayableForSlot = 0;
+        uint256 remainingAmountAfterNftFees = averageERC721SalePrice - totalNFTFeesPayableForSlot;
+        FeeCalculate.Fee memory interimCollectionFee = remainingAmountAfterNftFees.subFee(
+            (remainingAmountAfterNftFees * (totalCollectionFeesPercentageForSlot)) / (10000)
+        );
 
-        for (uint256 i = 0; i < slot.totalDepositedNfts; i += 1) {
-            DepositedERC721 memory nft = slot.depositedNfts[i + 1];
-
-            if (nft.hasSecondarySaleFees) {
-                (, LibPart.Part[] memory collectionRoyalties) = royaltiesRegistry.getRoyalties(
-                    nft.tokenAddress,
-                    nft.tokenId
-                );
-                uint256 value = averageERC721SalePrice - totalNFTFeesPayableForSlot;
-
-                for (uint256 j = 0; j < collectionRoyalties.length && j < 5; j += 1) {
-                    FeeCalculate.Fee memory interimFee = value.subFee(
-                        ((averageERC721SalePrice - totalNFTFeesPayableForSlot) * (collectionRoyalties[j].value)) / (10000)
-                    );
-                    value = interimFee.remainingValue;
-
-                    totalCollectionFeesPayableForSlot = totalCollectionFeesPayableForSlot + (interimFee.feeValue);
-                }
-            }
-        }
-
-        return totalNFTFeesPayableForSlot + totalCollectionFeesPayableForSlot;
-
+        return totalNFTFeesPayableForSlot + interimCollectionFee.feeValue;
     }
 
     function _verifyIndex(
