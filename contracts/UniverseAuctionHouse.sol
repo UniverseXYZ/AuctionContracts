@@ -659,24 +659,43 @@ contract UniverseAuctionHouse is
 
         uint256 averageERC721SalePrice = slot.winningBidAmount / slot.totalDepositedNfts;
 
-        LibPart.Part[] memory fees = royaltiesRegistry.getRoyalties(nft.tokenAddress, nft.tokenId);
+        (LibPart.Part[] memory nftRoyalties, LibPart.Part[] memory collectionRoyalties) = royaltiesRegistry.getRoyalties(nft.tokenAddress, nft.tokenId);
         uint256 value = averageERC721SalePrice;
+        uint256 nftFees = 0;
         nft.feesPaid = true;
 
-        for (uint256 i = 0; i < fees.length && i < 5; i += 1) {
+        for (uint256 i = 0; i < nftRoyalties.length && i < 5; i += 1) {
             FeeCalculate.Fee memory interimFee = value.subFee(
-                (averageERC721SalePrice * (fees[i].value)) / (10000)
+                (averageERC721SalePrice * (nftRoyalties[i].value)) / (10000)
             );
-            value = interimFee.remainingValue;
+            nftFees = nftFees + interimFee.feeValue;
 
             if (auction.bidToken == address(0) && interimFee.feeValue > 0) {
-                (bool success, ) = (fees[i].account).call{value: interimFee.feeValue}("");
+                (bool success, ) = (nftRoyalties[i].account).call{value: interimFee.feeValue}("");
                 require(success, "TX FAILED");
             }
 
             if (auction.bidToken != address(0) && interimFee.feeValue > 0) {
                 IERC20Upgradeable token = IERC20Upgradeable(auction.bidToken);
-                require(token.transfer(address(fees[i].account), interimFee.feeValue), "TX FAILED");
+                require(token.transfer(address(nftRoyalties[i].account), interimFee.feeValue), "TX FAILED");
+            }
+        }
+
+        uint256 valueAfterNftFees = averageERC721SalePrice - nftFees;
+
+        for (uint256 i = 0; i < collectionRoyalties.length && i < 5; i += 1) {
+            FeeCalculate.Fee memory interimFee = valueAfterNftFees.subFee(
+                (valueAfterNftFees * (collectionRoyalties[i].value)) / (10000)
+            );
+
+            if (auction.bidToken == address(0) && interimFee.feeValue > 0) {
+                (bool success, ) = (collectionRoyalties[i].account).call{value: interimFee.feeValue}("");
+                require(success, "TX FAILED");
+            }
+
+            if (auction.bidToken != address(0) && interimFee.feeValue > 0) {
+                IERC20Upgradeable token = IERC20Upgradeable(auction.bidToken);
+                require(token.transfer(address(collectionRoyalties[i].account), interimFee.feeValue), "TX FAILED");
             }
         }
     }
@@ -914,11 +933,13 @@ contract UniverseAuctionHouse is
         uint256 tokenId,
         address tokenAddress
     ) internal returns (uint256) {
+        (LibPart.Part[] memory nftRoyalties, LibPart.Part[] memory collectionRoyalties) = royaltiesRegistry.getRoyalties(tokenAddress, tokenId);
+
         DepositedERC721 memory item = DepositedERC721({
             tokenId: tokenId,
             tokenAddress: tokenAddress,
             depositor: msg.sender,
-            hasSecondarySaleFees: royaltiesRegistry.getRoyalties(tokenAddress, tokenId).length > 0,
+            hasSecondarySaleFees: (nftRoyalties.length > 0 || collectionRoyalties.length > 0),
             feesPaid: false
         });
 
@@ -1061,29 +1082,56 @@ contract UniverseAuctionHouse is
         Slot storage slot = auctions[auctionId].slots[slotIndex];
 
         uint256 averageERC721SalePrice = slot.winningBidAmount / slot.totalDepositedNfts;
-        uint256 totalFeesPayableForSlot = 0;
+        uint256 totalNFTFeesPayableForSlot = 0;
 
         for (uint256 i = 0; i < slot.totalDepositedNfts; i += 1) {
             DepositedERC721 memory nft = slot.depositedNfts[i + 1];
 
             if (nft.hasSecondarySaleFees) {
-                LibPart.Part[] memory fees = royaltiesRegistry.getRoyalties(
+                (LibPart.Part[] memory nftRoyalties,) = royaltiesRegistry.getRoyalties(
                     nft.tokenAddress,
                     nft.tokenId
                 );
                 uint256 value = averageERC721SalePrice;
 
-                for (uint256 j = 0; j < fees.length && j < 5; j += 1) {
+                for (uint256 j = 0; j < nftRoyalties.length && j < 5; j += 1) {
                     FeeCalculate.Fee memory interimFee = value.subFee(
-                        (averageERC721SalePrice * (fees[j].value)) / (10000)
+                        (averageERC721SalePrice * (nftRoyalties[j].value)) / (10000)
                     );
+                    // TODO:: do we need this value ? Everytime the returned amount is based on the calcs passed into subFee
                     value = interimFee.remainingValue;
-                    totalFeesPayableForSlot = totalFeesPayableForSlot + (interimFee.feeValue);
+                    totalNFTFeesPayableForSlot = totalNFTFeesPayableForSlot + (interimFee.feeValue);
                 }
             }
         }
 
-        return totalFeesPayableForSlot;
+        // We have to make a second loop to deduct the Collection Fees, cus we need the update value
+        // This method could become too expensive, that's why we may need to limit the number of totalDepositedNfts
+        uint256 totalCollectionFeesPayableForSlot = 0;
+
+        for (uint256 i = 0; i < slot.totalDepositedNfts; i += 1) {
+            DepositedERC721 memory nft = slot.depositedNfts[i + 1];
+
+            if (nft.hasSecondarySaleFees) {
+                (, LibPart.Part[] memory collectionRoyalties) = royaltiesRegistry.getRoyalties(
+                    nft.tokenAddress,
+                    nft.tokenId
+                );
+                uint256 value = averageERC721SalePrice - totalNFTFeesPayableForSlot;
+
+                for (uint256 j = 0; j < collectionRoyalties.length && j < 5; j += 1) {
+                    FeeCalculate.Fee memory interimFee = value.subFee(
+                        ((averageERC721SalePrice - totalNFTFeesPayableForSlot) * (collectionRoyalties[j].value)) / (10000)
+                    );
+                    value = interimFee.remainingValue;
+
+                    totalCollectionFeesPayableForSlot = totalCollectionFeesPayableForSlot + (interimFee.feeValue);
+                }
+            }
+        }
+
+        return totalNFTFeesPayableForSlot + totalCollectionFeesPayableForSlot;
+
     }
 
     function _verifyIndex(
