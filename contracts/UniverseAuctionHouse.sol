@@ -621,7 +621,7 @@ contract UniverseAuctionHouse is
         emit LogERC721RewardsClaim(claimer, auctionId, slotIndex);
 
         for (uint256 i = totalWithdrawn; i < amount + totalWithdrawn; i += 1) {
-            DepositedERC721 memory nftForWithdrawal = winningSlot.depositedNfts[i + 1];
+            DepositedERC721 storage nftForWithdrawal = winningSlot.depositedNfts[i + 1];
 
             auction.totalWithdrawnERC721s = auction.totalWithdrawnERC721s + 1;
             auction.slots[slotIndex].totalWithdrawnNfts =
