@@ -243,7 +243,6 @@ contract UniverseAuctionHouse is
         onlyExistingAuction(auctionId)
         onlyAuctionStarted(auctionId)
         onlyAuctionNotCanceled(auctionId)
-        nonReentrant
     {
         Auction storage auction = auctions[auctionId];
 
@@ -296,7 +295,6 @@ contract UniverseAuctionHouse is
         override
         onlyExistingAuction(auctionId)
         onlyAuctionStarted(auctionId)
-        nonReentrant
     {
         Auction storage auction = auctions[auctionId];
         address payable recipient = payable(msg.sender);
@@ -318,7 +316,6 @@ contract UniverseAuctionHouse is
         onlyExistingAuction(auctionId)
         onlyAuctionStarted(auctionId)
         onlyAuctionNotCanceled(auctionId)
-        nonReentrant
     {
         Auction storage auction = auctions[auctionId];
 
@@ -333,14 +330,12 @@ contract UniverseAuctionHouse is
         if (bidderCurrentBalance == 0) {
             // If total bids are less than total slots, add bid without checking if the bid is within the winning slots (isWinningBid())
             if (auction.numberOfBids < auction.numberOfSlots) {
-                require(bidToken.transferFrom(msg.sender, address(this), amount), "TX FAILED");
                 addBid(auctionId, msg.sender, amount);
 
                 // Check if slots are filled (if we have more bids than slots)
             } else if (auction.numberOfBids >= auction.numberOfSlots) {
                 // If slots are filled, check if the bid is within the winning slots
                 require(isWinningBid(auctionId, amount), "E20");
-                require(bidToken.transferFrom(msg.sender, address(this), amount), "TX FAILED");
 
                 // Add bid only if it is within the winning slots
                 addBid(auctionId, msg.sender, amount);
@@ -353,13 +348,11 @@ contract UniverseAuctionHouse is
 
             // If total bids are less than total slots update the bid directly
             if (auction.numberOfBids < auction.numberOfSlots) {
-                require(bidToken.transferFrom(msg.sender, address(this), amount), "TX FAILED");
                 updateBid(auctionId, msg.sender, bidderCurrentBalance + amount);
 
                 // If slots are filled, check if the current bidder balance + the new amount will be withing the winning slots
             } else if (auction.numberOfBids >= auction.numberOfSlots) {
                 require(isWinningBid(auctionId, bidderCurrentBalance + amount), "E20");
-                require(bidToken.transferFrom(msg.sender, address(this), amount), "TX FAILED");
                 // Update the bid if the new incremented balance falls within the winning slots
                 updateBid(auctionId, msg.sender, bidderCurrentBalance + amount);
             }
@@ -369,6 +362,8 @@ contract UniverseAuctionHouse is
             // Extend the auction if the remaining time is less than the reset timer
             extendAuction(auctionId);
         }
+
+        require(bidToken.transferFrom(msg.sender, address(this), amount), "TX FAILED");
     }
 
     function withdrawERC20Bid(uint256 auctionId)
@@ -376,7 +371,6 @@ contract UniverseAuctionHouse is
         override
         onlyExistingAuction(auctionId)
         onlyAuctionStarted(auctionId)
-        nonReentrant
     {
         Auction storage auction = auctions[auctionId];
         address sender = msg.sender;
@@ -419,7 +413,6 @@ contract UniverseAuctionHouse is
         override
         onlyExistingAuction(auctionId)
         onlyAuctionNotCanceled(auctionId)
-        nonReentrant
     {
         Auction storage auction = auctions[auctionId];
 
@@ -704,7 +697,6 @@ contract UniverseAuctionHouse is
         external
         override
         onlyDAO
-        nonReentrant
         returns (uint256)
     {
         uint256 amountToWithdraw = royaltiesReserve[token];
