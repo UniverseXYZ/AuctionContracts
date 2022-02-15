@@ -263,8 +263,8 @@ describe('Secondary Sale Fees Tests', () => {
     const balance1 = await ethers.provider.getBalance(randomWallet1.address);
     const balance2 = await ethers.provider.getBalance(randomWallet2.address);
 
-    expect(Number(ethers.utils.formatEther(balance1).toString())).to.equal(0.81);
-    expect(Number(ethers.utils.formatEther(balance2).toString())).to.equal(0.9);
+    expect(Number(ethers.utils.formatEther(balance1).toString())).to.equal(0.9);
+    expect(Number(ethers.utils.formatEther(balance2).toString())).to.equal(0.81);
 
     await expect(universeAuctionHouse.distributeCapturedAuctionRevenue(1)).to.be.emit(universeAuctionHouse, 'LogAuctionRevenueWithdrawal');
 
@@ -358,10 +358,10 @@ describe('Secondary Sale Fees Tests', () => {
     const balance3 = await ethers.provider.getBalance(randomWallet3.address);
     const balance4 = await ethers.provider.getBalance(randomWallet4.address);
 
-    expect(Number(ethers.utils.formatEther(balance1).toString())).to.equal(0.8);
-    expect(Number(ethers.utils.formatEther(balance3).toString())).to.equal(0.8);
-    expect(Number(ethers.utils.formatEther(balance2).toString())).to.equal(1);
-    expect(Number(ethers.utils.formatEther(balance4).toString())).to.equal(1);
+    expect(Number(ethers.utils.formatEther(balance1).toString())).to.equal(1);
+    expect(Number(ethers.utils.formatEther(balance3).toString())).to.equal(1);
+    expect(Number(ethers.utils.formatEther(balance2).toString())).to.equal(0.8);
+    expect(Number(ethers.utils.formatEther(balance4).toString())).to.equal(0.8);
 
     await expect(universeAuctionHouse.distributeCapturedAuctionRevenue(1)).to.be.emit(universeAuctionHouse, 'LogAuctionRevenueWithdrawal');
 
@@ -463,23 +463,23 @@ describe('Secondary Sale Fees Tests', () => {
     const balance4 = await ethers.provider.getBalance(randomWallet4.address);
     const balance6 = await ethers.provider.getBalance(randomWallet4.address);
 
-    // Address 2 & 4 & 6 should receive 10% on NFT Royalty Level 10 % from 10 ETH = 1 ETH
-    expect(Number(ethers.utils.formatEther(balance2).toString())).to.equal(1);
-    expect(Number(ethers.utils.formatEther(balance4).toString())).to.equal(1);
-    expect(Number(ethers.utils.formatEther(balance6).toString())).to.equal(1);
+    // Address 1 & 3 should receive 10% on Collection Royalty Level 10% from 10 ETH = 1 ETH
+    expect(Number(ethers.utils.formatEther(balance1).toString())).to.equal(1);
+    expect(Number(ethers.utils.formatEther(balance3).toString())).to.equal(1);
 
-    // Address 1 & 3 should receive 10% on Collection Royalty Level 10% from 8 ETH = 0.8 ETH
-    expect(Number(ethers.utils.formatEther(balance1).toString())).to.equal(0.7);
-    expect(Number(ethers.utils.formatEther(balance3).toString())).to.equal(0.7);
+    // Address 2 & 4 & 6 should receive 10% on NFT Royalty Level 10 % from 8 ETH = 0.8 ETH
+    expect(Number(ethers.utils.formatEther(balance2).toString())).to.equal(0.8);
+    expect(Number(ethers.utils.formatEther(balance4).toString())).to.equal(0.8);
+    expect(Number(ethers.utils.formatEther(balance6).toString())).to.equal(0.8);
 
     await expect(universeAuctionHouse.distributeCapturedAuctionRevenue(1)).to.be.emit(universeAuctionHouse, 'LogAuctionRevenueWithdrawal');
 
-    // Address 5 should receive 10% on Auction Royalty Level 10 % from 5.6 ETH = 0.56 ETH
-    const balance5 = await ethers.provider.getBalance(randomWallet5.address);
-    expect(Number(ethers.utils.formatEther(balance5).toString())).to.equal(0.56);
+    // DAO should receive 10% from 5.6 = 0.56
+    expect(await universeAuctionHouse.royaltiesReserve(ethAddress)).to.equal("560000000000000000");
 
-    // DAO should receive 10% = 0.576
-    expect(await universeAuctionHouse.royaltiesReserve(ethAddress)).to.equal("504000000000000000");
+    // Address 5 should receive 10% on Auction Royalty Level 10 % from 5.04 ETH = 0.504 ETH
+    const balance5 = await ethers.provider.getBalance(randomWallet5.address);
+    expect(Number(ethers.utils.formatEther(balance5).toString())).to.equal(0.504);
 
     // Distribute the Royalties
     await expect(universeAuctionHouse.distributeRoyalties(ethAddress)).emit(
@@ -630,29 +630,29 @@ describe('Secondary Sale Fees Tests', () => {
     const balance9 = await ethers.provider.getBalance(randomWallet9.address);
     const balance10 = await ethers.provider.getBalance(randomWallet10.address);
 
-    // Address 1 - 5 should receive 10% on NFT Royalty Level per NFT = 100
+    // Address 6 - 10 should receive 10% on Collection Royalty Level 10% from 10 ETH = 1 ETH
     // 1 slot has 100 nfts => NFT price = 10 (eth bid) / 100 = 0.1 => One address should receive 10 % from 0.1 = 0.01 => Total = 100 (NFTs) * 0.01 = 1;
-    expect(Number(ethers.utils.formatEther(balance1).toString())).to.equal(1);
-    expect(Number(ethers.utils.formatEther(balance2).toString())).to.equal(1);
-    expect(Number(ethers.utils.formatEther(balance3).toString())).to.equal(1);
-    expect(Number(ethers.utils.formatEther(balance4).toString())).to.equal(1);
-    expect(Number(ethers.utils.formatEther(balance5).toString())).to.equal(1);
+    expect(Number(ethers.utils.formatEther(balance6).toString())).to.equal(1);
+    expect(Number(ethers.utils.formatEther(balance7).toString())).to.equal(1);
+    expect(Number(ethers.utils.formatEther(balance8).toString())).to.equal(1);
+    expect(Number(ethers.utils.formatEther(balance9).toString())).to.equal(1);
+    expect(Number(ethers.utils.formatEther(balance10).toString())).to.equal(1);
 
-    // Address 6 - 10 should receive 10% on Collection Royalty Level 10% from 5 ETH = 0.5 ETH
-    expect(Number(ethers.utils.formatEther(balance6).toString())).to.equal(0.5);
-    expect(Number(ethers.utils.formatEther(balance7).toString())).to.equal(0.5);
-    expect(Number(ethers.utils.formatEther(balance8).toString())).to.equal(0.5);
-    expect(Number(ethers.utils.formatEther(balance9).toString())).to.equal(0.5);
-    expect(Number(ethers.utils.formatEther(balance10).toString())).to.equal(0.5);
+    // Address 1 - 5 should receive 10% on NFT Royalty Level
+    expect(Number(ethers.utils.formatEther(balance1).toString())).to.equal(0.5);
+    expect(Number(ethers.utils.formatEther(balance2).toString())).to.equal(0.5);
+    expect(Number(ethers.utils.formatEther(balance3).toString())).to.equal(0.5);
+    expect(Number(ethers.utils.formatEther(balance4).toString())).to.equal(0.5);
+    expect(Number(ethers.utils.formatEther(balance5).toString())).to.equal(0.5);
 
     await expect(universeAuctionHouse.distributeCapturedAuctionRevenue(1)).to.be.emit(universeAuctionHouse, 'LogAuctionRevenueWithdrawal');
 
-    // Address 5 should receive 10% on Auction Royalty Level 10 % from 2.5 ETH = 0.25 ETH
-    const balance11 = await ethers.provider.getBalance(randomWallet11.address);
-    expect(Number(ethers.utils.formatEther(balance11).toString())).to.equal(0.25);
+    // DAO should receive 10% on Auction Royalty Level 10 % from 2.5 ETH = 0.25 ETH
+    expect(await universeAuctionHouse.royaltiesReserve(ethAddress)).to.equal("250000000000000000");
 
-    // DAO should receive 10% from 2.25 = 0.225
-    expect(await universeAuctionHouse.royaltiesReserve(ethAddress)).to.equal("225000000000000000");
+    // Address 5 should receive 10% from 2.25 = 0.225
+    const balance11 = await ethers.provider.getBalance(randomWallet11.address);
+    expect(Number(ethers.utils.formatEther(balance11).toString())).to.equal(0.225);
 
     // Distribute the Royalties
     await expect(universeAuctionHouse.distributeRoyalties(ethAddress)).emit(
