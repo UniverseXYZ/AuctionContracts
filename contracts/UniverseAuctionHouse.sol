@@ -661,6 +661,8 @@ contract UniverseAuctionHouse is
             FeeCalculate.Fee memory interimFee = value.subFee(
                 (averageERC721SalePrice * (nftRoyalties[i].value)) / (10000)
             );
+
+            value = interimFee.remainingValue;
             nftFees = nftFees + interimFee.feeValue;
 
             if (auction.bidToken == address(0) && interimFee.feeValue > 0) {
@@ -675,11 +677,14 @@ contract UniverseAuctionHouse is
         }
 
         uint256 valueAfterNftFees = averageERC721SalePrice - nftFees;
+        value = averageERC721SalePrice - nftFees;
+
 
         for (uint256 i = 0; i < collectionRoyalties.length && i < 5; i += 1) {
-            FeeCalculate.Fee memory interimFee = valueAfterNftFees.subFee(
+            FeeCalculate.Fee memory interimFee = value.subFee(
                 (valueAfterNftFees * (collectionRoyalties[i].value)) / (10000)
             );
+            value = interimFee.remainingValue;
 
             if (auction.bidToken == address(0) && interimFee.feeValue > 0) {
                 (bool success, ) = (collectionRoyalties[i].account).call{value: interimFee.feeValue}("");
@@ -1093,6 +1098,7 @@ contract UniverseAuctionHouse is
                         FeeCalculate.Fee memory interimNFTFee = value.subFee(
                             (averageERC721SalePrice * (nftRoyalties[j].value)) / (10000)
                         );
+                        value = interimNFTFee.remainingValue;
                         totalNFTFeesPayableForSlot = totalNFTFeesPayableForSlot + (interimNFTFee.feeValue);
                     }
 
@@ -1103,9 +1109,9 @@ contract UniverseAuctionHouse is
             }
         }
 
-        uint256 remainingAmountAfterNftFees = averageERC721SalePrice - totalNFTFeesPayableForSlot;
+        uint256 remainingAmountAfterNftFees = slot.winningBidAmount - totalNFTFeesPayableForSlot;
         FeeCalculate.Fee memory interimCollectionFee = remainingAmountAfterNftFees.subFee(
-            (remainingAmountAfterNftFees * (totalCollectionFeesPercentageForSlot)) / (10000)
+            (remainingAmountAfterNftFees * (totalCollectionFeesPercentageForSlot / slot.totalDepositedNfts)) / 10000
         );
 
         return totalNFTFeesPayableForSlot + interimCollectionFee.feeValue;
