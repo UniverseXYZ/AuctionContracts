@@ -22,7 +22,6 @@ interface IUniverseAuctionHouse {
         mapping(uint256 => Slot) slots;
         mapping(address => uint256) bidBalance;
         mapping(address => address) nextBidders;
-        mapping(uint256 => address) winners;
         PaymentSplit[] paymentSplits;
     }
 

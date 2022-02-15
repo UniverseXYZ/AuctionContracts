@@ -445,7 +445,6 @@ contract UniverseAuctionHouse is
                         bidders[i]
                     ];
                     auction.slots[lastAwardedIndex].winner = bidders[i];
-                    auction.winners[lastAwardedIndex] = bidders[i];
 
                     emit LogBidMatched(
                         auctionId,
@@ -602,7 +601,7 @@ contract UniverseAuctionHouse is
         uint256 totalWithdrawn = winningSlot.totalWithdrawnNfts;
 
         require(auction.isFinalized && winningSlot.revenueCaptured, "E24");
-        require(auction.winners[slotIndex] == claimer, "E31");
+        require(auction.slots[slotIndex].winner == claimer, "E31");
         require(winningSlot.reservePriceReached, "E32");
 
         require(amount <= 40, "E25");
@@ -785,7 +784,7 @@ contract UniverseAuctionHouse is
         override
         returns (address)
     {
-        return auctions[auctionId].winners[slotIndex];
+        return auctions[auctionId].slots[slotIndex].winner;
     }
 
     function getBidderBalance(uint256 auctionId, address bidder)
