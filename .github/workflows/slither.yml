@@ -19,7 +19,7 @@ jobs:
       - name: Compile Contracts
         run: yarn compile
       - name: Slither Static Analysis
-        uses: luisfontes19/slither-static-analysis-action@v0.3.2
+        uses: luisfontes19/slither-static-analysis-action@v0.3.4
         with:
           slither-version: '0.8.2'
           run-npm-install: true
