@@ -430,36 +430,35 @@ contract UniverseAuctionHouse is
 
         // Award the slots by checking the highest bidders and minimum reserve values
         // Upper bound for bidders.length is maxNumberOfSlotsPerAuction
-        for (uint256 i = 0; i < bidders.length; i += 1) {
+        for (uint256 i = 0; i < bidders.length;) {
             for (
                 lastAwardedIndex;
                 lastAwardedIndex < auction.numberOfSlots;
-                lastAwardedIndex += 1
             ) {
+                unchecked { lastAwardedIndex += 1; }
                 if (
                     auction.bidBalance[bidders[i]] >=
-                    auction.slots[lastAwardedIndex + 1].reservePrice
+                    auction.slots[lastAwardedIndex].reservePrice
                 ) {
-                    auction.slots[lastAwardedIndex + 1].reservePriceReached = true;
-                    auction.slots[lastAwardedIndex + 1].winningBidAmount = auction.bidBalance[
+                    auction.slots[lastAwardedIndex].reservePriceReached = true;
+                    auction.slots[lastAwardedIndex].winningBidAmount = auction.bidBalance[
                         bidders[i]
                     ];
-                    auction.slots[lastAwardedIndex + 1].winner = bidders[i];
-                    auction.winners[lastAwardedIndex + 1] = bidders[i];
+                    auction.slots[lastAwardedIndex].winner = bidders[i];
+                    auction.winners[lastAwardedIndex] = bidders[i];
 
                     emit LogBidMatched(
                         auctionId,
-                        lastAwardedIndex + 1,
-                        auction.slots[lastAwardedIndex + 1].reservePrice,
-                        auction.slots[lastAwardedIndex + 1].winningBidAmount,
-                        auction.slots[lastAwardedIndex + 1].winner
+                        lastAwardedIndex,
+                        auction.slots[lastAwardedIndex].reservePrice,
+                        auction.slots[lastAwardedIndex].winningBidAmount,
+                        auction.slots[lastAwardedIndex].winner
                     );
-
-                    lastAwardedIndex += 1;
 
                     break;
                 }
             }
+            unchecked { i += 1;}
         }
 
         auction.isFinalized = true;
