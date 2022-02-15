@@ -600,7 +600,7 @@ contract UniverseAuctionHouse is
         uint256 totalDeposited = winningSlot.totalDepositedNfts;
         uint256 totalWithdrawn = winningSlot.totalWithdrawnNfts;
 
-        require(auction.isFinalized && winningSlot.revenueCaptured, "E24");
+        require(auction.isFinalized, "E24");
         require(auction.slots[slotIndex].winner == claimer, "E31");
         require(winningSlot.reservePriceReached, "E32");
 
