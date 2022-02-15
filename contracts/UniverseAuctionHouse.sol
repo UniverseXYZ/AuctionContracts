@@ -5,6 +5,7 @@ import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol"
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/utils/ERC721HolderUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import "./interfaces/IRoyaltiesProvider.sol";
 import "./interfaces/IUniverseAuctionHouse.sol";
 import "./lib/LibPart.sol";
@@ -16,6 +17,7 @@ contract UniverseAuctionHouse is
     ReentrancyGuardUpgradeable
 {
     using FeeCalculate for uint256;
+    using SafeERC20Upgradeable for IERC20Upgradeable;
 
     uint256 public totalAuctions;
     uint256 public maxNumberOfSlotsPerAuction;
@@ -363,7 +365,7 @@ contract UniverseAuctionHouse is
             extendAuction(auctionId);
         }
 
-        require(bidToken.transferFrom(msg.sender, address(this), amount), "TX FAILED");
+        bidToken.safeTransferFrom(msg.sender, address(this), amount);
     }
 
     function withdrawERC20Bid(uint256 auctionId)
@@ -384,7 +386,7 @@ contract UniverseAuctionHouse is
 
         emit LogBidWithdrawal(sender, auctionId, amount);
 
-        require(bidToken.transfer(sender, amount), "TX FAILED");
+        bidToken.safeTransfer(sender, amount);
     }
 
     function withdrawERC721FromNonWinningSlot(
@@ -570,13 +572,7 @@ contract UniverseAuctionHouse is
 
             if (auction.bidToken != address(0) && interimFee.feeValue > 0) {
                 IERC20Upgradeable token = IERC20Upgradeable(auction.bidToken);
-                require(
-                    token.transfer(
-                        address(auction.paymentSplits[i].recipient),
-                        interimFee.feeValue
-                    ),
-                    "TX FAILED"
-                );
+                token.safeTransfer(address(auction.paymentSplits[i].recipient), interimFee.feeValue);
             }
         }
 
@@ -590,10 +586,7 @@ contract UniverseAuctionHouse is
 
         if (auction.bidToken != address(0)) {
             IERC20Upgradeable bidToken = IERC20Upgradeable(auction.bidToken);
-            require(
-                bidToken.transfer(auction.auctionOwner, _totalRevenueAfterDaoFees - paymentSplitsPaid),
-                "TX FAILED"
-            );
+            bidToken.safeTransfer(auction.auctionOwner, _totalRevenueAfterDaoFees - paymentSplitsPaid);
         }
     }
 
@@ -671,7 +664,7 @@ contract UniverseAuctionHouse is
 
             if (auction.bidToken != address(0) && interimFee.feeValue > 0) {
                 IERC20Upgradeable token = IERC20Upgradeable(auction.bidToken);
-                require(token.transfer(address(collectionRoyalties[i].account), interimFee.feeValue), "TX FAILED");
+                token.safeTransfer(address(collectionRoyalties[i].account), interimFee.feeValue);
             }
         }
 
@@ -692,7 +685,7 @@ contract UniverseAuctionHouse is
 
             if (auction.bidToken != address(0) && interimFee.feeValue > 0) {
                 IERC20Upgradeable token = IERC20Upgradeable(auction.bidToken);
-                require(token.transfer(address(nftRoyalties[i].account), interimFee.feeValue), "TX FAILED");
+                token.safeTransfer(address(nftRoyalties[i].account), interimFee.feeValue);
             }
         }
     }
@@ -717,7 +710,7 @@ contract UniverseAuctionHouse is
 
         if (token != address(0)) {
             IERC20Upgradeable erc20token = IERC20Upgradeable(token);
-            require(erc20token.transfer(daoAddress, amountToWithdraw), "TX TX FAILED");
+            erc20token.safeTransfer(daoAddress, amountToWithdraw);
         }
 
         return amountToWithdraw;
