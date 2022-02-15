@@ -11,13 +11,13 @@ jobs:
         with:
           node-version: '14'
       - name: Install dependencies
-        run: npm install
+        run: yarn
       - name: Configure Hardhat
         env:
           HARDHAT_CONFIG : ${{secrets.HARDHAT_CONFIG}}
         run: echo "$HARDHAT_CONFIG" > hardhat.config.js
       - name: Compile Contracts
-        run: npx hardhat compile
+        run: yarn compile
       - name: Slither Static Analysis
         uses: luisfontes19/slither-static-analysis-action@v0.3.2
         with:
