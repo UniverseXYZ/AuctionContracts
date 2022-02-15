@@ -169,11 +169,6 @@ contract UniverseAuctionHouse is
             "E11"
         );
 
-        // Ensure minimum reserve values are lower for descending slot numbers
-        for (uint256 i = 1; i < config.minimumReserveValues.length; i += 1) {
-            require(config.minimumReserveValues[i - 1] >= config.minimumReserveValues[i], "E12");
-        }
-
         uint256 auctionId = totalAuctions + 1;
 
         auctions[auctionId].auctionOwner = msg.sender;
@@ -185,9 +180,12 @@ contract UniverseAuctionHouse is
         auctions[auctionId].bidToken = config.bidToken;
         auctions[auctionId].nextBidders[GUARD] = GUARD;
 
-        for (uint256 j = 0; j < config.minimumReserveValues.length; j += 1) {
-            auctions[auctionId].slots[j + 1].reservePrice = config.minimumReserveValues[j];
-        }
+        // Ensure minimum reserve values are lower for descending slot numbers
+        uint256 i = 1;
+        for (; i < config.minimumReserveValues.length; i += 1) {
+            require(config.minimumReserveValues[i - 1] >= config.minimumReserveValues[i], "E12"); 
+            auctions[auctionId].slots[i].reservePrice = config.minimumReserveValues[i - 1]; 
+        } 
 
         uint256 checkSum = 0;
         for (uint256 k = 0; k < config.paymentSplits.length; k += 1) {
