@@ -616,14 +616,12 @@ contract UniverseAuctionHouse is
             auction.slots[slotIndex].totalWithdrawnNfts =
                 auction.slots[slotIndex].totalWithdrawnNfts +
                 1;
-
-            if (nftForWithdrawal.tokenId != 0) {
-                IERC721Upgradeable(nftForWithdrawal.tokenAddress).safeTransferFrom(
-                    address(this),
-                    claimer,
-                    nftForWithdrawal.tokenId
-                );
-            }
+            IERC721Upgradeable(nftForWithdrawal.tokenAddress).safeTransferFrom(
+                address(this),
+                claimer,
+                nftForWithdrawal.tokenId
+            );
+            
         }
     }
 
