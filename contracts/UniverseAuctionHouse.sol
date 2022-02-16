@@ -5,6 +5,7 @@ import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol"
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/utils/ERC721HolderUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import "./interfaces/IRoyaltiesProvider.sol";
 import "./interfaces/IUniverseAuctionHouse.sol";
 import "./lib/LibPart.sol";
@@ -16,6 +17,7 @@ contract UniverseAuctionHouse is
     ReentrancyGuardUpgradeable
 {
     using FeeCalculate for uint256;
+    using SafeERC20Upgradeable for IERC20Upgradeable;
 
     uint256 public totalAuctions;
     uint256 public maxNumberOfSlotsPerAuction;
@@ -167,11 +169,6 @@ contract UniverseAuctionHouse is
             "E11"
         );
 
-        // Ensure minimum reserve values are lower for descending slot numbers
-        for (uint256 i = 1; i < config.minimumReserveValues.length; i += 1) {
-            require(config.minimumReserveValues[i - 1] >= config.minimumReserveValues[i], "E12");
-        }
-
         uint256 auctionId = totalAuctions + 1;
 
         auctions[auctionId].auctionOwner = msg.sender;
@@ -183,9 +180,12 @@ contract UniverseAuctionHouse is
         auctions[auctionId].bidToken = config.bidToken;
         auctions[auctionId].nextBidders[GUARD] = GUARD;
 
-        for (uint256 j = 0; j < config.minimumReserveValues.length; j += 1) {
-            auctions[auctionId].slots[j + 1].reservePrice = config.minimumReserveValues[j];
-        }
+        // Ensure minimum reserve values are lower for descending slot numbers
+        uint256 i = 1;
+        for (; i < config.minimumReserveValues.length; i += 1) {
+            require(config.minimumReserveValues[i - 1] >= config.minimumReserveValues[i], "E12"); 
+            auctions[auctionId].slots[i].reservePrice = config.minimumReserveValues[i - 1]; 
+        } 
 
         uint256 checkSum = 0;
         for (uint256 k = 0; k < config.paymentSplits.length; k += 1) {
@@ -243,7 +243,6 @@ contract UniverseAuctionHouse is
         onlyExistingAuction(auctionId)
         onlyAuctionStarted(auctionId)
         onlyAuctionNotCanceled(auctionId)
-        nonReentrant
     {
         Auction storage auction = auctions[auctionId];
 
@@ -296,7 +295,6 @@ contract UniverseAuctionHouse is
         override
         onlyExistingAuction(auctionId)
         onlyAuctionStarted(auctionId)
-        nonReentrant
     {
         Auction storage auction = auctions[auctionId];
         address payable recipient = payable(msg.sender);
@@ -318,7 +316,6 @@ contract UniverseAuctionHouse is
         onlyExistingAuction(auctionId)
         onlyAuctionStarted(auctionId)
         onlyAuctionNotCanceled(auctionId)
-        nonReentrant
     {
         Auction storage auction = auctions[auctionId];
 
@@ -333,14 +330,12 @@ contract UniverseAuctionHouse is
         if (bidderCurrentBalance == 0) {
             // If total bids are less than total slots, add bid without checking if the bid is within the winning slots (isWinningBid())
             if (auction.numberOfBids < auction.numberOfSlots) {
-                require(bidToken.transferFrom(msg.sender, address(this), amount), "TX FAILED");
                 addBid(auctionId, msg.sender, amount);
 
                 // Check if slots are filled (if we have more bids than slots)
             } else if (auction.numberOfBids >= auction.numberOfSlots) {
                 // If slots are filled, check if the bid is within the winning slots
                 require(isWinningBid(auctionId, amount), "E20");
-                require(bidToken.transferFrom(msg.sender, address(this), amount), "TX FAILED");
 
                 // Add bid only if it is within the winning slots
                 addBid(auctionId, msg.sender, amount);
@@ -353,13 +348,11 @@ contract UniverseAuctionHouse is
 
             // If total bids are less than total slots update the bid directly
             if (auction.numberOfBids < auction.numberOfSlots) {
-                require(bidToken.transferFrom(msg.sender, address(this), amount), "TX FAILED");
                 updateBid(auctionId, msg.sender, bidderCurrentBalance + amount);
 
                 // If slots are filled, check if the current bidder balance + the new amount will be withing the winning slots
             } else if (auction.numberOfBids >= auction.numberOfSlots) {
                 require(isWinningBid(auctionId, bidderCurrentBalance + amount), "E20");
-                require(bidToken.transferFrom(msg.sender, address(this), amount), "TX FAILED");
                 // Update the bid if the new incremented balance falls within the winning slots
                 updateBid(auctionId, msg.sender, bidderCurrentBalance + amount);
             }
@@ -369,6 +362,8 @@ contract UniverseAuctionHouse is
             // Extend the auction if the remaining time is less than the reset timer
             extendAuction(auctionId);
         }
+
+        bidToken.safeTransferFrom(msg.sender, address(this), amount);
     }
 
     function withdrawERC20Bid(uint256 auctionId)
@@ -376,7 +371,6 @@ contract UniverseAuctionHouse is
         override
         onlyExistingAuction(auctionId)
         onlyAuctionStarted(auctionId)
-        nonReentrant
     {
         Auction storage auction = auctions[auctionId];
         address sender = msg.sender;
@@ -390,7 +384,7 @@ contract UniverseAuctionHouse is
 
         emit LogBidWithdrawal(sender, auctionId, amount);
 
-        require(bidToken.transfer(sender, amount), "TX FAILED");
+        bidToken.safeTransfer(sender, amount);
     }
 
     function withdrawERC721FromNonWinningSlot(
@@ -419,7 +413,6 @@ contract UniverseAuctionHouse is
         override
         onlyExistingAuction(auctionId)
         onlyAuctionNotCanceled(auctionId)
-        nonReentrant
     {
         Auction storage auction = auctions[auctionId];
 
@@ -437,36 +430,34 @@ contract UniverseAuctionHouse is
 
         // Award the slots by checking the highest bidders and minimum reserve values
         // Upper bound for bidders.length is maxNumberOfSlotsPerAuction
-        for (uint256 i = 0; i < bidders.length; i += 1) {
+        for (uint256 i = 0; i < bidders.length;) {
             for (
                 lastAwardedIndex;
                 lastAwardedIndex < auction.numberOfSlots;
-                lastAwardedIndex += 1
             ) {
+                unchecked { lastAwardedIndex += 1; }
                 if (
                     auction.bidBalance[bidders[i]] >=
-                    auction.slots[lastAwardedIndex + 1].reservePrice
+                    auction.slots[lastAwardedIndex].reservePrice
                 ) {
-                    auction.slots[lastAwardedIndex + 1].reservePriceReached = true;
-                    auction.slots[lastAwardedIndex + 1].winningBidAmount = auction.bidBalance[
+                    auction.slots[lastAwardedIndex].reservePriceReached = true;
+                    auction.slots[lastAwardedIndex].winningBidAmount = auction.bidBalance[
                         bidders[i]
                     ];
-                    auction.slots[lastAwardedIndex + 1].winner = bidders[i];
-                    auction.winners[lastAwardedIndex + 1] = bidders[i];
+                    auction.slots[lastAwardedIndex].winner = bidders[i];
 
                     emit LogBidMatched(
                         auctionId,
-                        lastAwardedIndex + 1,
-                        auction.slots[lastAwardedIndex + 1].reservePrice,
-                        auction.slots[lastAwardedIndex + 1].winningBidAmount,
-                        auction.slots[lastAwardedIndex + 1].winner
+                        lastAwardedIndex,
+                        auction.slots[lastAwardedIndex].reservePrice,
+                        auction.slots[lastAwardedIndex].winningBidAmount,
+                        auction.slots[lastAwardedIndex].winner
                     );
-
-                    lastAwardedIndex += 1;
 
                     break;
                 }
             }
+            unchecked { i += 1;}
         }
 
         auction.isFinalized = true;
@@ -503,16 +494,12 @@ contract UniverseAuctionHouse is
             }
         }
 
-        // Calculate DAO fee and deduct from auction revenue
-        uint256 _royaltyFee = (royaltyFeeBps * slotRevenue) / 10000;
-        auctionsRevenue[auctionId] = auctionsRevenue[auctionId] - _royaltyFee;
-        royaltiesReserve[auction.bidToken] = royaltiesReserve[auction.bidToken] + _royaltyFee;
         auction.slots[slotIndex].revenueCaptured = true;
 
         emit LogSlotRevenueCaptured(
             auctionId,
             slotIndex,
-            (slotRevenue - _secondarySaleFeesForSlot - _royaltyFee),
+            (slotRevenue - _secondarySaleFeesForSlot),
             auction.bidToken
         );
     }
@@ -553,17 +540,22 @@ contract UniverseAuctionHouse is
         uint256 amountToWithdraw = auctionsRevenue[auctionId];
         require(amountToWithdraw > 0, "E30");
 
-        uint256 value = amountToWithdraw;
-        uint256 paymentSplitsPaid;
-
         auctionsRevenue[auctionId] = 0;
+
+        // Calculate DAO fee and deduct from auction revenue
+        uint256 _royaltyFee = (royaltyFeeBps * amountToWithdraw) / 10000;
+        royaltiesReserve[auction.bidToken] = royaltiesReserve[auction.bidToken] + _royaltyFee;
+        uint256 _totalRevenueAfterDaoFees = amountToWithdraw - _royaltyFee;
+
+        uint256 value = _totalRevenueAfterDaoFees;
+        uint256 paymentSplitsPaid;
 
         emit LogAuctionRevenueWithdrawal(auction.auctionOwner, auctionId, amountToWithdraw);
 
         // Distribute the payment splits to the respective recipients
         for (uint256 i = 0; i < auction.paymentSplits.length && i < 5; i += 1) {
             FeeCalculate.Fee memory interimFee = value.subFee(
-                (amountToWithdraw * auction.paymentSplits[i].value) / 10000
+                (_totalRevenueAfterDaoFees * auction.paymentSplits[i].value) / 10000
             );
             value = interimFee.remainingValue;
             paymentSplitsPaid = paymentSplitsPaid + interimFee.feeValue;
@@ -577,30 +569,21 @@ contract UniverseAuctionHouse is
 
             if (auction.bidToken != address(0) && interimFee.feeValue > 0) {
                 IERC20Upgradeable token = IERC20Upgradeable(auction.bidToken);
-                require(
-                    token.transfer(
-                        address(auction.paymentSplits[i].recipient),
-                        interimFee.feeValue
-                    ),
-                    "TX FAILED"
-                );
+                token.safeTransfer(address(auction.paymentSplits[i].recipient), interimFee.feeValue);
             }
         }
 
         // Distribute the remaining revenue to the auction owner
         if (auction.bidToken == address(0)) {
             (bool success, ) = payable(auction.auctionOwner).call{
-                value: amountToWithdraw - paymentSplitsPaid
+                value: _totalRevenueAfterDaoFees - paymentSplitsPaid
             }("");
             require(success, "TX FAILED");
         }
 
         if (auction.bidToken != address(0)) {
             IERC20Upgradeable bidToken = IERC20Upgradeable(auction.bidToken);
-            require(
-                bidToken.transfer(auction.auctionOwner, amountToWithdraw - paymentSplitsPaid),
-                "TX FAILED"
-            );
+            bidToken.safeTransfer(auction.auctionOwner, _totalRevenueAfterDaoFees - paymentSplitsPaid);
         }
     }
 
@@ -617,8 +600,8 @@ contract UniverseAuctionHouse is
         uint256 totalDeposited = winningSlot.totalDepositedNfts;
         uint256 totalWithdrawn = winningSlot.totalWithdrawnNfts;
 
-        require(auction.isFinalized && winningSlot.revenueCaptured, "E24");
-        require(auction.winners[slotIndex] == claimer, "E31");
+        require(auction.isFinalized, "E24");
+        require(auction.slots[slotIndex].winner == claimer, "E31");
         require(winningSlot.reservePriceReached, "E32");
 
         require(amount <= 40, "E25");
@@ -627,20 +610,18 @@ contract UniverseAuctionHouse is
         emit LogERC721RewardsClaim(claimer, auctionId, slotIndex);
 
         for (uint256 i = totalWithdrawn; i < amount + totalWithdrawn; i += 1) {
-            DepositedERC721 memory nftForWithdrawal = winningSlot.depositedNfts[i + 1];
+            DepositedERC721 storage nftForWithdrawal = winningSlot.depositedNfts[i + 1];
 
             auction.totalWithdrawnERC721s = auction.totalWithdrawnERC721s + 1;
             auction.slots[slotIndex].totalWithdrawnNfts =
                 auction.slots[slotIndex].totalWithdrawnNfts +
                 1;
-
-            if (nftForWithdrawal.tokenId != 0) {
-                IERC721Upgradeable(nftForWithdrawal.tokenAddress).safeTransferFrom(
-                    address(this),
-                    claimer,
-                    nftForWithdrawal.tokenId
-                );
-            }
+            IERC721Upgradeable(nftForWithdrawal.tokenAddress).safeTransferFrom(
+                address(this),
+                claimer,
+                nftForWithdrawal.tokenId
+            );
+            
         }
     }
 
@@ -658,24 +639,48 @@ contract UniverseAuctionHouse is
 
         uint256 averageERC721SalePrice = slot.winningBidAmount / slot.totalDepositedNfts;
 
-        LibPart.Part[] memory fees = royaltiesRegistry.getRoyalties(nft.tokenAddress, nft.tokenId);
+        (LibPart.Part[] memory nftRoyalties, LibPart.Part[] memory collectionRoyalties) = royaltiesRegistry.getRoyalties(nft.tokenAddress, nft.tokenId);
         uint256 value = averageERC721SalePrice;
+        uint256 collectionFees = 0;
         nft.feesPaid = true;
 
-        for (uint256 i = 0; i < fees.length && i < 5; i += 1) {
+        for (uint256 i = 0; i < collectionRoyalties.length && i < 5; i += 1) {
             FeeCalculate.Fee memory interimFee = value.subFee(
-                (averageERC721SalePrice * (fees[i].value)) / (10000)
+                (averageERC721SalePrice * (collectionRoyalties[i].value)) / (10000)
             );
+
             value = interimFee.remainingValue;
+            collectionFees = collectionFees + interimFee.feeValue;
 
             if (auction.bidToken == address(0) && interimFee.feeValue > 0) {
-                (bool success, ) = (fees[i].account).call{value: interimFee.feeValue}("");
+                (bool success, ) = (collectionRoyalties[i].account).call{value: interimFee.feeValue}("");
                 require(success, "TX FAILED");
             }
 
             if (auction.bidToken != address(0) && interimFee.feeValue > 0) {
                 IERC20Upgradeable token = IERC20Upgradeable(auction.bidToken);
-                require(token.transfer(address(fees[i].account), interimFee.feeValue), "TX FAILED");
+                token.safeTransfer(address(collectionRoyalties[i].account), interimFee.feeValue);
+            }
+        }
+
+        uint256 valueAfterCollectionFees = averageERC721SalePrice - collectionFees;
+        value = averageERC721SalePrice - collectionFees;
+
+
+        for (uint256 i = 0; i < nftRoyalties.length && i < 5; i += 1) {
+            FeeCalculate.Fee memory interimFee = value.subFee(
+                (valueAfterCollectionFees * (nftRoyalties[i].value)) / (10000)
+            );
+            value = interimFee.remainingValue;
+
+            if (auction.bidToken == address(0) && interimFee.feeValue > 0) {
+                (bool success, ) = (nftRoyalties[i].account).call{value: interimFee.feeValue}("");
+                require(success, "TX FAILED");
+            }
+
+            if (auction.bidToken != address(0) && interimFee.feeValue > 0) {
+                IERC20Upgradeable token = IERC20Upgradeable(auction.bidToken);
+                token.safeTransfer(address(nftRoyalties[i].account), interimFee.feeValue);
             }
         }
     }
@@ -684,7 +689,6 @@ contract UniverseAuctionHouse is
         external
         override
         onlyDAO
-        nonReentrant
         returns (uint256)
     {
         uint256 amountToWithdraw = royaltiesReserve[token];
@@ -701,7 +705,7 @@ contract UniverseAuctionHouse is
 
         if (token != address(0)) {
             IERC20Upgradeable erc20token = IERC20Upgradeable(token);
-            require(erc20token.transfer(daoAddress, amountToWithdraw), "TX TX FAILED");
+            erc20token.safeTransfer(daoAddress, amountToWithdraw);
         }
 
         return amountToWithdraw;
@@ -778,7 +782,7 @@ contract UniverseAuctionHouse is
         override
         returns (address)
     {
-        return auctions[auctionId].winners[slotIndex];
+        return auctions[auctionId].slots[slotIndex].winner;
     }
 
     function getBidderBalance(uint256 auctionId, address bidder)
@@ -913,11 +917,13 @@ contract UniverseAuctionHouse is
         uint256 tokenId,
         address tokenAddress
     ) internal returns (uint256) {
+        (LibPart.Part[] memory nftRoyalties, LibPart.Part[] memory collectionRoyalties) = royaltiesRegistry.getRoyalties(tokenAddress, tokenId);
+
         DepositedERC721 memory item = DepositedERC721({
             tokenId: tokenId,
             tokenAddress: tokenAddress,
             depositor: msg.sender,
-            hasSecondarySaleFees: royaltiesRegistry.getRoyalties(tokenAddress, tokenId).length > 0,
+            hasSecondarySaleFees: (nftRoyalties.length > 0 || collectionRoyalties.length > 0),
             feesPaid: false
         });
 
@@ -1060,29 +1066,42 @@ contract UniverseAuctionHouse is
         Slot storage slot = auctions[auctionId].slots[slotIndex];
 
         uint256 averageERC721SalePrice = slot.winningBidAmount / slot.totalDepositedNfts;
-        uint256 totalFeesPayableForSlot = 0;
+        uint256 totalCollectionFeesPayableForSlot = 0;
+        uint256 totalNFTFeesPercentageForSlot = 0;
 
         for (uint256 i = 0; i < slot.totalDepositedNfts; i += 1) {
             DepositedERC721 memory nft = slot.depositedNfts[i + 1];
 
             if (nft.hasSecondarySaleFees) {
-                LibPart.Part[] memory fees = royaltiesRegistry.getRoyalties(
+                (LibPart.Part[] memory nftRoyalties, LibPart.Part[] memory collectionRoyalties) = royaltiesRegistry.getRoyalties(
                     nft.tokenAddress,
                     nft.tokenId
                 );
                 uint256 value = averageERC721SalePrice;
 
-                for (uint256 j = 0; j < fees.length && j < 5; j += 1) {
-                    FeeCalculate.Fee memory interimFee = value.subFee(
-                        (averageERC721SalePrice * (fees[j].value)) / (10000)
-                    );
-                    value = interimFee.remainingValue;
-                    totalFeesPayableForSlot = totalFeesPayableForSlot + (interimFee.feeValue);
+                for (uint256 j = 0; (j < nftRoyalties.length || j < collectionRoyalties.length) && j < 5; j += 1) {
+
+                    if (collectionRoyalties.length > j) {
+                        FeeCalculate.Fee memory interimCollectionFee = value.subFee(
+                            (averageERC721SalePrice * (collectionRoyalties[j].value)) / (10000)
+                        );
+                        value = interimCollectionFee.remainingValue;
+                        totalCollectionFeesPayableForSlot = totalCollectionFeesPayableForSlot + interimCollectionFee.feeValue;
+                    }
+
+                    if (nftRoyalties.length > j) {
+                        totalNFTFeesPercentageForSlot = totalNFTFeesPercentageForSlot + nftRoyalties[j].value;
+                    }
                 }
             }
         }
 
-        return totalFeesPayableForSlot;
+        uint256 remainingAmountAfterCollectionFees = slot.winningBidAmount - totalCollectionFeesPayableForSlot;
+        FeeCalculate.Fee memory interimNFTFee = remainingAmountAfterCollectionFees.subFee(
+            (remainingAmountAfterCollectionFees * (totalNFTFeesPercentageForSlot / slot.totalDepositedNfts)) / 10000
+        );
+
+        return totalCollectionFeesPayableForSlot + interimNFTFee.feeValue;
     }
 
     function _verifyIndex(

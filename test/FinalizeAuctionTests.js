@@ -158,6 +158,118 @@ describe('Finalize auction ERC721 Tests', () => {
     await expect(universeAuctionHouse.claimERC721Rewards(1, 1, 20)).to.be.emit(universeAuctionHouse, "LogERC721RewardsClaim");
   });
 
+  it('should finalize successfully - first claim rewards', async () => {
+    const { universeAuctionHouse, mockNFT } = await loadFixture(deployedContracts);  
+    const [signer, signer2] = await ethers.getSigners();
+
+    let randomWallet1 = ethers.Wallet.createRandom();
+    let randomWallet2= ethers.Wallet.createRandom();
+
+    const NFT_TOKEN_COUNT = 100;
+    const NFT_CHUNK_SIZE = 40;
+
+    const currentTime = Math.round((new Date()).getTime() / 1000);
+
+    const startTime = currentTime + 2500;
+    const endTime = startTime + 500;
+    const resetTimer = 3;
+    const numberOfSlots = 1;
+    const ethAddress = '0x0000000000000000000000000000000000000000';
+    const minimumReserveValues = [];
+    const paymentSplits = [[randomWallet1.address, "2000"], [randomWallet2.address, "1000"]];
+  
+    await universeAuctionHouse.createAuction([
+      startTime,
+      endTime,
+      resetTimer,
+      numberOfSlots,
+      ethAddress,
+      minimumReserveValues,
+      paymentSplits
+    ]);
+
+    const multipleMockNFTs = new Array(NFT_TOKEN_COUNT);
+
+    // mint required nfts
+    for (let i = 1; i <= NFT_TOKEN_COUNT; i++) {
+      await mockNFT.mint(signer.address, i);
+      await mockNFT.approve(universeAuctionHouse.address, i);
+
+      multipleMockNFTs[i - 1] = [i, mockNFT.address];
+    }
+
+    // get matrix of nft chunks [ [nft, nft], [nft, nft] ]
+    const chunksOfNfts = chunkifyArray(multipleMockNFTs, NFT_CHUNK_SIZE)
+
+    // iterate chunks and deposit each one
+    for (let chunk = 0; chunk < chunksOfNfts.length; chunk++) {
+      await universeAuctionHouse.depositERC721(1, 1, chunksOfNfts[chunk]);
+    }
+
+    await ethers.provider.send('evm_setNextBlockTimestamp', [startTime + 100]); 
+    await ethers.provider.send('evm_mine');
+
+    await expect(
+      universeAuctionHouse.functions['ethBid(uint256)'](1, {
+        value: '200000000000000000000'
+      })
+    ).to.be.emit(universeAuctionHouse, 'LogBidSubmitted');
+
+    const bidderBalance = await universeAuctionHouse.getBidderBalance(1, signer.address);
+
+    const balance = Number(ethers.utils.formatEther(bidderBalance).toString());
+
+    expect(balance).to.equal(200);
+
+    await ethers.provider.send('evm_setNextBlockTimestamp', [endTime + 500]); 
+    await ethers.provider.send('evm_mine');
+
+    await universeAuctionHouse.finalizeAuction(1);
+
+    await expect(universeAuctionHouse.claimERC721Rewards(1, 1, 40)).to.be.emit(universeAuctionHouse, "LogERC721RewardsClaim");
+
+    await expect(universeAuctionHouse.claimERC721Rewards(1, 1, 40)).to.be.emit(universeAuctionHouse, "LogERC721RewardsClaim");
+
+    await expect(universeAuctionHouse.claimERC721Rewards(1, 1, 30)).revertedWith(
+      "E33"
+    );
+
+    await expect(universeAuctionHouse.claimERC721Rewards(1, 1, 41)).revertedWith(
+      "E25"
+    );
+
+    await expect(universeAuctionHouse.claimERC721Rewards(1, 1, 20)).to.be.emit(universeAuctionHouse, "LogERC721RewardsClaim");
+    
+    for (let i = 0; i < numberOfSlots; i++) {
+      await universeAuctionHouse.captureSlotRevenue(1, (i + 1));
+    }
+
+    const auction = await universeAuctionHouse.auctions(1);
+
+    expect(auction.isFinalized).to.be.true;
+
+    const slotWinner = await universeAuctionHouse.getSlotWinner(1, 1);
+
+    expect(slotWinner).to.equal(signer.address);
+
+    await ethers.provider.send('evm_setNextBlockTimestamp', [endTime + 1000]); 
+    await ethers.provider.send('evm_mine');
+
+
+    const balanceSignerBefore = await ethers.provider.getBalance(signer.address);
+
+    await expect(universeAuctionHouse.connect(signer2).distributeCapturedAuctionRevenue(1)).to.be.emit(universeAuctionHouse, "LogAuctionRevenueWithdrawal");
+
+    const balance1 = await ethers.provider.getBalance(randomWallet1.address);
+    const balance2 = await ethers.provider.getBalance(randomWallet2.address);
+    const balance3 = await ethers.provider.getBalance(signer.address);
+    
+    expect(Number(ethers.utils.formatEther(balance1).toString())).to.equal(40);
+    expect(Number(ethers.utils.formatEther(balance2).toString())).to.equal(20);
+    expect(Number(ethers.utils.formatEther(balance3).toString())).to.equal(parseFloat(ethers.utils.formatEther(balanceSignerBefore)) + 140);
+
+  });
+
   it('should revert invalid number of winners', async () => {
     const { universeAuctionHouse, mockNFT } = await loadFixture(deployedContracts);
 
